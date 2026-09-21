@@ -432,8 +432,10 @@ router bgp 65000
       `<div class="facts"><div><small>Size</small>${L.routers} routers</div><div><small>Folder</small>labs/${esc(a.id)}/</div>` +
       `<div><small>Scenarios</small>${L.scenarios.map(([sid, t]) => `<code>${esc(sid)}</code>: ${esc(t)}`).join("<br>")}</div></div>` +
       `<h4 style="margin-top:12px">Run it</h4>${code(labCommands(a.id, L.scenarios))}` +
+      `<p class="hint">Using the downloaded <code>.unl</code> yourself: copy it into <code>/opt/unetlab/labs</code> on the EVE VM. The <code>up</code> command above does that for you.</p>` +
       `<div class="tryit"><span>The lab folder has the inventory, baseline configs, scenario, the generated .unl and a README with the topology and the router output captured while testing it. It is a separate EVE-NG lab: never run it at the same time as the shared lab.</span>` +
       `<span style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn" href="#learn/${esc(a.id)}/lab">Read the lab README</a>` +
+      `<a class="btn" href="/api/labs/${esc(a.id)}/unl" download="${esc(a.id)}.unl" title="The EVE-NG topology file for this lab">Download .unl</a>` +
       `<a class="btn" href="${LABS_URL}${esc(a.id)}" target="_blank" rel="noopener" title="The same folder on GitHub">Files on GitHub &#8599;</a></span></div>`);
   }
 
@@ -442,7 +444,7 @@ router bgp 65000
     const L = (window.LEARN_LABS || {})[a.id], i = ATTRS.indexOf(a);
     el.innerHTML = `<div class="crumbs"><a href="#learn">All attributes</a> / <a href="#learn/${esc(a.id)}/practitioner">${esc(a.name)}</a> / Lab topology</div>` +
       `<h2>${String(i + 1).padStart(2, "0")} · ${esc(a.name)} <span class="chip">Lab topology${L ? " · " + L.routers + " routers" : ""}</span></h2>` +
-      `<div class="lvl"><a href="#learn/${esc(a.id)}/practitioner">&larr; Back to ${esc(a.name)}: Practitioner</a><a href="${LABS_URL}${esc(a.id)}" target="_blank" rel="noopener" style="margin-left:auto">Files on GitHub &#8599;</a></div>` +
+      `<div class="lvl"><a href="#learn/${esc(a.id)}/practitioner">&larr; Back to ${esc(a.name)}: Practitioner</a><a href="/api/labs/${esc(a.id)}/unl" download="${esc(a.id)}.unl" style="margin-left:auto" title="The EVE-NG topology file for this lab">Download .unl</a><a href="${LABS_URL}${esc(a.id)}" target="_blank" rel="noopener">Files on GitHub &#8599;</a></div>` +
       `<div class="md" id="lab-md"><p class="hint">Loading the lab README…</p></div>`;
     const box = el.querySelector("#lab-md");
     try {

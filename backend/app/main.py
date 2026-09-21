@@ -147,7 +147,7 @@ def labs_list() -> list[dict]:
     """Per-attribute labs that have a README (folders under labs/)."""
     if not LABS_DIR.is_dir():
         return []
-    return [{"id": p.name} for p in sorted(LABS_DIR.iterdir())
+    return [{"id": p.name, "unl": (p / f"{p.name}.unl").is_file()} for p in sorted(LABS_DIR.iterdir())
             if p.is_dir() and _LAB_ID.fullmatch(p.name) and (p / "README.md").is_file()]
 
 
@@ -158,6 +158,15 @@ def lab_readme(lab_id: str) -> dict:
     if not _LAB_ID.fullmatch(lab_id) or not readme.is_file():
         raise HTTPException(404, lab_id)
     return {"id": lab_id, "markdown": readme.read_text(encoding="utf-8")}
+
+
+@app.get("/api/labs/{lab_id}/unl")
+def lab_unl(lab_id: str) -> FileResponse:
+    """The lab's generated EVE-NG topology file, as a download (plain topology XML: no credentials)."""
+    unl = LABS_DIR / lab_id / f"{lab_id}.unl"
+    if not _LAB_ID.fullmatch(lab_id) or not unl.is_file():
+        raise HTTPException(404, lab_id)
+    return FileResponse(unl, media_type="application/xml", filename=f"{lab_id}.unl")
 
 
 @app.get("/api/scenarios")

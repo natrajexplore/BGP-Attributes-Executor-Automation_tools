@@ -45,3 +45,11 @@ the dashboard container polls the same management addresses.
 ```
 python backend/scripts/build_lab.py --inventory labs/05_med/inventory.yaml --out labs/05_med/05_med.unl
 ```
+
+### Reading and downloading them from the dashboard
+
+The dashboard serves each lab's README and its `.unl` to the Learn tab (Practitioner page, section "Lab topology"):
+
+* `GET /api/labs` lists the labs, `GET /api/labs/<id>/readme` returns the README, `GET /api/labs/<id>/unl` downloads the topology file.
+* To use a downloaded `.unl` yourself, copy it into `/opt/unetlab/labs` on the EVE VM. `labs/labtool.sh <lab> import` does exactly that.
+  (Importing a bare `.unl` through the EVE web UI's Import button has not been tested; that button expects EVE's own zip export.)
