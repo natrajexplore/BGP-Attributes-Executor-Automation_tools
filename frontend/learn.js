@@ -420,6 +420,22 @@ router bgp 65000
   const code = t => `<pre class="code">${esc(t)}</pre>`;
   const paras = a => a.map(p => `<p>${esc(p)}</p>`).join("");
 
+  /* per-attribute lab topologies: data in learn-labs.js, files in labs/<attribute id>/ of the repository */
+  const LABS_URL = "https://github.com/natrajexplore/BGP-Attributes-Executor-Automation_tools/tree/main/labs/";
+  const labCommands = (id, scn) => ["# on the EVE VM, from /opt/bgp-attributes-executor (stop the shared lab and the dashboard first)", `labs/labtool.sh ${id} up`,
+    ...scn.map(([sid]) => `labs/labtool.sh ${id} apply ${sid}`), ...[...scn].reverse().map(([sid]) => `labs/labtool.sh ${id} rollback ${sid}`)].join("\n");
+  function labSection(a) {
+    const L = (window.LEARN_LABS || {})[a.id];
+    if (!L) return "";
+    return section("Lab topology · " + L.title,
+      `<p>${esc(L.what)}</p>` + (L.extra ? `<p class="hint">${esc(L.extra)}</p>` : "") +
+      `<div class="facts"><div><small>Size</small>${L.routers} routers</div><div><small>Folder</small>labs/${esc(a.id)}/</div>` +
+      `<div><small>Scenarios</small>${L.scenarios.map(([sid, t]) => `<code>${esc(sid)}</code>: ${esc(t)}`).join("<br>")}</div></div>` +
+      `<h4 style="margin-top:12px">Run it</h4>${code(labCommands(a.id, L.scenarios))}` +
+      `<div class="tryit"><span>The lab folder has the inventory, baseline configs, scenario, the generated .unl and a README with the topology and the router output captured while testing it. It is a separate EVE-NG lab: never run it at the same time as the shared lab.</span>` +
+      `<a class="btn" href="${LABS_URL}${esc(a.id)}" target="_blank" rel="noopener">Open the lab README &#8599;</a></div>`);
+  }
+
   /* level content lives in learn-content.js (window.LEARN_CONTENT[id] = { foundations, practitioner, pro }) */
   const CONTENT = id => (window.LEARN_CONTENT || {})[id] || {};
   const LEVELS = [["foundations", "Foundations"], ["practitioner", "Practitioner"], ["pro", "Pro"]];
@@ -550,6 +566,8 @@ router bgp 65000
     const c = CONTENT(a.id), n = ATTRS.indexOf(a) + 1;
     let m = `# ${String(n).padStart(2, "0")} ${a.name} - cheat sheet\n\n${a.tag}\n\n- Scope: ${a.scope}\n- Default: ${a.dflt}\n- Type: ${a.type}\n- Best-path step: ${a.step || "not a tie-breaker (" + (a.stepNote || "policy / signal") + ")"}\n\n`;
     m += `## What it is\n${a.what.map(x => "- " + x).join("\n")}\n\n## Configuration (IOS)\n\`\`\`\n${a.config}\n\`\`\`\n\n## Verify\n\`\`\`\n${a.verify.join("\n")}\n\`\`\`\n\n## Production pitfalls\n${a.pitfalls.map(x => "- " + x).join("\n")}\n`;
+    const L = (window.LEARN_LABS || {})[a.id];
+    if (L) m += `\n## Lab topology (${L.routers} routers): ${L.title}\n${L.what}\n\n\`\`\`\n${labCommands(a.id, L.scenarios)}\n\`\`\`\nFiles: ${LABS_URL}${a.id}\n`;
     const tr = (c.pro && c.pro.tricks) || [];
     if (tr.length) m += `\n## Tactics and tricks\n${tr.map(t => `- **${t.title}**: ${t.text}`).join("\n")}\n`;
     return m;
@@ -567,6 +585,7 @@ router bgp 65000
     const total = ATTRS.length * 3, done = ATTRS.reduce((s, a) => s + LEVELS.filter(([lv]) => CONTENT(a.id)[lv] && levelDone(a.id, lv)).length, 0);
     el.innerHTML = `<h2>BGP path attributes · from scratch to pro</h2>
       <p class="lead">Eleven attributes, three levels each. <b>Foundations</b> explains what the attribute is and where it sits in path selection. <b>Practitioner</b> is the enterprise use case with config, verification and a hands-on exercise on the lab routers. <b>Pro</b> is tactics and tricks, interactions with other attributes, a troubleshooting drill and a harder quiz. Use the <a href="#learn/simulator">best-path simulator</a> to see why one route beats another.</p>
+      <p class="hint"><b>Two kinds of lab.</b> The hands-on exercises run on the <b>shared 8-router lab</b>, the same one the Lab tab uses, so you can try them from this page. Each attribute also has its own small <b>lab topology</b> (3 to 6 routers) built around its use case: see the "Lab topology" section on its Practitioner page. Those are separate EVE-NG labs that you start with <code>labs/labtool.sh</code>, and they must never run at the same time as the shared lab.</p>
       <div class="tryit"><span>Progress in this browser: ${done} of ${total} levels completed.</span><a class="btn" href="#learn/simulator">Open the simulator</a>
         <button class="ghost" id="dl-bp">Best-path cheat-sheet</button><button class="ghost" id="dl-all">All cheat-sheets</button></div>
       <h3 style="margin-top:18px">How BGP picks the best path (Cisco order)</h3>${orderStrip(null, "Attributes lower in the list only matter when everything above them ties. NEXT_HOP, ATOMIC_AGGREGATE, AGGREGATOR and COMMUNITY are not decision steps: they signal reachability, path detail, or policy.")}
@@ -592,7 +611,8 @@ router bgp 65000
     return section("Enterprise use case · " + a.useTitle, `<p>${esc(a.useText)}</p><div class="dgw">${a.use()}</div>`) +
       section("Configuration (IOS)", code(a.config)) + section("Verify", code(a.verify.join("\n"))) + section("Production pitfalls", list(a.pitfalls)) +
       (p.tactics ? section("Practical tactics", p.tactics.map(t => `<h4>${esc(t.title)}</h4><p>${esc(t.text)}</p>` + (t.config ? code(t.config) : "")).join("")) : "") +
-      (p.exercise ? section("Hands-on exercise · " + p.exercise.title, exerciseHtml(p.exercise, a.id)) : "") +
+      (p.exercise ? section("Hands-on exercise · " + p.exercise.title, `<p class="hint">Runs on the shared 8-router lab (the same one as the Lab tab) through the buttons below.</p>` + exerciseHtml(p.exercise, a.id)) : "") +
+      labSection(a) +
       `<div class="tryit"><span>Or run the whole scenario from the Lab tab, with before/after diffs.</span><button class="primary" id="tryLab">Open scenario ${esc(a.id)} in Lab</button></div>`;
   }
   function pro(a, c) {

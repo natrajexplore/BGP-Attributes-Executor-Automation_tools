@@ -288,8 +288,8 @@ EDGE1# show ip bgp 10.10.0.0/16
           { text: "ISP-A should have no /16 again.", type: "show", device: "ISPA-1", cmd: "show ip bgp 10.10.0.0/16", expect: "Network not in table", expectText: "'% Network not in table'", hint: "wait for the 30 second eBGP advertisement timer and run it again" }
         ],
         selfCheck: [
-          "The path on ISP-A is just '65000', with no AS_SET braces. Why, in this lab?",
-          "What would the path look like if the components came from two different subsidiary ASes?"
+          "The path on ISP-A is just '65000', with no AS_SET braces. Why, in the shared lab?",
+          "What would the path look like if the components came from two different subsidiary ASes? (Lab 08 has exactly that: see the Lab topology section below.)"
         ]
       }
     },
@@ -308,7 +308,7 @@ router bgp 65000
         "AGGREGATOR takes part in no comparison. The pair to remember is as-set versus ATOMIC_AGGREGATE: as-set restores the AS detail and removes the flag, while AGGREGATOR is there in both cases.",
         "An AS_SET counts as one hop for AS_PATH length (see 03), however many AS numbers it holds, so as-set does not make the summary look longer than it is.",
         "Because as-set copies the components' AS numbers, routers in those ASes see their own AS in the path and reject the summary, which restores loop detection. This is the main reason to use it when the components are in other ASes.",
-        "In this lab the components are all inside AS 65000, so the AS_SET is empty and the path shows a plain '65000'. If the components came from ASes 65010 and 65020, the path would read '65000 {65010,65020}'."
+        "In the shared lab the components are all inside AS 65000, so the AS_SET is empty and the path shows a plain '65000'. Lab 08 uses two subsidiary ASes (65010 and 65020) and shows the real thing on the provider: '65000 {65010,65020}', with both subsidiaries rejecting the summary because their own AS is in the set."
       ],
       edge: [
         "An as-set aggregate changes whenever a component's AS_PATH changes, which can mean many more updates than a plain aggregate. On unstable components, that is a reason not to use as-set.",

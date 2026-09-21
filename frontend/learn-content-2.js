@@ -185,7 +185,7 @@ router bgp 65000
       ],
       interactions: [
         "ORIGIN is step 5. Weight, Local-Pref and AS_PATH length are all compared first, so once any of them differs, ORIGIN is never looked at. It beats MED, eBGP-over-iBGP, IGP metric and everything after.",
-        "It only worked in the lab because both ISPs give a two-AS path to the content network. Change the length of one path and AS_PATH decides before ORIGIN is reached.",
+        "It only worked in the lab because both ISPs give a two-AS path to the content network. Change the length of one path and AS_PATH decides before ORIGIN is reached. The shared lab makes the path incomplete with 'set origin'; lab 04 produces a real one with 'redistribute static'.",
         "On the lab, EDGE1 stopped preferring its own path, so it stopped advertising it into iBGP. CORE-RR1 dropped from three paths to two, both via EDGE2 and ISP-B. Nothing in iBGP now points at ISP-A, so if ISP-B fails the AS has no ready alternative. A demotion changes what is advertised, not only what is chosen.",
         "ORIGIN travels with the route, so the change is visible to other ASes if you demote a route you advertise, not only one you learn."
       ],
@@ -303,7 +303,7 @@ router bgp 65000
       ],
       edge: [
         "MED is non-transitive: a MED you receive from a neighbor is not sent on to other ASes. It does go to your own iBGP peers, which is why the whole AS can see it.",
-        "Setting a MED on a route you learn, as this exercise does, is a lab simulation. In production the setting normally goes outbound, toward a single neighbor AS.",
+        "Setting a MED on a route you learn, as this exercise does, is a simulation on the shared lab. In production the setting normally goes outbound, toward a single neighbor AS. Lab 05 (two links to one provider) shows that real use, where MED is compared without always-compare-med.",
         "MED is 32 bits, so the worst value is 4294967295. A MED you set to a large number is not the same as 'unreachable'; the route stays valid.",
         "Comparing MED across neighbor ASes is a policy choice, not a fix: it assumes both providers use MED on the same scale, which they never agreed on."
       ],
