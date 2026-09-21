@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import asyncio
+import io
 import json
 import re
+import zipfile
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import bus, monitor, scenarios
@@ -167,6 +169,19 @@ def lab_unl(lab_id: str) -> FileResponse:
     if not _LAB_ID.fullmatch(lab_id) or not unl.is_file():
         raise HTTPException(404, lab_id)
     return FileResponse(unl, media_type="application/xml", filename=f"{lab_id}.unl")
+
+
+@app.get("/api/labs/{lab_id}/zip")
+def lab_zip(lab_id: str) -> Response:
+    """The .unl wrapped in a zip: the form EVE-NG's Import accepts (it rejects a bare .unl)."""
+    unl = LABS_DIR / lab_id / f"{lab_id}.unl"
+    if not _LAB_ID.fullmatch(lab_id) or not unl.is_file():
+        raise HTTPException(404, lab_id)
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        z.write(unl, arcname=f"{lab_id}.unl")                 # top level, the layout that EVE's import was tested with
+    return Response(buf.getvalue(), media_type="application/zip",
+                    headers={"Content-Disposition": f'attachment; filename="{lab_id}.zip"'})
 
 
 @app.get("/api/scenarios")
