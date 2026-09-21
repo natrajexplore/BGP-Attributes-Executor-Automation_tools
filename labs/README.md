@@ -34,6 +34,10 @@ the same folder layout and is driven with the same `labtool.sh` commands. They n
 |---|---|---|
 | `12_mpls_l3vpn/` | One customer, two sites over an MPLS core (LDP, VPNv4, VRF); a mistyped import route-target breaks one direction | Tested on the lab |
 | `13_mpls_overlap/` | Two customers with the same 10.1.0.0/24 (RD, RT, labels); one extra export route-target leaks a customer into another | Tested on the lab |
+| `14_mpls_shared_services/` | Shared-services VRF: two customers reach one service and not each other; a one-way extranet completed by one import RT | Tested on the lab |
+| `15_mpls_hub_spoke/` | Hub and spoke through a central firewall (two hub VRFs, a summary); one extra spoke import bypasses the firewall | Tested on the lab |
+| `16_mpls_vpnv4_rr/` | Four PEs and a VPNv4 route reflector; two PEs that lose client status stop hearing each other | Tested on the lab |
+| `17_mpls_as_override/` | Same customer AS at both sites: the far CE drops the route; fixed with `as-override` on the PEs or `allowas-in` on the CEs (two scenarios) | Tested on the lab |
 
 Each folder's `README.md` has the topology, addressing, commands and the router output captured while testing it.
 

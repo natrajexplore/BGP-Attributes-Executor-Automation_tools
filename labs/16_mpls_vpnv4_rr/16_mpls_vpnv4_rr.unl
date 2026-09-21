@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<lab name="bgp-attr-16-mpls-vpnv4-rr" id="45994254-6f2d-476f-b253-c821b7d6969c" version="1" scripttimeout="300" lock="0" sase="0">
+<lab name="bgp-attr-16-mpls-vpnv4-rr" id="d2a002d5-c173-42a9-8ebe-851fe5e9fb57" version="1" scripttimeout="300" lock="0" sase="0">
  <topology>
   <nodes>
    <node id="1" name="CE1" type="dynamips" template="c7200" image="c7200-adventerprisek9-mz.152-4.S6" console="telnet" delay="0" cpu="0" ram="256" nvram="128" idlepc="0x606df838" config="0" left="80" top="60">

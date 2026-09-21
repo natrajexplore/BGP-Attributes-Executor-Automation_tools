@@ -1,23 +1,30 @@
-title: "VPNv4 route reflector - restoring the route-target filter on a reflector with no VRFs"
-attribute: EXTENDED_COMMUNITY
+title: "VPNv4 route reflector - two PEs lose client status and stop hearing each other"
+attribute: ORIGINATOR_ID
 summary: >
-  The RR has no VRFs and reflects VPNv4 routes for four PEs. It works because the RR runs "no bgp default route-target
-  filter", which stops it dropping routes that none of its own VRFs import. The scenario puts the default filter back
-  ("bgp default route-target filter") and refreshes: the RR discards every VPN route, so PE1 and PE4 lose each other.
+  The RR reflects routes between four PE clients. The scenario removes "route-reflector-client" for PE1 and PE4 only.
+  A route-reflector reflects a client's route to every peer, but a non-client's route only to clients, so the two
+  non-clients no longer receive each other's routes. PE1 and PE4 lose each other while PE2 and PE3 still hear both,
+  and the RR itself still holds both routes.
 template: 16_mpls_vpnv4_rr.j2
 targets: [RR]
 vars: {}
 soft_clear: true
-settle_seconds: 40
+settle_seconds: 60
 verify:
   - device: PE1
     command: "show ip route vrf CUST 10.4.0.0"
     expect_regex: "not in table"
+  - device: PE2
+    command: "show ip route vrf CUST 10.4.0.0"
+    expect_regex: "Routing entry for 10.4.0.0/24"
   - device: RR
     command: "show bgp vpnv4 unicast all 10.4.0.0/24"
-    expect_regex: "not in table"
+    expect_regex: "1 available"
 rollback_verify:
   - device: PE1
+    command: "show ip route vrf CUST 10.4.0.0"
+    expect_regex: "Routing entry for 10.4.0.0/24"
+  - device: PE2
     command: "show ip route vrf CUST 10.4.0.0"
     expect_regex: "Routing entry for 10.4.0.0/24"
   - device: RR

@@ -1,6 +1,6 @@
 # Lab 16_mpls_vpnv4_rr: MPLS L3VPN at scale, a VPNv4 route reflector and the route-target filter
-# Four PEs peer only with one route reflector (RR) instead of a full mesh. The RR has no VRFs, so it needs 'no bgp default route-target filter' to keep VPNv4 routes
-# that none of its VRFs imports. The scenario restores the default filter on the RR: it drops every VPN route it has no VRF for, and PE1 and PE4 lose each other.
+# Four PEs peer only with one route reflector (RR) instead of a full mesh. The RR has no VRFs and keeps 'no bgp default route-target filter', so it holds VPNv4 routes that none of
+# its VRFs imports. The scenario removes route-reflector-client for PE1 and PE4: a reflector passes a non-client's routes only to clients, so PE1 and PE4 lose each other.
 # Generate the EVE-NG file with:  python backend/scripts/build_lab.py --inventory labs/16_mpls_vpnv4_rr/inventory.yaml --out labs/16_mpls_vpnv4_rr/16_mpls_vpnv4_rr.unl
 
 defaults:
@@ -12,7 +12,7 @@ defaults:
 
 lab:
   name: bgp-attr-16-mpls-vpnv4-rr
-  uuid: 45994254-6f2d-476f-b253-c821b7d6969c
+  uuid: d2a002d5-c173-42a9-8ebe-851fe5e9fb57
   template: c7200
   image: c7200-adventerprisek9-mz.152-4.S6
   npe: npe-400

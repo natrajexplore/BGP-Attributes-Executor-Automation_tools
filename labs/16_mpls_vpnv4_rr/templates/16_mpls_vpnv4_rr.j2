@@ -1,10 +1,13 @@
-{# A VPNv4 route reflector usually has no VRFs. By default a router with VPNv4 drops every route whose route-targets no local VRF
-   imports, which on a reflector means ALL of them. 'no bgp default route-target filter' turns that check off. The clear asks the
-   peers to send their routes again so the change takes effect on routes that are already in the table. #}
+{# Route reflector rules: a route learned from a CLIENT is reflected to every peer; a route learned from a NON-CLIENT is reflected only to
+   clients. Two PEs that are both non-clients therefore never hear each other's routes through the reflector, although each session
+   is up and the reflector holds both routes. Changing client status resets the session on IOS, so the clear below is a safety net. #}
 router bgp 65000
+ address-family vpnv4
 {% if rollback %}
- no bgp default route-target filter
+  neighbor 10.255.0.1 route-reflector-client
+  neighbor 10.255.0.4 route-reflector-client
 {% else %}
- bgp default route-target filter
+  no neighbor 10.255.0.1 route-reflector-client
+  no neighbor 10.255.0.4 route-reflector-client
 {% endif %}
-do clear ip bgp vpnv4 unicast * soft in
+do clear ip bgp vpnv4 unicast * soft
