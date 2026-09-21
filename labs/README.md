@@ -57,3 +57,17 @@ The dashboard serves each lab's README and its `.unl` to the Learn tab (Practiti
   imported lab matched its source (UUID, node names, networks and router image). The web UI's Import button itself was not clicked, and starting an
   imported lab was not tested (stop the shared lab first, as for any lab).
 * To copy the file yourself instead, use the bare `.unl`: put it in `/opt/unetlab/labs` on the EVE VM (`labs/labtool.sh <lab> import` does exactly that).
+
+### Exploring the routers while a lab runs (EVE tenants)
+
+EVE-NG runs each account's nodes in its own **tenant** (the account's pod). The dashboard and `labs/labtool.sh` log in as `bgpapi`, so the labs they start
+run in tenant 1. Your own `admin` login is tenant 0: it can open the lab files and their topology, but it does **not** see nodes started by `bgpapi` as
+running, and it cannot stop them (and the reverse). Consequences:
+
+* **To look at a running router, use its console or SSH, not the EVE web console.** `GET /api/devices` (the Lab tab) lists every router's console as
+  `<vm-ip>:<port>`; connect with any telnet client (PuTTY, `telnet 192.168.186.128 32897`). All 8 shared-lab consoles were reachable from the Windows host.
+  A console accepts one client at a time, so do not hold it open while `labtool.sh bootstrap` runs. From the VM you can also `ssh lab@192.168.99.<n>`.
+* **Do not start a lab from the EVE web UI as `admin` while the same lab runs under `bgpapi`.** You would get a second copy in tenant 0 on the same management
+  addresses, which is what happened once (two copies of the shared lab, answering the same addresses). A router's saved configuration lives with the tenant,
+  so a lab started in a different tenant boots **blank** and needs `labtool.sh <lab> bootstrap` and `baseline` again.
+* `bgpapi` allows one session, and the dashboard container uses it too, so stop the dashboard before running `labtool.sh` or an EVE API test (as the steps above do).
