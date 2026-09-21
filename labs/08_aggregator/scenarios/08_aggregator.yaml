@@ -1,0 +1,23 @@
+title: "AGGREGATOR - summarising two subsidiaries: as-set keeps their AS numbers"
+attribute: AGGREGATOR
+summary: >
+  HQ-EDGE summarises 10.10.1.0/24 (AS 65010) and 10.10.2.0/24 (AS 65020) into 10.10.0.0/16. Without as-set the
+  summary carries only AS 65000 and the ATOMIC_AGGREGATE flag. With as-set the path keeps {65010,65020}, the flag
+  disappears, AGGREGATOR still names HQ-EDGE, and each subsidiary rejects the summary because its own AS is in it.
+template: 08_aggregator.j2
+targets: [HQ-EDGE]
+soft_clear: true
+settle_seconds: 40
+verify:
+  - device: ISP
+    command: "show ip bgp 10.10.0.0/16"
+    expect_regex: "\{650(10,65020|20,65010)\}"
+  - device: ISP
+    command: "show ip bgp 10.10.0.0/16"
+    must_not_match: "atomic-aggregate"
+  - device: ISP
+    command: "show ip bgp 10.10.0.0/16"
+    expect_regex: "aggregated by 65000 10\.255\.0\.1"
+  - device: SUB-A
+    command: "show ip bgp 10.10.0.0/16"
+    expect_regex: "Network not in table"

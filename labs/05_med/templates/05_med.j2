@@ -1,0 +1,19 @@
+{# MED - each data centre tells the provider which link to use for its OWN prefix, by sending a low MED for
+   the prefix that lives at that site and a high MED for the other site's prefix. The provider has two paths to
+   each prefix from the same neighbor AS (65000), so MED IS compared, before the eBGP-over-iBGP rule (step 7).
+   Works unchanged on both routers because each defines LOCAL-DC (its own prefix) and an ISP peer-group. #}
+{% if rollback %}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  no neighbor ISP route-map MED-OUT out
+no route-map MED-OUT
+{% else %}
+route-map MED-OUT permit 10
+ match ip address prefix-list LOCAL-DC
+ set metric {{ med_local }}
+route-map MED-OUT permit 20
+ set metric {{ med_remote }}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  neighbor ISP route-map MED-OUT out
+{% endif %}

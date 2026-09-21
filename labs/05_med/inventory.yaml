@@ -1,0 +1,63 @@
+# Lab 05 MED: an enterprise with two data centres, each linked to a different POP of the SAME provider.
+# This is the case MED exists for: one neighbor AS (65001) reached over two links. The shared 8-router lab
+# cannot show it, because there the two providers are different ASes and MED is not compared between them.
+# Generate the EVE-NG file with:  python backend/scripts/build_lab.py --inventory labs/05_med/inventory.yaml --out labs/05_med/05_med.unl
+
+defaults:
+  username: lab
+  password: lab123
+  secret: lab123
+  mgmt_gateway: 192.168.99.1
+  mgmt_mask: 255.255.255.0
+
+lab:
+  name: bgp-attr-05-med
+  uuid: e23fc3a1-e26e-4c8f-a07c-a2192b8673b5
+  template: c7200
+  image: c7200-adventerprisek9-mz.152-4.S6
+  npe: npe-400
+  ram: 256
+  nvram: 128
+  idlepc: "0x606df838"
+  io_adapter: C7200-IO-FE
+  slots: [PA-8E]
+  mgmt_interface: fa0/0
+  mgmt_network:
+    type: pnet1
+    name: MGMT-Cloud1
+
+links:
+  - {a: DC-EAST, a_if: e1/0, b: DC-WEST, b_if: e1/0}   # 10.0.0.0/30   enterprise inter-DC link (OSPF)
+  - {a: DC-EAST, a_if: e1/1, b: ISP-E,   b_if: e1/0}   # 172.16.1.0/30 eBGP, DC-East to provider POP-East
+  - {a: DC-WEST, a_if: e1/1, b: ISP-W,   b_if: e1/0}   # 172.16.2.0/30 eBGP, DC-West to provider POP-West
+  - {a: ISP-E,   a_if: e1/1, b: ISP-W,   b_if: e1/1}   # 192.0.2.0/30  provider backbone (OSPF + iBGP)
+
+globals:
+  as_enterprise: 65000
+  as_provider: 65001
+
+devices:
+  DC-EAST:
+    role: edge
+    asn: 65000
+    mgmt_ip: 192.168.99.11
+    router_id: 10.255.0.1
+    canvas: [200, 150]
+  DC-WEST:
+    role: edge
+    asn: 65000
+    mgmt_ip: 192.168.99.12
+    router_id: 10.255.0.2
+    canvas: [200, 400]
+  ISP-E:
+    role: provider
+    asn: 65001
+    mgmt_ip: 192.168.99.31
+    router_id: 10.255.1.1
+    canvas: [550, 150]
+  ISP-W:
+    role: provider
+    asn: 65001
+    mgmt_ip: 192.168.99.32
+    router_id: 10.255.1.2
+    canvas: [550, 400]

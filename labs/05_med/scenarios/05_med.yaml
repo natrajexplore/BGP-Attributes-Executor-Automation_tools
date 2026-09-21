@@ -1,0 +1,26 @@
+title: "MED - the provider delivers each data centre's traffic to the right site"
+attribute: MULTI_EXIT_DISC
+summary: >
+  DC-EAST and DC-WEST each advertise both prefixes to the provider, with MED 50 for their own prefix and
+  MED 200 for the other site's. The provider's routers hear every prefix from the same neighbor AS over two
+  links, so MED is compared and each prefix is delivered over the link of the site where it lives.
+template: 05_med.j2
+targets: [DC-EAST, DC-WEST]
+vars:
+  med_local: 50
+  med_remote: 200
+soft_clear: true
+settle_seconds: 40
+verify:
+  - device: ISP-E
+    command: "show ip bgp 10.2.0.0/16"
+    expect_regex: "metric 50[^\n]*internal, best"
+  - device: ISP-W
+    command: "show ip bgp 10.1.0.0/16"
+    expect_regex: "metric 50[^\n]*internal, best"
+  - device: ISP-E
+    command: "show ip bgp 10.1.0.0/16"
+    expect_regex: "metric 50[^\n]*external, best"
+  - device: ISP-W
+    command: "show ip bgp 10.2.0.0/16"
+    expect_regex: "metric 50[^\n]*external, best"

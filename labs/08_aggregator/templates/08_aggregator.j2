@@ -1,0 +1,15 @@
+{# AGGREGATOR / AS_SET - HQ-EDGE rebuilds its summary WITH 'as-set'. The components come from AS 65010 and AS 65020,
+   so the aggregate now carries an AS_SET {65010,65020}, ATOMIC_AGGREGATE is no longer set, and AGGREGATOR still names
+   who built it. Because the AS_SET contains the subsidiaries' own AS numbers, each subsidiary rejects the summary
+   when it is advertised back to it: loop detection works again. Rollback restores the plain summary. #}
+{% if rollback %}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  no aggregate-address {{ aggregate_net }} {{ aggregate_mask }} as-set summary-only
+  aggregate-address {{ aggregate_net }} {{ aggregate_mask }} summary-only
+{% else %}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  no aggregate-address {{ aggregate_net }} {{ aggregate_mask }} summary-only
+  aggregate-address {{ aggregate_net }} {{ aggregate_mask }} as-set summary-only
+{% endif %}
