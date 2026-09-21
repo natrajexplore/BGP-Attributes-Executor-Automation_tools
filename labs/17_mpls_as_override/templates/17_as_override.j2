@@ -1,0 +1,10 @@
+{# as-override: when the PE sends a route to this CE, every occurrence of the CE's own AS in the AS_PATH is replaced with the PE's AS,
+   so a customer that uses one AS at several sites is not rejected by its own loop check. Configured on the PE, inside the VRF. #}
+router bgp 65000
+ address-family ipv4 vrf CUST
+{% if rollback %}
+  no neighbor {{ ce_ip }} as-override
+{% else %}
+  neighbor {{ ce_ip }} as-override
+{% endif %}
+do clear ip bgp vrf CUST * soft out

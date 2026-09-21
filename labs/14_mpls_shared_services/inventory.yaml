@@ -1,0 +1,76 @@
+# Lab 14_mpls_shared_services: MPLS L3VPN shared services, two customers reach one service VRF but not each other
+# Customers A and B each have their own VRF, and a third VRF (SHARED) at PE2 holds a services network (10.9.0.0/24). SHARED exports RT 65000:900 and
+# imports both customer RTs, so the services network can answer both customers. Customer A also imports 900, so A reaches the services. Customer B does not,
+# yet: the return path exists but the outbound path does not, a one-way extranet. The scenario adds import 65000:900 to B's VRF and B reaches the services.
+# Generate the EVE-NG file with:  python backend/scripts/build_lab.py --inventory labs/14_mpls_shared_services/inventory.yaml --out labs/14_mpls_shared_services/14_mpls_shared_services.unl
+
+defaults:
+  username: lab
+  password: lab123
+  secret: lab123
+  mgmt_gateway: 192.168.99.1
+  mgmt_mask: 255.255.255.0
+
+lab:
+  name: bgp-attr-14-mpls-shared-services
+  uuid: 3b28d4a5-9074-42a1-9e24-c5b277a85fa1
+  template: c7200
+  image: c7200-adventerprisek9-mz.152-4.S6
+  npe: npe-400
+  ram: 256
+  nvram: 128
+  idlepc: "0x606df838"
+  io_adapter: C7200-IO-FE
+  slots: [PA-8E]
+  mgmt_interface: fa0/0
+  mgmt_network:
+    type: pnet1
+    name: MGMT-Cloud1
+
+links:
+  - {a: CE-A, a_if: e1/0, b: PE1, b_if: e1/1}   # 172.16.1.0/30 eBGP PE-CE, customer A
+  - {a: CE-B, a_if: e1/0, b: PE1, b_if: e1/2}   # 172.16.2.0/30 eBGP PE-CE, customer B
+  - {a: PE1, a_if: e1/0, b: P, b_if: e1/0}   # 10.0.1.0/30 core (OSPF, LDP)
+  - {a: P, a_if: e1/1, b: PE2, b_if: e1/0}   # 10.0.2.0/30 core (OSPF, LDP)
+  - {a: PE2, a_if: e1/1, b: CE-SVC, b_if: e1/0}   # 172.16.3.0/30 eBGP PE-CE, shared services
+
+globals:
+  as_provider: 65000
+
+devices:
+  CE-A:
+    role: customer
+    asn: 65101
+    mgmt_ip: 192.168.99.11
+    router_id: 10.255.101.1
+    canvas: [100, 100]
+  CE-B:
+    role: customer
+    asn: 65201
+    mgmt_ip: 192.168.99.13
+    router_id: 10.255.201.1
+    canvas: [100, 350]
+  PE1:
+    role: pe
+    asn: 65000
+    mgmt_ip: 192.168.99.21
+    router_id: 10.255.0.1
+    canvas: [300, 225]
+  P:
+    role: core
+    asn: 65000
+    mgmt_ip: 192.168.99.22
+    router_id: 10.255.0.2
+    canvas: [500, 225]
+  PE2:
+    role: pe
+    asn: 65000
+    mgmt_ip: 192.168.99.23
+    router_id: 10.255.0.3
+    canvas: [700, 225]
+  CE-SVC:
+    role: customer
+    asn: 65900
+    mgmt_ip: 192.168.99.14
+    router_id: 10.255.190.1
+    canvas: [900, 225]

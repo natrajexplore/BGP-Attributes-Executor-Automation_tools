@@ -1,0 +1,32 @@
+title: "Extranet - onboarding customer B to the shared services VRF with one import route-target"
+attribute: EXTENDED_COMMUNITY
+summary: >
+  SHARED (at PE2) exports RT 65000:900 and imports both customer RTs, so the services network already has a route to
+  customer B, but B's VRF does not import 900, so B has no route to the services. The scenario adds
+  "route-target import 65000:900" to B's VRF at PE1. B reaches the services; A and B still cannot see each other.
+template: 14_mpls_shared_services.j2
+targets: [PE1]
+vars:
+  shared_rt: "65000:900"
+soft_clear: true
+settle_seconds: 40
+verify:
+  - device: PE1
+    command: "show ip route vrf CUST-B 10.9.0.0"
+    expect_regex: "Routing entry for 10.9.0.0/24"
+  - device: CE-B
+    command: "show ip route 10.9.0.0"
+    expect_regex: "Routing entry for 10.9.0.0/24"
+  - device: CE-A
+    command: "show ip route 10.2.0.0"
+    must_not_match: "Routing entry for 10.2.0.0/24"
+rollback_verify:
+  - device: PE1
+    command: "show ip route vrf CUST-B 10.9.0.0"
+    expect_regex: "not in table"
+  - device: CE-B
+    command: "show ip route 10.9.0.0"
+    expect_regex: "not in table"
+  - device: CE-A
+    command: "show ip route 10.2.0.0"
+    must_not_match: "Routing entry for 10.2.0.0/24"

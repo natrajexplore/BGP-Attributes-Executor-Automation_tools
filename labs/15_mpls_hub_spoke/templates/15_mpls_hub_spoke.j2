@@ -1,0 +1,9 @@
+{# Hub and spoke: the RTs decide the topology. Spokes export 1001 and import only the hub's 1000. Importing 1001 on a spoke VRF makes
+   that spoke a member of the spokes' mesh: it learns the other spokes' routes directly (a longer prefix than the hub summary). #}
+{% if rollback %}
+ip vrf SPOKE
+ no route-target import {{ spoke_rt }}
+{% else %}
+ip vrf SPOKE
+ route-target import {{ spoke_rt }}
+{% endif %}

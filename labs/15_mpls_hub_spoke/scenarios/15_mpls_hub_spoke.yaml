@@ -1,0 +1,21 @@
+title: "Hub and spoke - one extra import route-target lets a spoke bypass the firewall"
+attribute: EXTENDED_COMMUNITY
+summary: >
+  Spokes import only the hub's RT (65000:1000), so spoke 2 knows spoke 1 only through the hub's summary 10.0.0.0/8 and
+  its traffic to spoke 1 goes through the firewall. The scenario adds "route-target import 65000:1001" (the spokes' own
+  export RT) to VRF SPOKE at PE2. Spoke 2 now learns 10.1.0.0/24 straight from PE1, a more specific route than the
+  summary, and the traffic no longer visits the hub.
+template: 15_mpls_hub_spoke.j2
+targets: [PE2]
+vars:
+  spoke_rt: "65000:1001"
+soft_clear: true
+settle_seconds: 40
+verify:
+  - device: CE-S2
+    command: "show ip route 10.1.0.0"
+    expect_regex: "Routing entry for 10.1.0.0/24"
+rollback_verify:
+  - device: CE-S2
+    command: "show ip route 10.1.0.0"
+    expect_regex: "Routing entry for 10.0.0.0/8"

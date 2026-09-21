@@ -1,0 +1,10 @@
+{# Shared services (extranet): a service VRF that exports its own RT and imports each customer's RT, while each customer imports
+   the service RT and NOT the other customers' RTs. Both directions are needed: the service side (import customer RT) is in the
+   baseline, this scenario adds the customer side (import the service RT). #}
+{% if rollback %}
+ip vrf CUST-B
+ no route-target import {{ shared_rt }}
+{% else %}
+ip vrf CUST-B
+ route-target import {{ shared_rt }}
+{% endif %}

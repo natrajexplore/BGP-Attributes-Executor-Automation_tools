@@ -1,0 +1,8 @@
+{# allowas-in: accept routes whose AS_PATH already contains this router's own AS. The customer-side alternative to as-override. #}
+router bgp {{ customer_as }}
+ address-family ipv4
+{% if rollback %}
+  no neighbor {{ pe_ip }} allowas-in
+{% else %}
+  neighbor {{ pe_ip }} allowas-in
+{% endif %}

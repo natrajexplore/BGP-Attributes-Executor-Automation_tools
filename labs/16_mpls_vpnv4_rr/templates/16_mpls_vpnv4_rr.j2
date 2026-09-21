@@ -1,0 +1,10 @@
+{# A VPNv4 route reflector usually has no VRFs. By default a router with VPNv4 drops every route whose route-targets no local VRF
+   imports, which on a reflector means ALL of them. 'no bgp default route-target filter' turns that check off. The clear asks the
+   peers to send their routes again so the change takes effect on routes that are already in the table. #}
+router bgp 65000
+{% if rollback %}
+ no bgp default route-target filter
+{% else %}
+ bgp default route-target filter
+{% endif %}
+do clear ip bgp vpnv4 unicast * soft in

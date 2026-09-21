@@ -1,0 +1,5 @@
+CE-S2|show ip route 10.1.0.0
+CE-S2|show ip route 10.100.0.0
+CE-HUB|show ip route 10.1.0.0
+PE3|show ip route vrf HUB-OUT
+PE2|show ip route vrf SPOKE 10.1.0.0

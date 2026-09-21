@@ -1,0 +1,85 @@
+# Lab 15_mpls_hub_spoke: MPLS L3VPN hub and spoke, all spoke-to-spoke traffic through a central firewall
+# Two spokes and a hub site (a firewall) share one VPN. Spokes export RT 65000:1001 and import only 65000:1000; the hub PE has two VRFs: HUB-IN imports 1001
+# (every spoke route goes to the firewall) and HUB-OUT exports 1000 (the firewall's summary 10.0.0.0/8 goes back to every spoke). Spokes never see each other's
+# routes, so their traffic follows the summary to the hub. The scenario makes one spoke import 1001: it then learns the other spoke directly and bypasses the firewall.
+# Generate the EVE-NG file with:  python backend/scripts/build_lab.py --inventory labs/15_mpls_hub_spoke/inventory.yaml --out labs/15_mpls_hub_spoke/15_mpls_hub_spoke.unl
+
+defaults:
+  username: lab
+  password: lab123
+  secret: lab123
+  mgmt_gateway: 192.168.99.1
+  mgmt_mask: 255.255.255.0
+
+lab:
+  name: bgp-attr-15-mpls-hub-spoke
+  uuid: a2c8b6a6-d221-4c58-bd18-d960d5783914
+  template: c7200
+  image: c7200-adventerprisek9-mz.152-4.S6
+  npe: npe-400
+  ram: 256
+  nvram: 128
+  idlepc: "0x606df838"
+  io_adapter: C7200-IO-FE
+  slots: [PA-8E]
+  mgmt_interface: fa0/0
+  mgmt_network:
+    type: pnet1
+    name: MGMT-Cloud1
+
+links:
+  - {a: CE-S1, a_if: e1/0, b: PE1, b_if: e1/1}   # 172.16.1.0/30 eBGP PE-CE, spoke 1
+  - {a: CE-S2, a_if: e1/0, b: PE2, b_if: e1/1}   # 172.16.2.0/30 eBGP PE-CE, spoke 2
+  - {a: CE-HUB, a_if: e1/0, b: PE3, b_if: e1/1}   # 172.16.3.0/30 eBGP, PE3 VRF HUB-IN
+  - {a: CE-HUB, a_if: e1/1, b: PE3, b_if: e1/2}   # 172.16.4.0/30 eBGP, PE3 VRF HUB-OUT
+  - {a: PE1, a_if: e1/0, b: P, b_if: e1/0}   # 10.0.1.0/30 core (OSPF, LDP)
+  - {a: PE2, a_if: e1/0, b: P, b_if: e1/1}   # 10.0.2.0/30 core (OSPF, LDP)
+  - {a: PE3, a_if: e1/0, b: P, b_if: e1/2}   # 10.0.3.0/30 core (OSPF, LDP)
+
+globals:
+  as_provider: 65000
+  as_hub: 65900
+
+devices:
+  CE-S1:
+    role: customer
+    asn: 65101
+    mgmt_ip: 192.168.99.11
+    router_id: 10.255.101.1
+    canvas: [80, 60]
+  CE-S2:
+    role: customer
+    asn: 65102
+    mgmt_ip: 192.168.99.12
+    router_id: 10.255.102.1
+    canvas: [80, 380]
+  CE-HUB:
+    role: customer
+    asn: 65900
+    mgmt_ip: 192.168.99.15
+    router_id: 10.255.190.1
+    canvas: [100, 225]
+  PE1:
+    role: pe
+    asn: 65000
+    mgmt_ip: 192.168.99.21
+    router_id: 10.255.0.1
+    canvas: [250, 60]
+  P:
+    role: core
+    asn: 65000
+    mgmt_ip: 192.168.99.22
+    router_id: 10.255.0.2
+    canvas: [400, 225]
+  PE2:
+    role: pe
+    asn: 65000
+    mgmt_ip: 192.168.99.23
+    router_id: 10.255.0.3
+    canvas: [250, 380]
+  PE3:
+    role: pe
+    asn: 65000
+    mgmt_ip: 192.168.99.24
+    router_id: 10.255.0.4
+    canvas: [550, 225]

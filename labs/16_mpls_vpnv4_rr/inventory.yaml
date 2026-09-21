@@ -1,0 +1,82 @@
+# Lab 16_mpls_vpnv4_rr: MPLS L3VPN at scale, a VPNv4 route reflector and the route-target filter
+# Four PEs peer only with one route reflector (RR) instead of a full mesh. The RR has no VRFs, so it needs 'no bgp default route-target filter' to keep VPNv4 routes
+# that none of its VRFs imports. The scenario restores the default filter on the RR: it drops every VPN route it has no VRF for, and PE1 and PE4 lose each other.
+# Generate the EVE-NG file with:  python backend/scripts/build_lab.py --inventory labs/16_mpls_vpnv4_rr/inventory.yaml --out labs/16_mpls_vpnv4_rr/16_mpls_vpnv4_rr.unl
+
+defaults:
+  username: lab
+  password: lab123
+  secret: lab123
+  mgmt_gateway: 192.168.99.1
+  mgmt_mask: 255.255.255.0
+
+lab:
+  name: bgp-attr-16-mpls-vpnv4-rr
+  uuid: 45994254-6f2d-476f-b253-c821b7d6969c
+  template: c7200
+  image: c7200-adventerprisek9-mz.152-4.S6
+  npe: npe-400
+  ram: 256
+  nvram: 128
+  idlepc: "0x606df838"
+  io_adapter: C7200-IO-FE
+  slots: [PA-8E]
+  mgmt_interface: fa0/0
+  mgmt_network:
+    type: pnet1
+    name: MGMT-Cloud1
+
+links:
+  - {a: PE1, a_if: e1/0, b: RR, b_if: e1/0}   # 10.0.1.0/30 core
+  - {a: PE2, a_if: e1/0, b: RR, b_if: e1/1}   # 10.0.2.0/30 core
+  - {a: PE3, a_if: e1/0, b: RR, b_if: e1/2}   # 10.0.3.0/30 core
+  - {a: PE4, a_if: e1/0, b: RR, b_if: e1/3}   # 10.0.4.0/30 core
+  - {a: CE1, a_if: e1/0, b: PE1, b_if: e1/1}   # 172.16.1.0/30 eBGP PE-CE
+  - {a: CE4, a_if: e1/0, b: PE4, b_if: e1/1}   # 172.16.4.0/30 eBGP PE-CE
+
+globals:
+  as_provider: 65000
+
+devices:
+  CE1:
+    role: customer
+    asn: 65101
+    mgmt_ip: 192.168.99.11
+    router_id: 10.255.101.1
+    canvas: [80, 60]
+  CE4:
+    role: customer
+    asn: 65104
+    mgmt_ip: 192.168.99.14
+    router_id: 10.255.104.1
+    canvas: [80, 380]
+  PE1:
+    role: pe
+    asn: 65000
+    mgmt_ip: 192.168.99.21
+    router_id: 10.255.0.1
+    canvas: [230, 60]
+  PE2:
+    role: pe
+    asn: 65000
+    mgmt_ip: 192.168.99.22
+    router_id: 10.255.0.2
+    canvas: [230, 180]
+  PE3:
+    role: pe
+    asn: 65000
+    mgmt_ip: 192.168.99.23
+    router_id: 10.255.0.3
+    canvas: [230, 270]
+  PE4:
+    role: pe
+    asn: 65000
+    mgmt_ip: 192.168.99.24
+    router_id: 10.255.0.4
+    canvas: [230, 380]
+  RR:
+    role: core
+    asn: 65000
+    mgmt_ip: 192.168.99.30
+    router_id: 10.255.0.10
+    canvas: [400, 225]

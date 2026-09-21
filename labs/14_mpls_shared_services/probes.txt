@@ -1,0 +1,6 @@
+PE2|show ip route vrf SHARED
+PE1|show ip route vrf CUST-A
+PE1|show ip route vrf CUST-B
+CE-B|show ip route 10.9.0.0
+CE-A|show ip route 10.2.0.0
+CE-SVC|show ip route 10.2.0.0

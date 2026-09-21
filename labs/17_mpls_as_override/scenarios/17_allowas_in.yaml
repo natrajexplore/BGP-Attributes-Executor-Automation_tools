@@ -1,0 +1,26 @@
+title: "Same customer AS at both sites - the customer accepts its own AS with allowas-in"
+attribute: AS_PATH
+summary: >
+  The other fix, on the customer's side: "neighbor 172.16.0.1 allowas-in" on both CEs lets each accept a route whose AS_PATH
+  contains its own AS (65000 65100). The provider does not change. Run this scenario from the baseline, not together with 17_as_override.
+template: 17_allowas_in.j2
+targets: [CE1, CE2]
+vars:
+  pe_ip: "172.16.0.1"
+  customer_as: 65100
+soft_clear: true
+settle_seconds: 40
+verify:
+  - device: CE2
+    command: "show ip route 10.1.1.0"
+    expect_regex: "Routing entry for 10.1.1.0/24"
+  - device: CE1
+    command: "show ip route 10.2.1.0"
+    expect_regex: "Routing entry for 10.2.1.0/24"
+rollback_verify:
+  - device: CE2
+    command: "show ip route 10.1.1.0"
+    expect_regex: "not in table"
+  - device: CE1
+    command: "show ip route 10.2.1.0"
+    expect_regex: "not in table"

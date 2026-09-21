@@ -1,0 +1,70 @@
+# Lab 17_mpls_as_override: MPLS L3VPN with the same customer AS at both sites, as-override versus allowas-in
+# The customer uses AS 65100 at both sites. A route from site 1 reaches site 2 with AS_PATH 65000 65100, which contains site 2's own AS, so CE2 discards it (loop prevention)
+# and the VPN is broken in both directions although every session is up. Two fixes, two scenarios: as-override on the PEs (the provider replaces the customer AS)
+# and allowas-in on the CEs (the customer accepts its own AS). Both PE-CE links use 172.16.0.0/30 at each PE, so one template fits both PEs.
+# Generate the EVE-NG file with:  python backend/scripts/build_lab.py --inventory labs/17_mpls_as_override/inventory.yaml --out labs/17_mpls_as_override/17_mpls_as_override.unl
+
+defaults:
+  username: lab
+  password: lab123
+  secret: lab123
+  mgmt_gateway: 192.168.99.1
+  mgmt_mask: 255.255.255.0
+
+lab:
+  name: bgp-attr-17-mpls-as-override
+  uuid: 6d50f2e2-6b43-4074-ae42-c8fb26138bca
+  template: c7200
+  image: c7200-adventerprisek9-mz.152-4.S6
+  npe: npe-400
+  ram: 256
+  nvram: 128
+  idlepc: "0x606df838"
+  io_adapter: C7200-IO-FE
+  slots: [PA-8E]
+  mgmt_interface: fa0/0
+  mgmt_network:
+    type: pnet1
+    name: MGMT-Cloud1
+
+links:
+  - {a: CE1, a_if: e1/0, b: PE1, b_if: e1/1}   # 172.16.0.0/30 eBGP PE-CE, site 1 (AS 65100)
+  - {a: PE1, a_if: e1/0, b: P, b_if: e1/0}   # 10.0.1.0/30 core (OSPF, LDP)
+  - {a: P, a_if: e1/1, b: PE2, b_if: e1/0}   # 10.0.2.0/30 core (OSPF, LDP)
+  - {a: PE2, a_if: e1/1, b: CE2, b_if: e1/0}   # 172.16.0.0/30 eBGP PE-CE, site 2 (AS 65100)
+
+globals:
+  as_provider: 65000
+  as_customer: 65100
+
+devices:
+  CE1:
+    role: customer
+    asn: 65100
+    mgmt_ip: 192.168.99.11
+    router_id: 10.255.101.1
+    canvas: [100, 200]
+  PE1:
+    role: pe
+    asn: 65000
+    mgmt_ip: 192.168.99.21
+    router_id: 10.255.0.1
+    canvas: [300, 200]
+  P:
+    role: core
+    asn: 65000
+    mgmt_ip: 192.168.99.22
+    router_id: 10.255.0.2
+    canvas: [500, 200]
+  PE2:
+    role: pe
+    asn: 65000
+    mgmt_ip: 192.168.99.23
+    router_id: 10.255.0.3
+    canvas: [700, 200]
+  CE2:
+    role: customer
+    asn: 65100
+    mgmt_ip: 192.168.99.12
+    router_id: 10.255.102.1
+    canvas: [900, 200]

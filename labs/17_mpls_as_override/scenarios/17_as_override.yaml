@@ -1,0 +1,26 @@
+title: "Same customer AS at both sites - the provider replaces the customer AS with as-override"
+attribute: AS_PATH
+summary: >
+  Both customer sites are AS 65100, so each CE drops the other site's routes because its own AS is in the path (65000 65100).
+  The scenario adds "neighbor 172.16.0.2 as-override" on both PEs: the PE replaces 65100 in the path with its own AS 65000 when it
+  sends a route to the CE, so the path is 65000 65000 and the CE accepts it.
+template: 17_as_override.j2
+targets: [PE1, PE2]
+vars:
+  ce_ip: "172.16.0.2"
+soft_clear: true
+settle_seconds: 45
+verify:
+  - device: CE2
+    command: "show ip route 10.1.1.0"
+    expect_regex: "Routing entry for 10.1.1.0/24"
+  - device: CE1
+    command: "show ip route 10.2.1.0"
+    expect_regex: "Routing entry for 10.2.1.0/24"
+rollback_verify:
+  - device: CE2
+    command: "show ip route 10.1.1.0"
+    expect_regex: "not in table"
+  - device: CE1
+    command: "show ip route 10.2.1.0"
+    expect_regex: "not in table"

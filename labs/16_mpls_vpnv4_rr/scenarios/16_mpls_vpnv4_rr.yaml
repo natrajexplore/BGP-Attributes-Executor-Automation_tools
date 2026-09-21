@@ -1,0 +1,25 @@
+title: "VPNv4 route reflector - restoring the route-target filter on a reflector with no VRFs"
+attribute: EXTENDED_COMMUNITY
+summary: >
+  The RR has no VRFs and reflects VPNv4 routes for four PEs. It works because the RR runs "no bgp default route-target
+  filter", which stops it dropping routes that none of its own VRFs import. The scenario puts the default filter back
+  ("bgp default route-target filter") and refreshes: the RR discards every VPN route, so PE1 and PE4 lose each other.
+template: 16_mpls_vpnv4_rr.j2
+targets: [RR]
+vars: {}
+soft_clear: true
+settle_seconds: 40
+verify:
+  - device: PE1
+    command: "show ip route vrf CUST 10.4.0.0"
+    expect_regex: "not in table"
+  - device: RR
+    command: "show bgp vpnv4 unicast all 10.4.0.0/24"
+    expect_regex: "not in table"
+rollback_verify:
+  - device: PE1
+    command: "show ip route vrf CUST 10.4.0.0"
+    expect_regex: "Routing entry for 10.4.0.0/24"
+  - device: RR
+    command: "show bgp vpnv4 unicast all 10.4.0.0/24"
+    expect_regex: "1 available"
