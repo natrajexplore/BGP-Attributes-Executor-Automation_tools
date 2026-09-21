@@ -1,6 +1,6 @@
 # 16_mpls_vpnv4_rr: all device configurations
 
-MPLS L3VPN at scale, a VPNv4 route reflector and the route-target filter
+MPLS L3VPN at scale, a VPNv4 route reflector and client status
 
 Everything below is generated from `inventory.yaml`, `baseline/*.cfg`, and `scenarios/` + `templates/` of this lab. The topology, README and the
 captured output are in `README.md`.
