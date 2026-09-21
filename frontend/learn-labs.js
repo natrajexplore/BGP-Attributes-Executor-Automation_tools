@@ -37,4 +37,12 @@ window.LEARN_LABS = {
   "11_cluster_list": { title: "A two-tier reflector hierarchy", routers: 5,
     what: "RR-TOP with a regional reflector for Europe and one for the US, each with a leaf. A route crosses three reflectors and collects three cluster-IDs. Giving RR-US the same cluster-ID as RR-TOP makes the reflectors discard each other's routes, in both directions.",
     scenarios: [["11_cluster_list", "RR-US takes RR-TOP's cluster-ID"]] },
+  "12_mpls_l3vpn": { title: "One customer, two sites over an MPLS core", routers: 5,
+    what: "CE1 - PE1 - P - PE2 - CE2. LDP labels the core, PE1 and PE2 exchange the customer's routes over iBGP address-family vpnv4 (RD and RT 65000:1), and each customer edge runs plain eBGP to its PE. The scenario mistypes PE2's import route-target: the route vanishes and the ping fails while every session stays up.",
+    extra: "The P router has no BGP and no customer routes. A wrong import RT removes the prefix from the VPNv4 table completely, because a PE drops routes that no VRF imports.",
+    scenarios: [["12_mpls_l3vpn", "PE2 imports route-target 65000:11 instead of 65000:1"]] },
+  "13_mpls_overlap": { title: "Two customers with the same 10.1.0.0/24", routers: 7,
+    what: "Customers A and B both use 10.1.0.0/24. Different RDs make two VPNv4 routes, different RTs keep each in its own VRF, and different VPN labels (19 and 20) separate the traffic. The scenario adds A's route-target to B's export list on PE2, and B's second site leaks into A's VRF and into A's router.",
+    extra: "Seven routers: allow more time for bootstrap. The leak changes no session and logs nothing, which is why the RT lists need audits.",
+    scenarios: [["13_mpls_overlap", "PE2 exports customer B's routes with customer A's route-target too"]] },
 };

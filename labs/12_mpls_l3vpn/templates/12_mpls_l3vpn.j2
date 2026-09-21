@@ -1,0 +1,11 @@
+{# L3VPN - the import route-target decides which VPNv4 routes a VRF accepts. The route is still in the BGP VPNv4 table
+   (the peer sent it), but a VRF whose import RT does not match ignores it, so the VRF routing table loses it. #}
+{% if rollback %}
+ip vrf CUST
+ no route-target import {{ wrong_rt }}
+ route-target import {{ right_rt }}
+{% else %}
+ip vrf CUST
+ no route-target import {{ right_rt }}
+ route-target import {{ wrong_rt }}
+{% endif %}

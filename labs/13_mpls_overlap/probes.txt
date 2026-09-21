@@ -1,0 +1,5 @@
+PE2|show bgp vpnv4 unicast all 10.1.0.0/24
+PE1|show ip route vrf CUST-A 10.3.0.0
+PE1|show ip route vrf CUST-B 10.3.0.0
+CE-A1|show ip route 10.3.0.0
+PE2|show bgp vpnv4 unicast all summary

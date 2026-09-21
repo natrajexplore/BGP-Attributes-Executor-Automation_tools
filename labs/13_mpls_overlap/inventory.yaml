@@ -1,0 +1,83 @@
+# Lab 13_mpls_overlap: MPLS L3VPN, two customers with the same 10.1.0.0/24, and a route-target leak
+# Two customers (A and B) both use 10.1.0.0/24 at their first site. RD makes the two VPNv4 routes distinct (65000:100 vs 65000:200),
+# RT keeps each customer inside its own VRF, and the labels keep the traffic apart. The scenario adds customer A's RT as an export
+# on customer B's VRF at PE2, so B's second-site prefix leaks into A's VRF at PE1; rollback closes the leak.
+# Generate the EVE-NG file with:  python backend/scripts/build_lab.py --inventory labs/13_mpls_overlap/inventory.yaml --out labs/13_mpls_overlap/13_mpls_overlap.unl
+
+defaults:
+  username: lab
+  password: lab123
+  secret: lab123
+  mgmt_gateway: 192.168.99.1
+  mgmt_mask: 255.255.255.0
+
+lab:
+  name: bgp-attr-13-mpls-overlap
+  uuid: 8315e52c-fd83-4bba-97a5-bb22ecba66cd
+  template: c7200
+  image: c7200-adventerprisek9-mz.152-4.S6
+  npe: npe-400
+  ram: 256
+  nvram: 128
+  idlepc: "0x606df838"
+  io_adapter: C7200-IO-FE
+  slots: [PA-8E]
+  mgmt_interface: fa0/0
+  mgmt_network:
+    type: pnet1
+    name: MGMT-Cloud1
+
+links:
+  - {a: CE-A1, a_if: e1/0, b: PE1, b_if: e1/1}   # 172.16.1.0/30 eBGP PE-CE, customer A site 1
+  - {a: CE-B1, a_if: e1/0, b: PE1, b_if: e1/2}   # 172.16.2.0/30 eBGP PE-CE, customer B site 1
+  - {a: PE1, a_if: e1/0, b: P, b_if: e1/0}   # 10.0.1.0/30 core (OSPF, LDP)
+  - {a: P, a_if: e1/1, b: PE2, b_if: e1/0}   # 10.0.2.0/30 core (OSPF, LDP)
+  - {a: PE2, a_if: e1/1, b: CE-A2, b_if: e1/0}   # 172.16.3.0/30 eBGP PE-CE, customer A site 2
+  - {a: PE2, a_if: e1/2, b: CE-B2, b_if: e1/0}   # 172.16.4.0/30 eBGP PE-CE, customer B site 2
+
+globals:
+  as_provider: 65000
+
+devices:
+  CE-A1:
+    role: customer
+    asn: 65101
+    mgmt_ip: 192.168.99.11
+    router_id: 10.255.101.1
+    canvas: [100, 100]
+  CE-B1:
+    role: customer
+    asn: 65201
+    mgmt_ip: 192.168.99.13
+    router_id: 10.255.201.1
+    canvas: [100, 350]
+  PE1:
+    role: pe
+    asn: 65000
+    mgmt_ip: 192.168.99.21
+    router_id: 10.255.0.1
+    canvas: [300, 225]
+  P:
+    role: core
+    asn: 65000
+    mgmt_ip: 192.168.99.22
+    router_id: 10.255.0.2
+    canvas: [500, 225]
+  PE2:
+    role: pe
+    asn: 65000
+    mgmt_ip: 192.168.99.23
+    router_id: 10.255.0.3
+    canvas: [700, 225]
+  CE-A2:
+    role: customer
+    asn: 65102
+    mgmt_ip: 192.168.99.12
+    router_id: 10.255.102.1
+    canvas: [900, 100]
+  CE-B2:
+    role: customer
+    asn: 65202
+    mgmt_ip: 192.168.99.14
+    router_id: 10.255.202.1
+    canvas: [900, 350]

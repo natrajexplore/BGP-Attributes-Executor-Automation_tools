@@ -1,0 +1,71 @@
+# Lab 12_mpls_l3vpn: MPLS L3VPN basics, one customer, two sites over an MPLS core
+# A provider (AS 65000) connects one customer's two sites over an MPLS core: CE1 - PE1 - P - PE2 - CE2. PE1 and PE2 run
+# iBGP address-family vpnv4 between loopbacks, LDP labels the core, and each PE holds the customer in VRF CUST (RD and RT 65000:1).
+# The scenario mistypes the import route-target on PE2: the site-1 route stops arriving, the VPN breaks, and rollback restores it.
+# Generate the EVE-NG file with:  python backend/scripts/build_lab.py --inventory labs/12_mpls_l3vpn/inventory.yaml --out labs/12_mpls_l3vpn/12_mpls_l3vpn.unl
+
+defaults:
+  username: lab
+  password: lab123
+  secret: lab123
+  mgmt_gateway: 192.168.99.1
+  mgmt_mask: 255.255.255.0
+
+lab:
+  name: bgp-attr-12-mpls-l3vpn
+  uuid: b7df74ea-4f3b-430e-bc80-a6c69c177651
+  template: c7200
+  image: c7200-adventerprisek9-mz.152-4.S6
+  npe: npe-400
+  ram: 256
+  nvram: 128
+  idlepc: "0x606df838"
+  io_adapter: C7200-IO-FE
+  slots: [PA-8E]
+  mgmt_interface: fa0/0
+  mgmt_network:
+    type: pnet1
+    name: MGMT-Cloud1
+
+links:
+  - {a: CE1, a_if: e1/0, b: PE1, b_if: e1/1}   # 172.16.1.0/30 eBGP PE-CE, customer site 1
+  - {a: PE1, a_if: e1/0, b: P, b_if: e1/0}   # 10.0.1.0/30 core (OSPF, LDP)
+  - {a: P, a_if: e1/1, b: PE2, b_if: e1/0}   # 10.0.2.0/30 core (OSPF, LDP)
+  - {a: PE2, a_if: e1/1, b: CE2, b_if: e1/0}   # 172.16.2.0/30 eBGP PE-CE, customer site 2
+
+globals:
+  as_provider: 65000
+  as_customer_site1: 65101
+  as_customer_site2: 65102
+
+devices:
+  CE1:
+    role: customer
+    asn: 65101
+    mgmt_ip: 192.168.99.11
+    router_id: 10.255.101.1
+    canvas: [100, 200]
+  PE1:
+    role: pe
+    asn: 65000
+    mgmt_ip: 192.168.99.21
+    router_id: 10.255.0.1
+    canvas: [300, 200]
+  P:
+    role: core
+    asn: 65000
+    mgmt_ip: 192.168.99.22
+    router_id: 10.255.0.2
+    canvas: [500, 200]
+  PE2:
+    role: pe
+    asn: 65000
+    mgmt_ip: 192.168.99.23
+    router_id: 10.255.0.3
+    canvas: [700, 200]
+  CE2:
+    role: customer
+    asn: 65102
+    mgmt_ip: 192.168.99.12
+    router_id: 10.255.102.1
+    canvas: [900, 200]

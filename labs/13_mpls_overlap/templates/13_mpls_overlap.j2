@@ -1,0 +1,9 @@
+{# L3VPN - the RTs a VRF EXPORTS decide which other VRFs may import its routes. Adding customer A's RT to customer B's
+   export list makes every VRF that imports A's RT (VRF CUST-A on PE1) accept B's routes as well. #}
+{% if rollback %}
+ip vrf CUST-B
+ no route-target export {{ leak_rt }}
+{% else %}
+ip vrf CUST-B
+ route-target export {{ leak_rt }}
+{% endif %}

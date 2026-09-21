@@ -1,0 +1,19 @@
+title: "L3VPN - one extra export route-target leaks customer B into customer A"
+attribute: EXTENDED_COMMUNITY
+summary: >
+  Customer B's second site (10.3.0.0/24) is exported by PE2 with route-target 65000:200, which only VRF CUST-B imports.
+  The scenario adds customer A's route-target 65000:100 as a second export on VRF CUST-B at PE2. PE1's VRF CUST-A now
+  imports 10.3.0.0/24 and customer A's router learns a network that belongs to customer B. Rollback removes the extra export.
+template: 13_mpls_overlap.j2
+targets: [PE2]
+vars:
+  leak_rt: "65000:100"
+soft_clear: true
+settle_seconds: 40
+verify:
+  - device: PE1
+    command: "show ip route vrf CUST-A 10.3.0.0"
+    expect_regex: "Routing entry for 10.3.0.0/24"
+  - device: CE-A1
+    command: "show ip route 10.3.0.0"
+    expect_regex: "Routing entry for 10.3.0.0/24"

@@ -24,6 +24,17 @@ scenario and a generated `.unl`. They are **not** served by the dashboard: you d
 | `10_originator_id/` | Route reflector with three clients, plus a duplicate router-ID (two scenarios) | Tested on the lab |
 | `11_cluster_list/` | Two-tier reflector hierarchy and a cluster-ID clash between tiers | Tested on the lab |
 
+### MP-BGP and MPLS VPN labs (IPv4 unicast + VPNv4)
+
+Small MPLS cores (PE, P and customer routers, all c7200) for the "MP-BGP and MPLS VPN" section of the Learn tab. Each has
+the same folder layout and is driven with the same `labtool.sh` commands. They need `mpls` and VPNv4 support in the image
+(checked on `c7200-adventerprisek9-mz.152-4.S6`). Bootstrap of the 5 to 7 routers takes several minutes.
+
+| Lab | Use case | Status |
+|---|---|---|
+| `12_mpls_l3vpn/` | One customer, two sites over an MPLS core (LDP, VPNv4, VRF); a mistyped import route-target breaks one direction | Tested on the lab |
+| `13_mpls_overlap/` | Two customers with the same 10.1.0.0/24 (RD, RT, labels); one extra export route-target leaks a customer into another | Tested on the lab |
+
 Each folder's `README.md` has the topology, addressing, commands and the router output captured while testing it.
 
 ### Running one

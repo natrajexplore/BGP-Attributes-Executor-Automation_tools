@@ -414,6 +414,13 @@ router bgp 65000
     },
   ];
 
+  /* MP-BGP / MPLS VPN pages: metadata in learn-mp.js, diagrams described as data (drawn here), content in learn-mp-content.js */
+  const MP = window.LEARN_MP || [];
+  const ALL = ATTRS.concat(MP);
+  const diag = d => (typeof d === "function" ? d() : d.decision ? decision(d.decision) : topo(d.topo));
+  const numLabel = a => (a.mp ? "M" + (MP.indexOf(a) + 1) : String(ATTRS.indexOf(a) + 1).padStart(2, "0"));
+  const groupOf = a => (a.mp ? MP : ATTRS);
+
   /* ---------- rendering ---------- */
   const section = (title, body) => `<section class="ls"><h3>${esc(title)}</h3>${body}</section>`;
   const list = a => `<ul>${a.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`;
@@ -442,9 +449,9 @@ router bgp 65000
 
   /* the lab's README.md, served read-only by the dashboard (/api/labs/<id>/readme) and rendered by learn-md.js */
   async function renderLabPage(el, a) {
-    const L = (window.LEARN_LABS || {})[a.id], i = ATTRS.indexOf(a);
-    el.innerHTML = `<div class="crumbs"><a href="#learn">All attributes</a> / <a href="#learn/${esc(a.id)}/practitioner">${esc(a.name)}</a> / Lab topology</div>` +
-      `<h2>${String(i + 1).padStart(2, "0")} · ${esc(a.name)} <span class="chip">Lab topology${L ? " · " + L.routers + " routers" : ""}</span></h2>` +
+    const L = (window.LEARN_LABS || {})[a.id];
+    el.innerHTML = `<div class="crumbs"><a href="#learn">${a.mp ? "Learn" : "All attributes"}</a> / <a href="#learn/${esc(a.id)}/practitioner">${esc(a.name)}</a> / Lab topology</div>` +
+      `<h2>${numLabel(a)} · ${esc(a.name)} <span class="chip">Lab topology${L ? " · " + L.routers + " routers" : ""}</span></h2>` +
       `<div class="lvl"><a href="#learn/${esc(a.id)}/practitioner">&larr; Back to ${esc(a.name)}: Practitioner</a><a href="/api/labs/${esc(a.id)}/zip" download="${esc(a.id)}.zip" style="margin-left:auto" title="The .unl inside a zip: the form EVE's Import button accepts">Download .zip (for EVE Import)</a><a href="/api/labs/${esc(a.id)}/unl" download="${esc(a.id)}.unl" title="The bare EVE-NG topology file, to copy into /opt/unetlab/labs">Download .unl</a><a href="${LABS_URL}${esc(a.id)}" target="_blank" rel="noopener">Files on GitHub &#8599;</a></div>` +
       `<div class="md" id="lab-md"><p class="hint">Loading the lab README…</p></div>`;
     const box = el.querySelector("#lab-md");
@@ -520,6 +527,8 @@ router bgp 65000
       if (s.type === "show") {
         h += `<div class="run"><code>${esc(s.device)}# ${esc(s.cmd)}</code><button class="ghost runshow" data-i="${i}">Run on ${esc(s.device)}</button><span class="chk"></span></div>` +
           `<pre class="out" hidden></pre>` + (s.expectText ? `<small class="exp">Expect: ${esc(s.expectText)}</small>` : "");
+      } else if (s.type === "guided") {
+        h += `<div class="run"><code>${esc(s.device)}# ${esc(s.cmd)}</code></div><pre class="out">${esc(s.output)}</pre>`;
       } else if (s.type === "scenario") {
         h += `<div class="run"><button class="primary runscn" data-i="${i}">${s.mode === "rollback" ? "Roll back" : "Apply"} scenario ${esc(s.id)}</button><span class="chk"></span></div>`;
       }
@@ -586,8 +595,8 @@ router bgp 65000
 
   /* ---- cheat-sheets (generated from the same data as the pages) ---- */
   function cheatMd(a) {
-    const c = CONTENT(a.id), n = ATTRS.indexOf(a) + 1;
-    let m = `# ${String(n).padStart(2, "0")} ${a.name} - cheat sheet\n\n${a.tag}\n\n- Scope: ${a.scope}\n- Default: ${a.dflt}\n- Type: ${a.type}\n- Best-path step: ${a.step || "not a tie-breaker (" + (a.stepNote || "policy / signal") + ")"}\n\n`;
+    const c = CONTENT(a.id), n = a.mp ? numLabel(a) : String(ATTRS.indexOf(a) + 1).padStart(2, "0");
+    let m = `# ${n} ${a.name} - cheat sheet\n\n${a.tag}\n\n- Scope: ${a.scope}\n- Default: ${a.dflt}\n- Type: ${a.type}\n${a.mp ? "" : "- Best-path step: " + (a.step || "not a tie-breaker (" + (a.stepNote || "policy / signal") + ")") + "\n"}\n`;
     m += `## What it is\n${a.what.map(x => "- " + x).join("\n")}\n\n## Configuration (IOS)\n\`\`\`\n${a.config}\n\`\`\`\n\n## Verify\n\`\`\`\n${a.verify.join("\n")}\n\`\`\`\n\n## Production pitfalls\n${a.pitfalls.map(x => "- " + x).join("\n")}\n`;
     const L = (window.LEARN_LABS || {})[a.id];
     if (L) m += `\n## Lab topology (${L.routers} routers): ${L.title}\n${L.what}\n\n\`\`\`\n${labCommands(a.id, L.scenarios)}\n\`\`\`\nFiles: ${LABS_URL}${a.id}\n`;
@@ -605,14 +614,16 @@ router bgp 65000
 
   /* ---- pages ---- */
   function renderOverview(el) {
-    const total = ATTRS.length * 3, done = ATTRS.reduce((s, a) => s + LEVELS.filter(([lv]) => CONTENT(a.id)[lv] && levelDone(a.id, lv)).length, 0);
+    const total = ALL.length * 3, done = ALL.reduce((s, a) => s + LEVELS.filter(([lv]) => CONTENT(a.id)[lv] && levelDone(a.id, lv)).length, 0);
     el.innerHTML = `<h2>BGP path attributes · from scratch to pro</h2>
       <p class="lead">Eleven attributes, three levels each. <b>Foundations</b> explains what the attribute is and where it sits in path selection. <b>Practitioner</b> is the enterprise use case with config, verification and a hands-on exercise on the lab routers. <b>Pro</b> is tactics and tricks, interactions with other attributes, a troubleshooting drill and a harder quiz. Use the <a href="#learn/simulator">best-path simulator</a> to see why one route beats another.</p>
       <p class="hint"><b>Two kinds of lab.</b> The hands-on exercises run on the <b>shared 8-router lab</b>, the same one the Lab tab uses, so you can try them from this page. Each attribute also has its own small <b>lab topology</b> (3 to 6 routers) built around its use case: see the "Lab topology" section on its Practitioner page. Those are separate EVE-NG labs that you start with <code>labs/labtool.sh</code>, and they must never run at the same time as the shared lab.</p>
       <div class="tryit"><span>Progress in this browser: ${done} of ${total} levels completed.</span><a class="btn" href="#learn/simulator">Open the simulator</a>
         <button class="ghost" id="dl-bp">Best-path cheat-sheet</button><button class="ghost" id="dl-all">All cheat-sheets</button></div>
       <h3 style="margin-top:18px">How BGP picks the best path (Cisco order)</h3>${orderStrip(null, "Attributes lower in the list only matter when everything above them ties. NEXT_HOP, ATOMIC_AGGREGATE, AGGREGATOR and COMMUNITY are not decision steps: they signal reachability, path detail, or policy.")}
-      <div class="cards">${ATTRS.map((a, i) => `<a class="acard" href="#learn/${a.id}"><b>${String(i + 1).padStart(2, "0")} ${esc(a.name)}</b><span>${esc(a.tag)}</span><small>${a.step ? "Best-path step " + a.step : "Policy / signal"}</small>${dots(a.id)}</a>`).join("")}</div>`;
+      <div class="cards">${ATTRS.map((a, i) => `<a class="acard" href="#learn/${a.id}"><b>${String(i + 1).padStart(2, "0")} ${esc(a.name)}</b><span>${esc(a.tag)}</span><small>${a.step ? "Best-path step " + a.step : "Policy / signal"}</small>${dots(a.id)}</a>`).join("")}</div>` +
+      (MP.length ? `<h3 style="margin-top:22px">MP-BGP and MPLS VPN · IPv4 unicast and VPNv4</h3><p class="hint">The same three levels for multiprotocol BGP: address families first, then VRF, RD, RT and labels, then production use cases, each with its own lab (labs 12 and up). Exercises here are guided: they show real output captured from the lab, they do not run on the dashboard.</p>` +
+        `<div class="cards">${MP.map(a => `<a class="acard" href="#learn/${a.id}"><b>${numLabel(a)} ${esc(a.name)}</b><span>${esc(a.tag)}</span><small>${(window.LEARN_LABS || {})[a.id] ? "Lab: " + window.LEARN_LABS[a.id].routers + " routers" : "Concept page"}</small>${dots(a.id)}</a>`).join("")}</div>` : "");
     el.querySelector("#dl-bp").onclick = () => download("bgp-best-path-cheatsheet.md", bestPathMd());
     el.querySelector("#dl-all").onclick = () => download("bgp-attributes-cheatsheets.md", bestPathMd() + "\n---\n\n" + ATTRS.map(cheatMd).join("\n---\n\n"));
   }
@@ -622,21 +633,21 @@ router bgp 65000
   function foundations(a, c) {
     const f = c.foundations || {};
     return `<div class="facts"><div><small>Scope</small>${esc(a.scope)}</div><div><small>Default</small>${esc(a.dflt)}</div><div><small>Type</small>${esc(a.type)}</div></div>` +
-      section("Where it sits in path selection", orderStrip(a.step, a.stepNote)) +
+      (a.mp ? "" : section("Where it sits in path selection", orderStrip(a.step, a.stepNote))) +
       section("What it is", list(a.what)) + (f.theory ? section("The theory in more depth", paras(f.theory)) : "") +
-      section("How it works", `<div class="dgw">${a.mech()}</div>`) +
+      section("How it works", `<div class="dgw">${diag(a.mech)}</div>`) +
       (f.example ? section("Worked example · " + f.example.title, `<p>${esc(f.example.text)}</p>` + (f.example.output ? code(f.example.output) : "")) : "") +
       (f.basicConfig ? section("Basic configuration (IOS)", code(f.basicConfig)) : "") +
       (f.quiz ? section("Check your understanding", quizHtml(f.quiz, `${a.id}:foundations:quiz`)) : "");
   }
   function practitioner(a, c) {
     const p = c.practitioner || {};
-    return section("Enterprise use case · " + a.useTitle, `<p>${esc(a.useText)}</p><div class="dgw">${a.use()}</div>`) +
+    return section("Enterprise use case · " + a.useTitle, `<p>${esc(a.useText)}</p><div class="dgw">${diag(a.use)}</div>`) +
       section("Configuration (IOS)", code(a.config)) + section("Verify", code(a.verify.join("\n"))) + section("Production pitfalls", list(a.pitfalls)) +
       (p.tactics ? section("Practical tactics", p.tactics.map(t => `<h4>${esc(t.title)}</h4><p>${esc(t.text)}</p>` + (t.config ? code(t.config) : "")).join("")) : "") +
-      (p.exercise ? section("Hands-on exercise · " + p.exercise.title, `<p class="hint">Runs on the shared 8-router lab (the same one as the Lab tab) through the buttons below.</p>` + exerciseHtml(p.exercise, a.id)) : "") +
+      (p.exercise ? section("Hands-on exercise · " + p.exercise.title, (a.mp ? `<p class="hint">Guided: every step shows the output captured from the real lab. The dashboard drives only the shared 8-router lab, so these steps do not run from this page.</p>` : `<p class="hint">Runs on the shared 8-router lab (the same one as the Lab tab) through the buttons below.</p>`) + exerciseHtml(p.exercise, a.id)) : "") +
       labSection(a) +
-      `<div class="tryit"><span>Or run the whole scenario from the Lab tab, with before/after diffs.</span><button class="primary" id="tryLab">Open scenario ${esc(a.id)} in Lab</button></div>`;
+      (a.mp ? "" : `<div class="tryit"><span>Or run the whole scenario from the Lab tab, with before/after diffs.</span><button class="primary" id="tryLab">Open scenario ${esc(a.id)} in Lab</button></div>`);
   }
   function pro(a, c) {
     const p = c.pro;
@@ -649,11 +660,11 @@ router bgp 65000
   }
 
   function renderAttr(el, a, level) {
-    const i = ATTRS.indexOf(a), prev = ATTRS[i - 1], next = ATTRS[i + 1], c = CONTENT(a.id);
+    const G = groupOf(a), i = G.indexOf(a), prev = G[i - 1], next = G[i + 1], c = CONTENT(a.id);
     level = LEVELS.some(([lv]) => lv === level) ? level : "foundations";
     const body = { foundations, practitioner, pro }[level](a, c);
-    el.innerHTML = `<div class="crumbs"><a href="#learn">All attributes</a> / ${esc(a.name)}</div>
-      <h2>${String(i + 1).padStart(2, "0")} · ${esc(a.name)} <span class="chip">${esc(a.tag)}</span></h2>
+    el.innerHTML = `<div class="crumbs"><a href="#learn">${a.mp ? "Learn" : "All attributes"}</a> / ${esc(a.name)}</div>
+      <h2>${numLabel(a)} · ${esc(a.name)} <span class="chip">${esc(a.tag)}</span></h2>
       <div class="lvl">${LEVELS.map(([lv, lb], k) => `<a class="${lv === level ? "on" : ""}" href="#learn/${a.id}/${lv}"><b>${k + 1}</b> ${lb}${c[lv] && levelDone(a.id, lv) ? ' <span class="tick">✓</span>' : ""}</a>`).join("")}
         <button class="ghost" id="dl-cs" title="Download a Markdown cheat-sheet for ${esc(a.name)}">Cheat-sheet ↓</button></div>
       ${body}
@@ -678,7 +689,8 @@ router bgp 65000
 
   function navHtml(id) {
     return `<a class="${!id ? "on" : ""}" href="#learn">Overview</a><a class="${id === "simulator" ? "on" : ""}" href="#learn/simulator">Best-path simulator</a><hr>` +
-      ATTRS.map((a, i) => `<a class="${a.id === id ? "on" : ""}" href="#learn/${a.id}"><b>${String(i + 1).padStart(2, "0")}</b> ${esc(a.name)}${dots(a.id)}</a>`).join("");
+      ATTRS.map(a => `<a class="${a.id === id ? "on" : ""}" href="#learn/${a.id}"><b>${numLabel(a)}</b> ${esc(a.name)}${dots(a.id)}</a>`).join("") +
+      (MP.length ? `<hr><small class="navh">MP-BGP and MPLS VPN</small>` + MP.map(a => `<a class="${a.id === id ? "on" : ""}" href="#learn/${a.id}"><b>${numLabel(a)}</b> ${esc(a.name)}${dots(a.id)}</a>`).join("") : "");
   }
   const refreshNav = () => {
     const p = location.hash.split("/"); document.getElementById("learn-nav").innerHTML = navHtml(p[1] || "");
@@ -691,7 +703,7 @@ router bgp 65000
   function renderLearn() {
     const nav = document.getElementById("learn-nav"), body = document.getElementById("learn-body"), parts = location.hash.split("/"), id = parts[1] || "";
     nav.innerHTML = navHtml(id);
-    const a = ATTRS.find(x => x.id === id);
+    const a = ALL.find(x => x.id === id);
     if (id === "simulator" && window.BGPSim) window.BGPSim.mount(body);
     else if (a && parts[2] === "lab") renderLabPage(body, a);
     else if (a) renderAttr(body, a, parts[2]);

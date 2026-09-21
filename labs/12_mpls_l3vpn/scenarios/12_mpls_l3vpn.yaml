@@ -1,0 +1,27 @@
+title: "L3VPN - a mistyped import route-target silently breaks one direction of the VPN"
+attribute: MP_REACH_NLRI
+summary: >
+  PE2 imports route-target 65000:1 into VRF CUST, which is how it learns site 1's prefix from PE1. The scenario
+  changes PE2's import RT to 65000:11 (a typo). The VPNv4 route still arrives at PE2, but no VRF imports it, so
+  the route vanishes from VRF CUST and site 2 loses site 1. Rollback restores the import RT.
+template: 12_mpls_l3vpn.j2
+targets: [PE2]
+vars:
+  wrong_rt: "65000:11"
+  right_rt: "65000:1"
+soft_clear: true
+settle_seconds: 20
+verify:
+  - device: PE2
+    command: "show bgp vpnv4 unicast all 10.1.1.0/24"
+    expect_regex: "not in table|no best path"
+  - device: PE2
+    command: "show ip route vrf CUST 10.1.1.0"
+    expect_regex: "not in table"
+rollback_verify:
+  - device: PE2
+    command: "show bgp vpnv4 unicast all 10.1.1.0/24"
+    expect_regex: "1 available, best #1, table CUST"
+  - device: PE2
+    command: "show ip route vrf CUST 10.1.1.0"
+    expect_regex: "Routing entry for 10.1.1.0/24"
