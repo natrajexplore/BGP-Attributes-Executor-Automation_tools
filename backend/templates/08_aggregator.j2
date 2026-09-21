@@ -1,0 +1,14 @@
+{# AGGREGATOR / AS_SET - same aggregate as scenario 07 but WITH 'as-set'. The
+   aggregate now carries an AS_SET {..} built from the component AS_PATHs, so
+   ATOMIC_AGGREGATE is NOT set, while the AGGREGATOR attribute (AS 65000 +
+   router-id 10.255.0.11) still identifies who built it. #}
+{% if rollback %}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  no aggregate-address {{ enterprise_aggregate_net }} {{ enterprise_aggregate_mask }} as-set summary-only
+{% else %}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  no aggregate-address {{ enterprise_aggregate_net }} {{ enterprise_aggregate_mask }} summary-only
+  aggregate-address {{ enterprise_aggregate_net }} {{ enterprise_aggregate_mask }} as-set summary-only
+{% endif %}

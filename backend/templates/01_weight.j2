@@ -1,0 +1,16 @@
+{# WEIGHT - local to EDGE2. Prefer the iBGP path (out via EDGE1/ISP-A) over the
+   local eBGP path from ISP-B for all iBGP-learned prefixes. #}
+{% if rollback %}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  no neighbor {{ rr1_loopback }} route-map IBGP-WEIGHT in
+  no neighbor {{ rr2_loopback }} route-map IBGP-WEIGHT in
+no route-map IBGP-WEIGHT
+{% else %}
+route-map IBGP-WEIGHT permit 10
+ set weight {{ weight }}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  neighbor {{ rr1_loopback }} route-map IBGP-WEIGHT in
+  neighbor {{ rr2_loopback }} route-map IBGP-WEIGHT in
+{% endif %}

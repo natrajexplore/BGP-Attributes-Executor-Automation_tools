@@ -1,0 +1,23 @@
+{# COMMUNITY - EDGE1 summarises to 10.10.0.0/16 and tags it toward ISP-A with a
+   well-known community (no-export) plus a custom value an ISP would map to a
+   local-preference policy. 'send-community' must be enabled for the neighbor. #}
+{% if rollback %}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  no neighbor {{ ispa_neighbor }} route-map ISPA-COMM out
+  no neighbor {{ ispa_neighbor }} send-community
+  no aggregate-address {{ enterprise_aggregate_net }} {{ enterprise_aggregate_mask }} summary-only
+no route-map ISPA-COMM
+no ip prefix-list AGG9
+{% else %}
+ip prefix-list AGG9 permit {{ enterprise_aggregate }}
+route-map ISPA-COMM permit 10
+ match ip address prefix-list AGG9
+ set community {{ community }} no-export additive
+route-map ISPA-COMM permit 20
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  aggregate-address {{ enterprise_aggregate_net }} {{ enterprise_aggregate_mask }} summary-only
+  neighbor {{ ispa_neighbor }} send-community
+  neighbor {{ ispa_neighbor }} route-map ISPA-COMM out
+{% endif %}

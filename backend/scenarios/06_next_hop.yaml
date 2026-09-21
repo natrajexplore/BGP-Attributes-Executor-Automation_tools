@@ -1,0 +1,18 @@
+title: "NEXT_HOP - dropping next-hop-self makes the route unresolvable"
+attribute: NEXT_HOP
+summary: >
+  EDGE1 stops rewriting the NEXT_HOP for iBGP peers. The unchanged eBGP
+  next-hop 172.16.12.1 is not reachable via OSPF, so CORE-RR1 marks the EDGE1 path
+  for the content prefix "(inaccessible)" and never reflects it to EDGE2. This is why edge routers run
+  'neighbor x next-hop-self'. Rollback restores it.
+template: 06_next_hop.j2
+targets: [EDGE1]
+soft_clear: true
+settle_seconds: 10
+verify:
+  - device: CORE-RR1
+    command: "show ip bgp 100.100.100.0/24"
+    expect_regex: "inaccessible"
+  - device: EDGE1
+    command: "show running-config | include next-hop-self"
+    must_not_match: "next-hop-self"

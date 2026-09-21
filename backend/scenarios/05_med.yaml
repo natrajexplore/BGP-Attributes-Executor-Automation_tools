@@ -1,0 +1,21 @@
+title: "MULTI_EXIT_DISC - high MED on ISP-B pushes EDGE2 to ISP-A"
+attribute: MULTI_EXIT_DISC
+summary: >
+  With 'bgp always-compare-med', EDGE2 compares the MED of the ISP-B path
+  (set to 200) against the iBGP path via EDGE1/ISP-A (0) and picks ISP-A for
+  100.100.100.0/24. MED is evaluated before the eBGP-over-iBGP rule.
+  (Applied on EDGE2: the route reflectors reflect only their best path, which
+  is EDGE1's, so EDGE2 is the edge that actually has an iBGP alternative.)
+template: 05_med.j2
+targets: [EDGE2]
+vars:
+  med: 200
+soft_clear: true
+settle_seconds: 10
+verify:
+  - device: EDGE2
+    command: "show ip bgp 100.100.100.0/24"
+    expect_regex: "metric 200"
+  - device: EDGE2
+    command: "show ip bgp 100.100.100.0/24"
+    expect_regex: "internal, best"

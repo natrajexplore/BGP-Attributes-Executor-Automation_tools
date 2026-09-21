@@ -1,0 +1,18 @@
+title: "ORIGINATOR_ID - RR clients learn who originated the prefix"
+attribute: ORIGINATOR_ID
+summary: >
+  EDGE1 advertises 10.255.99.1/32. The route reflectors add
+  ORIGINATOR_ID = 10.255.0.11 as it is reflected, visible on EDGE2 and CE-LAN.
+template: 10_originator_id.j2
+targets: [EDGE1]
+vars:
+  probe_host: 10.255.99.1
+soft_clear: true
+settle_seconds: 10
+verify:
+  - device: EDGE2
+    command: "show ip bgp 10.255.99.1/32"
+    expect_regex: "Originator: 10\\.255\\.0\\.11"
+  - device: CE-LAN
+    command: "show ip bgp 10.255.99.1/32"
+    expect_regex: "Originator: 10\\.255\\.0\\.11"

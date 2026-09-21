@@ -1,0 +1,17 @@
+{# ORIGINATOR_ID - EDGE1 originates a fresh prefix. As it is reflected through
+   RR2 and RR1 the reflectors stamp ORIGINATOR_ID = 10.255.0.11 (EDGE1's
+   router-id) so any client that hears it back can discard its own route
+   (loop prevention). #}
+{% if rollback %}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  no network {{ probe_host }} mask 255.255.255.255
+no interface Loopback9
+{% else %}
+interface Loopback9
+ description ORIGINATOR_ID probe
+ ip address {{ probe_host }} 255.255.255.255
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  network {{ probe_host }} mask 255.255.255.255
+{% endif %}

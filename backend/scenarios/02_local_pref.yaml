@@ -1,0 +1,29 @@
+title: "LOCAL_PREF - AS 65000 prefers ISP-A for the content prefix"
+attribute: LOCAL_PREF
+summary: >
+  EDGE1 sets local-preference 200 on 100.100.100.0/24 learned from ISP-A.
+  Because LOCAL_PREF is carried in iBGP, EDGE2 and CE-LAN also select the
+  path through EDGE1/ISP-A. Higher wins.
+template: 02_local_pref.j2
+targets: [EDGE1]
+vars:
+  local_pref: 200
+soft_clear: true
+settle_seconds: 10
+verify:
+  - device: EDGE1
+    command: "show ip bgp 100.100.100.0/24"
+    expect_regex: "localpref 200"
+  - device: EDGE2
+    command: "show ip bgp 100.100.100.0/24"
+    expect_regex: "10\\.255\\.0\\.11.*from|localpref 200"
+  - device: CE-LAN
+    command: "show ip bgp 100.100.100.0/24"
+    expect_regex: "localpref 200, valid, internal, best"
+rollback_verify:
+  - device: EDGE1
+    command: "show ip bgp 100.100.100.0/24"
+    must_not_match: "localpref 200"
+  - device: CE-LAN
+    command: "show ip bgp 100.100.100.0/24"
+    must_not_match: "localpref 200"

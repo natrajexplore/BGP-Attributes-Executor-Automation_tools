@@ -1,0 +1,21 @@
+title: "WEIGHT - EDGE2 prefers the iBGP path via ISP-A"
+attribute: WEIGHT
+summary: >
+  WEIGHT is Cisco-proprietary and never leaves the router. Setting it on
+  iBGP-learned routes makes EDGE2 pick the path via EDGE1/ISP-A for
+  100.100.100.0/24 even though it has its own eBGP path from ISP-B.
+  (Applied on EDGE2: the route reflectors reflect only their best path, which
+  is EDGE1's, so EDGE2 is the edge that actually has an iBGP alternative.)
+template: 01_weight.j2
+targets: [EDGE2]
+vars:
+  weight: 200
+soft_clear: true
+settle_seconds: 8
+verify:
+  - device: EDGE2
+    command: "show ip bgp 100.100.100.0/24"
+    expect_regex: "weight 200"
+  - device: EDGE2
+    command: "show ip bgp 100.100.100.0/24"
+    expect_regex: "internal, best"

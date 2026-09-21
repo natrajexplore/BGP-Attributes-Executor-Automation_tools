@@ -1,0 +1,30 @@
+# Runs on the EVE-NG VM. `network_mode: host` gives the container direct access to
+# both the EVE-NG REST API (127.0.0.1) and the router MGMT subnet (192.168.99.0/24
+# on the pnet1 bridge).
+
+services:
+  bgp-dashboard:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: bgp-attributes-executor:latest
+    container_name: bgp-attributes-executor
+    network_mode: host
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      # live-editable without a rebuild
+      - ./backend/inventory.yaml:/app/inventory.yaml:ro
+      - ./backend/templates:/app/templates:ro
+      - ./backend/scenarios:/app/scenarios:ro
+      - ./backend/baseline:/app/baseline:ro
+      - ./frontend:/app/frontend:ro
+      - bgp_runs:/app/runs
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health').status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  bgp_runs:

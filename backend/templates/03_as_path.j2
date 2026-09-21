@@ -1,0 +1,15 @@
+{# AS_PATH prepend - EDGE2 prepends its own ASN 3x outbound to ISP-B for the
+   enterprise aggregate/components, so the outside world returns traffic via
+   ISP-A (shorter AS_PATH). #}
+{% if rollback %}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  no neighbor {{ ispb_neighbor }} route-map ISPB-OUT-PREPEND out
+no route-map ISPB-OUT-PREPEND
+{% else %}
+route-map ISPB-OUT-PREPEND permit 10
+ set as-path prepend {{ as_enterprise }} {{ as_enterprise }} {{ as_enterprise }}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  neighbor {{ ispb_neighbor }} route-map ISPB-OUT-PREPEND out
+{% endif %}

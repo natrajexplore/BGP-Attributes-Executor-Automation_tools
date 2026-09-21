@@ -1,0 +1,111 @@
+# Single source of truth for the dashboard AND for scripts/build_lab.py.
+# The baseline/*.cfg files must stay consistent with this (see docs/runbook.md).
+
+defaults:
+  username: lab
+  password: lab123
+  secret: lab123
+  mgmt_gateway: 192.168.99.1
+  mgmt_mask: 255.255.255.0
+
+# ---------------------------------------------------------------------------
+# EVE-NG lab generation (scripts/build_lab.py -> labs/bgp-attributes.unl)
+# Cisco 7206VXR / c7200 on Dynamips.
+lab:
+  name: bgp-attributes
+  uuid: 3b1e7a10-0b9d-4c1a-9f77-b6a0c0de1a01
+  template: c7200
+  image: c7200-adventerprisek9-mz.152-4.S6
+  npe: npe-400
+  ram: 256
+  nvram: 128
+  idlepc: "0x606df838"
+  io_adapter: C7200-IO-FE              # slot0 -> fa0/0 (explicit, don't rely on template default)
+  slots: [PA-8E]                       # slot1 -> e1/0 .. e1/7 (EVE c7200 template only offers PA-FE-TX/PA-4E/PA-8E)
+  mgmt_interface: fa0/0                # onboard C7200-IO-FE, every node
+  mgmt_network:
+    type: pnet1                        # EVE "Cloud1"
+    name: MGMT-Cloud1
+
+# Point-to-point links. a_if / b_if are physical ports on each c7200.
+# IP addressing lives in baseline/*.cfg; kept here only as a comment.
+links:
+  - {a: CORE-RR1, a_if: e1/0, b: CORE-RR2, b_if: e1/0}   # 10.0.0.0/30
+  - {a: CORE-RR1, a_if: e1/1, b: EDGE1,    b_if: e1/0}   # 10.0.0.4/30
+  - {a: CORE-RR1, a_if: e1/2, b: EDGE2,    b_if: e1/0}   # 10.0.0.8/30
+  - {a: CORE-RR1, a_if: e1/3, b: CE-LAN,   b_if: e1/0}   # 10.0.0.20/30
+  - {a: CORE-RR2, a_if: e1/1, b: EDGE1,    b_if: e1/1}   # 10.0.0.12/30
+  - {a: CORE-RR2, a_if: e1/2, b: EDGE2,    b_if: e1/1}   # 10.0.0.16/30
+  - {a: CORE-RR2, a_if: e1/3, b: CE-LAN,   b_if: e1/1}   # 10.0.0.24/30
+  - {a: EDGE1,    a_if: e1/2, b: ISPA-1,   b_if: e1/0}   # 172.16.12.0/30
+  - {a: EDGE2,    a_if: e1/2, b: ISPB-1,   b_if: e1/0}   # 172.16.34.0/30
+  - {a: ISPA-1,   a_if: e1/1, b: ISPB-1,   b_if: e1/1}   # 192.0.2.0/30
+  - {a: ISPA-1,   a_if: e1/2, b: CONTENT,  b_if: e1/0}   # 198.51.100.0/30
+  - {a: ISPB-1,   a_if: e1/2, b: CONTENT,  b_if: e1/1}   # 203.0.113.0/30
+
+globals:
+  # referenced by scenario templates via {{ ... }}
+  as_enterprise: 65000
+  as_ispa: 65001
+  as_ispb: 65002
+  as_content: 65100
+  rr1_loopback: 10.255.0.1
+  rr2_loopback: 10.255.0.2
+  edge1_loopback: 10.255.0.11
+  edge2_loopback: 10.255.0.12
+  ispa_neighbor: 172.16.12.1        # EDGE1's eBGP peer
+  ispb_neighbor: 172.16.34.1        # EDGE2's eBGP peer
+  content_prefix: 100.100.100.0/24
+  enterprise_aggregate: 10.10.0.0/16
+  enterprise_aggregate_net: 10.10.0.0
+  enterprise_aggregate_mask: 255.255.0.0
+
+devices:
+  CORE-RR1:
+    role: route-reflector
+    asn: 65000
+    mgmt_ip: 192.168.99.21
+    router_id: 10.255.0.1
+    canvas: [400, 460]
+  CORE-RR2:
+    role: route-reflector
+    asn: 65000
+    mgmt_ip: 192.168.99.22
+    router_id: 10.255.0.2
+    canvas: [640, 460]
+  EDGE1:
+    role: edge
+    asn: 65000
+    mgmt_ip: 192.168.99.11
+    router_id: 10.255.0.11
+    canvas: [340, 310]
+  EDGE2:
+    role: edge
+    asn: 65000
+    mgmt_ip: 192.168.99.12
+    router_id: 10.255.0.12
+    canvas: [700, 310]
+  CE-LAN:
+    role: internal
+    asn: 65000
+    mgmt_ip: 192.168.99.20
+    router_id: 10.255.0.20
+    canvas: [520, 600]
+  ISPA-1:
+    role: provider
+    asn: 65001
+    mgmt_ip: 192.168.99.31
+    router_id: 10.255.1.1
+    canvas: [320, 150]
+  ISPB-1:
+    role: provider
+    asn: 65002
+    mgmt_ip: 192.168.99.32
+    router_id: 10.255.2.1
+    canvas: [720, 150]
+  CONTENT:
+    role: content
+    asn: 65100
+    mgmt_ip: 192.168.99.33
+    router_id: 10.255.100.1
+    canvas: [520, 40]

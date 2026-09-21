@@ -1,0 +1,15 @@
+{# NEXT_HOP - remove EDGE1's 'next-hop-self' toward the reflectors. The eBGP
+   next-hop (172.16.12.1) is then carried into iBGP unchanged and is NOT in
+   OSPF, so EDGE2 marks the content prefix "inaccessible". Rollback restores
+   next-hop-self. #}
+{% if rollback %}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  neighbor {{ rr1_loopback }} next-hop-self
+  neighbor {{ rr2_loopback }} next-hop-self
+{% else %}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  no neighbor {{ rr1_loopback }} next-hop-self
+  no neighbor {{ rr2_loopback }} next-hop-self
+{% endif %}

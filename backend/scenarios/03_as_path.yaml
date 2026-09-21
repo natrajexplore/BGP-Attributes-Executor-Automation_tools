@@ -1,0 +1,21 @@
+title: "AS_PATH - prepend on the ISP-B link steers inbound traffic to ISP-A"
+attribute: AS_PATH
+summary: >
+  EDGE2 prepends AS 65000 three times toward ISP-B. CONTENT (and ISP-B) then see
+  a longer AS_PATH via ISP-B and choose the ISP-A path for the enterprise
+  prefixes. Shorter AS_PATH wins.
+template: 03_as_path.j2
+targets: [EDGE2]
+soft_clear: true
+settle_seconds: 10
+verify:
+  - device: ISPB-1
+    command: "show ip bgp 10.10.0.0/24"
+    expect_regex: "65000 65000 65000 65000"
+  - device: CONTENT
+    command: "show ip bgp 10.10.0.0/24"
+    expect_regex: "^\\s*65001 65000\\s*\\n.*\\n.*best"
+rollback_verify:
+  - device: ISPB-1
+    command: "show ip bgp 10.10.0.0/24"
+    must_not_match: "65000 65000 65000 65000"

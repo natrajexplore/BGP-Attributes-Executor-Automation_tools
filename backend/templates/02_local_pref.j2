@@ -1,0 +1,18 @@
+{# LOCAL_PREF - set on EDGE1 inbound from ISP-A. Propagates through iBGP so the
+   whole AS 65000 prefers ISP-A to reach the content prefix. #}
+{% if rollback %}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  no neighbor {{ ispa_neighbor }} route-map ISPA-IN in
+no route-map ISPA-IN
+no ip prefix-list CONTENT
+{% else %}
+ip prefix-list CONTENT permit {{ content_prefix }}
+route-map ISPA-IN permit 10
+ match ip address prefix-list CONTENT
+ set local-preference {{ local_pref }}
+route-map ISPA-IN permit 20
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  neighbor {{ ispa_neighbor }} route-map ISPA-IN in
+{% endif %}

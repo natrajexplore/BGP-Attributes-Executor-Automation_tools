@@ -1,0 +1,26 @@
+title: "CLUSTER_LIST - a cluster-id clash triggers RR loop prevention"
+attribute: CLUSTER_LIST
+summary: >
+  CORE-RR2 is reconfigured with CORE-RR1's cluster-id. RR2 now rejects
+  CE-LAN prefixes reflected to it by RR1 (its own cluster-id is already in the
+  CLUSTER_LIST), so EDGE2 loses the second path to 10.10.0.0/24. Baseline / a
+  matching, deliberate redundant-RR design would use identical cluster-ids AND
+  full client meshing; here it demonstrates the loop check.
+template: 11_cluster_list.j2
+targets: [CORE-RR2]
+soft_clear: true
+settle_seconds: 30                # iBGP re-learn after a cluster-id change can take longer than 12s
+verify:
+  - device: EDGE2
+    command: "show ip bgp 10.10.1.0/24"
+    expect_regex: "from 10\\.255\\.0\\.1 \\(10\\.255\\.0\\.1\\)"
+  - device: EDGE2
+    command: "show ip bgp 10.10.1.0/24"
+    must_not_match: "from 10\\.255\\.0\\.2 \\(10\\.255\\.0\\.2\\)"
+rollback_verify:
+  - device: EDGE2
+    command: "show ip bgp 10.10.1.0/24"
+    expect_regex: "from 10\\.255\\.0\\.1 \\(10\\.255\\.0\\.1\\)"
+  - device: EDGE2
+    command: "show ip bgp 10.10.1.0/24"
+    expect_regex: "from 10\\.255\\.0\\.2 \\(10\\.255\\.0\\.2\\)"

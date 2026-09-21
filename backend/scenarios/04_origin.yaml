@@ -1,0 +1,17 @@
+title: "ORIGIN - incomplete origin demotes the ISP-A path"
+attribute: ORIGIN
+summary: >
+  EDGE1 sets ORIGIN=incomplete on 100.100.100.0/24 from ISP-A. All other
+  tie-breakers being equal, BGP now prefers the EDGE2/ISP-B path (ORIGIN=IGP).
+  Order of preference: IGP (i) < EGP (e) < incomplete (?).
+template: 04_origin.j2
+targets: [EDGE1]
+soft_clear: true
+settle_seconds: 10
+verify:
+  - device: EDGE1
+    command: "show ip bgp 100.100.100.0/24"
+    expect_regex: "Origin incomplete"
+  - device: EDGE1
+    command: "show ip bgp 100.100.100.0/24"
+    expect_regex: "internal, best"

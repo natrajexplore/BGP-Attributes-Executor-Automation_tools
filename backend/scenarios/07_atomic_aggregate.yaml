@@ -1,0 +1,20 @@
+title: "ATOMIC_AGGREGATE - EDGE1 summarises 10.10.0.0/16 to ISP-A"
+attribute: ATOMIC_AGGREGATE
+summary: >
+  'aggregate-address ... summary-only' (no as-set) on EDGE1 replaces the
+  10.10.x.0/24 components with 10.10.0.0/16. ISP-A receives it flagged
+  ATOMIC_AGGREGATE and aggregated by AS 65000 / 10.255.0.11.
+template: 07_atomic_aggregate.j2
+targets: [EDGE1]
+soft_clear: true
+settle_seconds: 40                # eBGP min advertisement interval is 30s
+verify:
+  - device: ISPA-1
+    command: "show ip bgp 10.10.0.0/16"
+    expect_regex: "atomic-aggregate"
+  - device: ISPA-1
+    command: "show ip bgp 10.10.0.0/16"
+    expect_regex: "aggregated by 65000 10\\.255\\.0\\.11"
+  - device: ISPA-1
+    command: "show ip bgp 10.10.1.0/24"
+    must_not_match: "172\\.16\\.12\\.2 from"   # no path learned from EDGE1 (ISP-B still supplies the /24)

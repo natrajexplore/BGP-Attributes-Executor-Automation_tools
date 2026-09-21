@@ -1,0 +1,12 @@
+{# CLUSTER_LIST - give CORE-RR2 the SAME cluster-id as CORE-RR1. When RR1
+   reflects a CE-LAN prefix to RR2, RR2 finds its own cluster-id already in the
+   CLUSTER_LIST and drops the update (loop prevention). EDGE1/EDGE2 then lose the
+   via-RR2 copy of every CE-LAN-originated prefix and keep only the via-RR1 path.
+   Rollback restores RR2's unique cluster-id 10.255.0.2. #}
+{% if rollback %}
+router bgp {{ as_enterprise }}
+ bgp cluster-id {{ rr2_loopback }}
+{% else %}
+router bgp {{ as_enterprise }}
+ bgp cluster-id {{ rr1_loopback }}
+{% endif %}

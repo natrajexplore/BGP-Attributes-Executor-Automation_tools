@@ -1,0 +1,19 @@
+{# ORIGIN - EDGE1 rewrites the ORIGIN of the content prefix from ISP-A to
+   "incomplete" (worst). The AS then prefers the EDGE2/ISP-B path whose ORIGIN is
+   still "IGP". IGP < EGP < incomplete. #}
+{% if rollback %}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  no neighbor {{ ispa_neighbor }} route-map ISPA-ORIGIN in
+no route-map ISPA-ORIGIN
+no ip prefix-list CONTENT4
+{% else %}
+ip prefix-list CONTENT4 permit {{ content_prefix }}
+route-map ISPA-ORIGIN permit 10
+ match ip address prefix-list CONTENT4
+ set origin incomplete
+route-map ISPA-ORIGIN permit 20
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  neighbor {{ ispa_neighbor }} route-map ISPA-ORIGIN in
+{% endif %}

@@ -1,0 +1,22 @@
+title: "AGGREGATOR - as-set aggregate keeps AGGREGATOR, drops ATOMIC_AGGREGATE"
+attribute: AGGREGATOR
+summary: >
+  Re-create the 10.10.0.0/16 aggregate on EDGE1 with 'as-set'. The AGGREGATOR
+  attribute (AS 65000 / router-id 10.255.0.11) still names who summarised, but
+  ATOMIC_AGGREGATE is no longer set because AS_PATH information is preserved via
+  the AS_SET. Compare the ISP-A view against scenario 07.
+template: 08_aggregator.j2
+targets: [EDGE1]
+soft_clear: true
+settle_seconds: 40                # eBGP min advertisement interval is 30s
+verify:
+  - device: ISPA-1
+    command: "show ip bgp 10.10.0.0/16"
+    expect_regex: "aggregated by 65000 10\\.255\\.0\\.11"
+  - device: ISPA-1
+    command: "show ip bgp 10.10.0.0/16"
+    must_not_match: "atomic-aggregate"
+rollback_verify:
+  - device: ISPA-1
+    command: "show ip bgp 10.10.0.0/16"
+    must_not_match: "aggregated by 65000 10\\.255\\.0\\.11"

@@ -1,0 +1,20 @@
+groups:
+  - name: bgp
+    rules:
+      - alert: BGPSessionDown
+        expr: bgp_neighbor_up == 0
+        for: 30s
+        labels: {severity: critical}
+        annotations:
+          summary: "BGP session {{ $labels.router }} -> {{ $labels.neighbor }} (AS{{ $labels.remote_as }}) is down"
+      - alert: BGPRouterUnreachable
+        expr: bgp_router_reachable == 0
+        for: 1m
+        labels: {severity: critical}
+        annotations:
+          summary: "{{ $labels.router }} is not answering SSH/BGP polls"
+      - alert: BGPMonitorStale
+        expr: time() - bgp_snapshot_timestamp_seconds > 120
+        labels: {severity: warning}
+        annotations:
+          summary: "No BGP snapshot from {{ $labels.router }} for 2m (backend or Kafka path broken)"

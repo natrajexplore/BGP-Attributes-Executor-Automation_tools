@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BGP Attributes Executor</title>
+<style>
+  :root {
+    --bg:#0f141a; --panel:#171f29; --panel2:#1e2833; --line:#2b3947;
+    --fg:#e6edf3; --muted:#8b9bb0; --accent:#4aa3ff; --ok:#3fb950; --bad:#f85149; --warn:#d29922;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.5 -apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--fg); }
+  header { display:flex; align-items:center; gap:16px; padding:12px 20px; background:var(--panel); border-bottom:1px solid var(--line); }
+  header h1 { font-size:16px; margin:0; font-weight:600; }
+  header .grow { flex:1; }
+  button { font:inherit; color:var(--fg); background:var(--panel2); border:1px solid var(--line); border-radius:6px; padding:6px 12px; cursor:pointer; }
+  button:hover { border-color:var(--accent); }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#04121f; font-weight:600; }
+  button.ghost { background:transparent; }
+  button:disabled { opacity:.5; cursor:not-allowed; }
+  [hidden] { display:none !important; }   /* .wrap/.learn set display:grid, which would otherwise defeat the hidden attribute */
+  .wrap { display:grid; grid-template-columns:minmax(360px,1fr) minmax(420px,1.2fr); gap:16px; padding:16px 20px; align-items:start; }
+  @media (max-width:900px){ .wrap{ grid-template-columns:1fr; } }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:8px; }
+  .card h2 { font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0; padding:10px 14px; border-bottom:1px solid var(--line); }
+  #devices { display:flex; flex-wrap:wrap; gap:6px; padding:12px 14px; }
+  .dev { font-size:12px; padding:3px 8px; border-radius:5px; border:1px solid var(--line); background:var(--panel2); }
+  .dev .dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px; background:var(--muted); vertical-align:middle; }
+  .dev.running .dot { background:var(--ok); } .dev.stopped .dot { background:var(--bad); }
+  .scn { padding:12px 14px; border-bottom:1px solid var(--line); }
+  .scn:last-child { border-bottom:0; }
+  .scn .top { display:flex; align-items:center; gap:8px; }
+  .scn .badge { font-size:11px; padding:1px 7px; border-radius:10px; background:var(--panel2); border:1px solid var(--line); color:var(--accent); }
+  .scn .name { font-weight:600; }
+  .scn .sum { color:var(--muted); font-size:12.5px; margin:6px 0 8px; }
+  .scn .acts { display:flex; gap:8px; }
+  .scn .state { margin-left:auto; font-size:12px; }
+  .state.passed { color:var(--ok); } .state.failed, .state.error { color:var(--bad); } .state.running { color:var(--warn); }
+  #log { white-space:pre-wrap; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; padding:12px 14px; max-height:44vh; overflow:auto; color:#cfe0f0; }
+  #results { padding:0 14px 14px; }
+  .assert { border:1px solid var(--line); border-radius:6px; margin-top:10px; overflow:hidden; }
+  .assert .h { display:flex; gap:8px; align-items:center; padding:7px 10px; background:var(--panel2); font-size:12.5px; }
+  .assert .h .v { margin-left:auto; font-weight:600; }
+  .assert pre { margin:0; padding:10px; font-size:11.5px; overflow:auto; max-height:220px; background:#0b0f14; }
+  .diff .add { color:var(--ok); } .diff .del { color:var(--bad); }
+  .empty { color:var(--muted); padding:14px; }
+  a.btn { font:inherit; color:var(--fg); background:var(--panel2); border:1px solid var(--line); border-radius:6px; padding:6px 12px; text-decoration:none; }
+  a.btn:hover { border-color:var(--accent); }
+  #sessions { padding:8px 14px; display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:6px; }
+  .sess { font-size:12px; padding:5px 8px; border:1px solid var(--line); border-radius:5px; background:var(--panel2); border-left:3px solid var(--ok); }
+  .sess.down { border-left-color:var(--bad); background:#2a1719; }
+  .sess small { color:var(--muted); display:block; }
+  #feed { max-height:200px; overflow:auto; padding:6px 14px 10px; font:12px ui-monospace,Menlo,monospace; border-top:1px solid var(--line); }
+  #feed div { padding:2px 0; } #feed .critical { color:var(--bad); } #feed .info { color:var(--ok); } #feed .warning { color:var(--warn); } #feed .cfg { color:var(--accent); }
+  /* tabs */
+  nav.tabs { display:flex; gap:4px; }
+  nav.tabs a { color:var(--muted); text-decoration:none; padding:6px 14px; border-radius:6px; border:1px solid transparent; }
+  nav.tabs a:hover { color:var(--fg); }
+  nav.tabs a.on { color:var(--fg); background:var(--panel2); border-color:var(--line); }
+  .scn.flash { outline:2px solid var(--accent); }
+  /* learn */
+  .learn { display:grid; grid-template-columns:230px minmax(0,1fr); gap:16px; padding:16px 20px; align-items:start; }
+  @media (max-width:900px){ .learn{ grid-template-columns:1fr; } }
+  #learn-nav { position:sticky; top:12px; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:6px; display:flex; flex-direction:column; }
+  #learn-nav a { color:var(--muted); text-decoration:none; padding:6px 10px; border-radius:6px; font-size:13px; }
+  #learn-nav a b { color:var(--accent); font-weight:600; margin-right:4px; }
+  #learn-nav a:hover { color:var(--fg); background:var(--panel2); }
+  #learn-nav a.on { color:var(--fg); background:var(--panel2); box-shadow:inset 3px 0 var(--accent); }
+  #learn-body { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:8px 22px 22px; min-width:0; }
+  #learn-body h2 { font-size:20px; margin:14px 0 10px; } #learn-body h3 { font-size:14px; margin:0 0 8px; }
+  .chip { font-size:11px; font-weight:500; padding:2px 9px; border-radius:10px; background:var(--panel2); border:1px solid var(--line); color:var(--accent); vertical-align:middle; margin-left:6px; }
+  .lead a, #learn-body p a { color:var(--accent); }
+  .lead { color:var(--muted); max-width:70ch; } .crumbs { color:var(--muted); font-size:12px; margin-top:10px; } .crumbs a { color:var(--accent); text-decoration:none; }
+  .facts { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:8px; margin:6px 0 4px; }
+  .facts div { background:var(--panel2); border:1px solid var(--line); border-radius:6px; padding:8px 10px; font-size:13px; }
+  .facts small { display:block; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; font-size:10.5px; }
+  .ls { margin-top:18px; } .ls p { margin:0 0 10px; max-width:80ch; } .ls ul { margin:0; padding-left:20px; max-width:80ch; } .ls li { margin:4px 0; }
+  .dgw { background:#0b0f14; border:1px solid var(--line); border-radius:8px; padding:8px; overflow-x:auto; }
+  svg.dg { width:100%; height:auto; min-width:560px; display:block; }
+  svg.dg .nl { font:600 12.5px -apple-system,Segoe UI,sans-serif; fill:#e6edf3; } svg.dg .ns { font:11px -apple-system,Segoe UI,sans-serif; fill:#8b9bb0; }
+  svg.dg .lb { font:600 11px -apple-system,Segoe UI,sans-serif; paint-order:stroke; stroke:#0b0f14; stroke-width:4px; }
+  svg.dg .pl { font:600 11px -apple-system,Segoe UI,sans-serif; }
+  .ord { display:flex; flex-wrap:wrap; gap:6px; } .ord span { font-size:12px; padding:4px 9px; border-radius:6px; background:var(--panel2); border:1px solid var(--line); color:var(--muted); }
+  .ord b { color:var(--muted); margin-right:6px; } .ord span.on { background:#4aa3ff22; border-color:var(--accent); color:var(--fg); } .ord span.on b { color:var(--accent); }
+  .hint { color:var(--muted); font-size:12.5px; margin-top:8px; }
+  pre.code { margin:0; background:#0b0f14; border:1px solid var(--line); border-radius:6px; padding:12px; font:12px ui-monospace,Menlo,monospace; overflow:auto; color:#cfe0f0; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:10px; margin-top:16px; }
+  .acard { display:flex; flex-direction:column; gap:3px; background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:12px; text-decoration:none; color:var(--fg); }
+  .acard:hover { border-color:var(--accent); } .acard span { color:var(--muted); font-size:12.5px; } .acard small { color:var(--accent); }
+  .tryit { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:20px; padding:12px 14px; background:var(--panel2); border:1px solid var(--line); border-radius:8px; }
+  .tryit span { flex:1; color:var(--muted); } .pn { display:flex; justify-content:space-between; margin-top:16px; } .pn a { color:var(--accent); text-decoration:none; }
+  /* learn: levels, progress, quiz, exercise, drill, simulator */
+  #learn-nav hr { border:0; border-top:1px solid var(--line); margin:6px 4px; }
+  .pg { float:right; display:inline-flex; gap:3px; margin-top:5px; } .pg i { width:7px; height:7px; border-radius:50%; border:1px solid var(--line); }
+  .pg i.a { border-color:var(--muted); } .pg i.d { background:#3fb950; border-color:#3fb950; } .acard .pg { float:none; margin-top:6px; }
+  .lvl { display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin:12px 0 4px; padding-bottom:10px; border-bottom:1px solid var(--line); }
+  .lvl a { padding:6px 14px; border-radius:6px; background:var(--panel2); border:1px solid var(--line); color:var(--muted); text-decoration:none; font-size:13px; }
+  .lvl a b { color:var(--accent); margin-right:4px; } .lvl a:hover { color:var(--fg); } .lvl a.on { color:var(--fg); border-color:var(--accent); background:#4aa3ff22; } .lvl button { margin-left:auto; }
+  .tick { color:#3fb950; font-weight:700; }
+  #learn-body input, #learn-body select { background:var(--panel2); color:var(--fg); border:1px solid var(--line); border-radius:5px; padding:4px 6px; font:inherit; font-size:12.5px; }
+  #learn-body input[type=checkbox], #learn-body input[type=radio] { width:auto; }
+  #learn-body h4 { margin:16px 0 4px; font-size:13.5px; } .trick h4 { margin-top:0; }
+  .quiz fieldset { border:1px solid var(--line); border-radius:8px; margin:0 0 10px; padding:10px 14px; } .quiz legend { padding:0 6px; font-weight:600; font-size:13.5px; }
+  .quiz label { display:block; padding:3px 0; cursor:pointer; font-size:13.5px; }
+  .qfb { margin-top:8px; padding:8px 10px; border-radius:6px; font-size:13px; } .qfb.ok { background:#3fb95022; border:1px solid #3fb950; } .qfb.no { background:#f8514922; border:1px solid #f85149; }
+  .qscore { margin-left:10px; color:var(--muted); font-size:13px; }
+  ol.steps { padding-left:22px; max-width:none; } .st { margin:0 0 16px; } .st p { margin:0 0 6px; }
+  .run { display:flex; gap:10px; align-items:center; flex-wrap:wrap; } .run code { background:#0b0f14; border:1px solid var(--line); border-radius:5px; padding:3px 8px; font:12px ui-monospace,Menlo,monospace; color:#cfe0f0; }
+  pre.out { margin:8px 0 0; max-height:280px; overflow:auto; background:#0b0f14; border:1px solid var(--line); border-radius:6px; padding:10px; font:12px ui-monospace,Menlo,monospace; color:#cfe0f0; }
+  .chk { font-size:12.5px; color:var(--muted); } .chk.ok { color:#3fb950; } .chk.no { color:#f85149; } .exp { display:block; margin-top:4px; color:var(--muted); font-size:12px; }
+  .selfcheck { margin:8px 0 12px; padding:10px 14px; background:var(--panel2); border:1px solid var(--line); border-radius:8px; font-size:13.5px; }
+  .drill details { margin:6px 0; background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:8px 14px; } .drill summary { cursor:pointer; font-weight:600; color:var(--accent); }
+  .trick { border-left:3px solid var(--accent); padding-left:12px; margin:0 0 16px; }
+  .sim-bar { display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin:12px 0; font-size:13px; } .sim-bar label { display:flex; gap:6px; align-items:center; color:var(--muted); }
+  table.sim-t, table.sim-tr { border-collapse:collapse; width:100%; font-size:12.5px; } .sim-t th, .sim-t td, .sim-tr th, .sim-tr td { padding:5px 8px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+  .sim-t td:first-child { color:var(--muted); white-space:nowrap; } .sim-t input:not([type=checkbox]), .sim-t select { width:100%; min-width:120px; box-sizing:border-box; }
+  .sim-name { font-weight:600; width:calc(100% - 26px) !important; } .sim-x { padding:0 6px; margin-left:4px; }
+  .sim-win { background:#3fb95022; border:1px solid #3fb950; padding:10px 14px; border-radius:8px; margin:14px 0 6px; font-size:15px; } .sim-why { max-width:80ch; margin:6px 0 10px; }
+  .sim-ex { color:#f0883e; font-size:12.5px; margin:4px 0; }
+  .sim-tr th { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; } .sim-tr tr.unreached, .sim-tr tr.skipped { opacity:.55; } .sim-tr small { display:block; color:var(--muted); font-size:11px; }
+  .sim-tr tr.deciding td { background:#4aa3ff18; } .sim-tr tr.deciding td:first-child { box-shadow:inset 3px 0 var(--accent); } .sim-tr td.win { color:#3fb950; font-weight:600; } .sim-tr td.lose { color:#f85149; text-decoration:line-through; }
+</style>
+</head>
+<body>
+<header>
+  <h1>BGP Attributes Executor</h1>
+  <nav class="tabs"><a id="tab-lab" href="#lab">Lab</a><a id="tab-learn" href="#learn">Learn</a></nav>
+  <span id="conn" class="dev"><span class="dot"></span>connecting</span>
+  <span class="grow"></span>
+  <a id="grafana" class="btn" target="_blank" rel="noopener" hidden>Grafana dashboard &#8599;</a>
+  <button id="refresh" class="ghost">Refresh</button>
+  <button id="reset" class="ghost">Reset lab to baseline</button>
+</header>
+
+<div class="wrap" id="view-lab">
+  <div>
+    <div class="card" style="margin-bottom:16px">
+      <h2>Devices</h2>
+      <div id="devices"><span class="empty">loading…</span></div>
+    </div>
+    <div class="card">
+      <h2>Scenarios — the 11 BGP attributes</h2>
+      <div id="scenarios"><span class="empty">loading…</span></div>
+    </div>
+  </div>
+
+  <div>
+  <div class="card" style="margin-bottom:16px">
+    <h2>BGP session monitor <span id="kafka" style="float:right;text-transform:none;letter-spacing:0"></span></h2>
+    <div id="sessions"><span class="empty">waiting for first poll&hellip;</span></div>
+    <div id="feed"><div style="color:var(--muted)">Live events (Kafka: neighbor up/down, config pushes)</div></div>
+  </div>
+  <div class="card">
+    <h2>Run output</h2>
+    <div id="log" class="empty">Pick a scenario and press Run.</div>
+    <div id="results"></div>
+  </div>
+  </div>
+</div>
+
+<div class="learn" id="view-learn" hidden>
+  <nav id="learn-nav"></nav>
+  <article id="learn-body"></article>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const api = (p, o) => fetch(p, o).then(r => r.json());
+let evtSource = null;
+
+async function loadDevices() {
+  const box = $("#devices");
+  try {
+    const devs = await api("/api/devices");
+    box.innerHTML = "";
+    for (const d of devs) {
+      const el = document.createElement("span");
+      el.className = "dev " + (d.status || "");
+      el.title = `${d.role} · AS ${d.asn} · ${d.mgmt_ip}` + (d.console ? ` · console ${d.console}` : "");
+      el.innerHTML = `<span class="dot"></span>${d.name}`;
+      box.appendChild(el);
+    }
+    $("#conn").className = "dev running";
+    $("#conn").innerHTML = `<span class="dot"></span>EVE-NG connected`;
+  } catch (e) {
+    $("#conn").className = "dev stopped";
+    $("#conn").innerHTML = `<span class="dot"></span>backend unreachable`;
+  }
+}
+
+async function loadScenarios() {
+  const box = $("#scenarios");
+  const list = await api("/api/scenarios");
+  box.innerHTML = "";
+  for (const s of list) {
+    const el = document.createElement("div");
+    el.className = "scn";
+    el.dataset.id = s.id;
+    el.innerHTML = `
+      <div class="top">
+        <span class="badge">${s.attribute}</span>
+        <span class="name">${s.id} — ${s.title}</span>
+        <span class="state" data-state></span>
+      </div>
+      <div class="sum">${s.summary || ""}</div>
+      <div class="acts">
+        <button class="primary" data-run>Run</button>
+        <button data-rollback>Rollback</button>
+        <span style="margin-left:auto;color:var(--muted);font-size:12px">targets: ${(s.targets||[]).join(", ")}</span>
+      </div>`;
+    el.querySelector("[data-run]").onclick = () => execute(s.id, "run");
+    el.querySelector("[data-rollback]").onclick = () => execute(s.id, "rollback");
+    box.appendChild(el);
+  }
+}
+
+function setState(id, state) {
+  const el = document.querySelector(`.scn[data-id="${id}"] [data-state]`);
+  if (el) { el.textContent = state; el.className = "state " + state; }
+}
+
+function esc(t){ return t.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+function renderDiff(text) {
+  return esc(text).split("\n").map(l => {
+    if (l.startsWith("+")) return `<span class="add">${l}</span>`;
+    if (l.startsWith("-")) return `<span class="del">${l}</span>`;
+    return l;
+  }).join("\n");
+}
+
+async function execute(id, mode) {
+  document.querySelectorAll("button").forEach(b => b.disabled = true);
+  $("#results").innerHTML = "";
+  const log = $("#log");
+  log.className = "";
+  log.textContent = "";
+  setState(id, "running");
+
+  const url = mode === "run" ? `/api/scenarios/${id}/run` : `/api/scenarios/${id}/rollback`;
+  const { run_id } = await api(url, { method: "POST" });
+
+  if (evtSource) evtSource.close();
+  evtSource = new EventSource(`/api/stream/${run_id}`);
+  evtSource.addEventListener("log", e => {
+    log.textContent += JSON.parse(e.data) + "\n";
+    log.scrollTop = log.scrollHeight;
+  });
+  evtSource.addEventListener("result", async e => {
+    evtSource.close();
+    const state = JSON.parse(e.data);
+    setState(id, state);
+    const run = await api(`/api/runs/${run_id}`);
+    renderResults(run);
+    document.querySelectorAll("button").forEach(b => b.disabled = false);
+    loadDevices();
+  });
+  evtSource.addEventListener("end", () => { evtSource.close();
+    document.querySelectorAll("button").forEach(b => b.disabled = false); });
+  evtSource.onerror = () => { evtSource.close();
+    document.querySelectorAll("button").forEach(b => b.disabled = false); };
+}
+
+function renderResults(run) {
+  const box = $("#results");
+  if (run.error) { box.innerHTML = `<div class="assert"><div class="h">error <span class="v" style="color:var(--bad)">${esc(run.error)}</span></div></div>`; return; }
+  for (const r of (run.results || [])) {
+    const el = document.createElement("div");
+    el.className = "assert";
+    el.innerHTML = `
+      <div class="h">
+        <span>${r.device}</span><span style="color:var(--muted)">${esc(r.command)}</span>
+        <span class="v" style="color:${r.passed ? 'var(--ok)' : 'var(--bad)'}">${r.passed ? "PASS" : "FAIL"} · ${esc(r.reason)}</span>
+      </div>
+      <pre class="diff">${renderDiff(r.diff || r.output || "")}</pre>`;
+    box.appendChild(el);
+  }
+}
+
+$("#refresh").onclick = () => { loadDevices(); loadScenarios(); };
+$("#reset").onclick = async () => {
+  if (!confirm("Re-push every baseline config to all nodes?")) return;
+  const { run_id } = await api("/api/lab/reset", { method: "POST" });
+  const log = $("#log"); log.className = ""; log.textContent = "";
+  const es = new EventSource(`/api/stream/${run_id}`);
+  es.addEventListener("log", e => { log.textContent += JSON.parse(e.data) + "\n"; log.scrollTop = log.scrollHeight; });
+  es.addEventListener("result", () => { es.close(); loadDevices(); });
+  es.addEventListener("end", () => es.close());
+};
+
+async function loadSessions() {
+  try {
+    const list = await api("/api/monitor/state");
+    const box = $("#sessions");
+    if (!list.length) return;
+    box.innerHTML = list.map(n => `<div class="sess ${n.established ? "" : "down"}">
+      <b>${n.router}</b> &rarr; ${n.neighbor} <small>AS${n.remote_as} &middot; ${esc(n.state)}${n.established ? " &middot; " + n.prefixes + " pfx" : ""} &middot; ${esc(n.uptime)}</small></div>`).join("");
+  } catch (e) {}
+}
+
+function addEvent(e) {
+  const t = new Date(e.ts).toLocaleTimeString();
+  let txt, cls = e.severity;
+  if (e.type === "config_change") { txt = `CONFIG ${e.scenario} ${e.mode} &rarr; ${e.result} [${(e.targets||[]).join(",")}]`; cls = "cfg"; }
+  else if (e.neighbor) txt = `${e.type.toUpperCase()} ${e.router} &rarr; ${e.neighbor} (AS${e.remote_as}) ${e.prev_state} &rarr; ${e.state}`;
+  else txt = `${e.type.toUpperCase()} ${e.router}`;
+  const d = document.createElement("div");
+  d.className = cls; d.innerHTML = `${t} ${txt}`;
+  $("#feed").insertBefore(d, $("#feed").children[1] || null);
+  if (e.type !== "config_change") loadSessions();
+}
+
+async function initMonitor() {
+  const cfg = await api("/api/config").catch(() => ({}));
+  if (cfg.grafana_url) { $("#grafana").href = cfg.grafana_url; $("#grafana").hidden = false; }
+  $("#kafka").textContent = cfg.kafka_enabled ? "Kafka: publishing" : "Kafka: disabled (BGP_KAFKA_BOOTSTRAP empty)";
+  (await api("/api/events/recent").catch(() => [])).reverse().forEach(addEvent);
+  new EventSource("/api/events/stream").addEventListener("bgp", e => addEvent(JSON.parse(e.data)));
+  loadSessions();
+  setInterval(loadSessions, 10000);
+}
+
+loadDevices();
+loadScenarios();
+initMonitor();
+setInterval(loadDevices, 30000);
+</script>
+<script src="/static/learn-content.js"></script>
+<script src="/static/learn-content-2.js"></script>
+<script src="/static/learn-content-3.js"></script>
+<script src="/static/learn-content-4.js"></script>
+<script src="/static/learn-sim.js"></script>
+<script src="/static/learn.js"></script>
+</body>
+</html>

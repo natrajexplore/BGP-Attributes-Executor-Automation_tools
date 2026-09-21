@@ -1,0 +1,27 @@
+title: "COMMUNITY - tag the enterprise aggregate toward ISP-A"
+attribute: COMMUNITY
+summary: >
+  EDGE1 attaches community 65001:120 and the well-known no-export community to
+  10.10.0.0/16 advertised to ISP-A. ISP-A sees the communities; no-export stops
+  ISP-A re-advertising the aggregate to ISP-B / CONTENT; the /16 still reaches
+  CONTENT via EDGE2 and ISP-B.
+template: 09_community.j2
+targets: [EDGE1]
+vars:
+  community: "65001:120"
+soft_clear: true
+settle_seconds: 40                # eBGP min advertisement interval is 30s
+verify:
+  - device: ISPA-1
+    command: "show ip bgp 10.10.0.0/16"
+    expect_regex: "65001:120|4259905656"   # ISPA-1 prints the community in old decimal format
+  - device: ISPA-1
+    command: "show ip bgp 10.10.0.0/16"
+    expect_regex: "no-export"
+  - device: CONTENT
+    command: "show ip bgp 10.10.0.0/16"
+    must_not_match: "^\\s*65001 65000"   # ISP-A path withdrawn (no-export); the ISP-B path remains
+rollback_verify:
+  - device: ISPA-1
+    command: "show ip bgp 10.10.0.0/16"
+    must_not_match: "no-export"

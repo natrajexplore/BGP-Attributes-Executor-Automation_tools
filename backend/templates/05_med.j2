@@ -1,0 +1,20 @@
+{# MULTI_EXIT_DISC - enterprise makes its two providers comparable with
+   'bgp always-compare-med' and tags the ISP-B path with a high MED, so EDGE2
+   prefers the iBGP path via EDGE1/ISP-A (MED 0) for the content prefix. Lower MED wins, and
+   MED is compared before the eBGP-over-iBGP rule.
+   NOTE: in production MED is normally sent OUTBOUND toward a single AS reached
+   over multiple links; this lab simulates comparison across two providers. #}
+{% if rollback %}
+router bgp {{ as_enterprise }}
+ no bgp always-compare-med
+ address-family ipv4
+  no neighbor {{ ispb_neighbor }} route-map MED-B in
+no route-map MED-B
+{% else %}
+route-map MED-B permit 10
+ set metric {{ med }}
+router bgp {{ as_enterprise }}
+ bgp always-compare-med
+ address-family ipv4
+  neighbor {{ ispb_neighbor }} route-map MED-B in
+{% endif %}
