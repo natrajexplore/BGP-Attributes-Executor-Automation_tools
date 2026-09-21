@@ -1,0 +1,23 @@
+title: "ORIGINATOR_ID - the reflector names C1 as the source of the route"
+attribute: ORIGINATOR_ID
+summary: >
+  C1 advertises 10.255.99.1/32. The route reflector adds ORIGINATOR_ID 10.255.0.11 when it reflects the route to C2 and C3. C1 itself
+  shows the route as sourced and local, with no originator.
+template: 10_originator_id.j2
+targets: [C1]
+soft_clear: true
+settle_seconds: 15
+verify:
+  - device: C2
+    command: "show ip bgp 10.255.99.1/32"
+    expect_regex: "Originator: 10\\.255\\.0\\.11"
+  - device: C3
+    command: "show ip bgp 10.255.99.1/32"
+    expect_regex: "Originator: 10\\.255\\.0\\.11"
+  - device: C1
+    command: "show ip bgp 10.255.99.1/32"
+    must_not_match: "Originator"
+rollback_verify:
+  - device: C2
+    command: "show ip bgp 10.255.99.1/32"
+    expect_regex: "Network not in table"

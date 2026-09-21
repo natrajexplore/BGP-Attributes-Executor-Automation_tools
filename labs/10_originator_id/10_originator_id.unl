@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lab name="bgp-attr-10-originator-id" id="7b1b77e9-92e6-4099-adc0-0b0d0ff361d3" version="1" scripttimeout="300" lock="0" sase="0">
+ <topology>
+  <nodes>
+   <node id="1" name="RR" type="dynamips" template="c7200" image="c7200-adventerprisek9-mz.152-4.S6" console="telnet" delay="0" cpu="0" ram="256" nvram="128" idlepc="0x606df838" config="0" left="450" top="250">
+    <slot id="1" module="PA-8E"/>
+    <interface id="0" name="fa0/0" type="ethernet" network_id="1"/>
+    <interface id="16" name="e1/0" type="ethernet" network_id="2"/>
+    <interface id="17" name="e1/1" type="ethernet" network_id="3"/>
+    <interface id="18" name="e1/2" type="ethernet" network_id="4"/>
+   </node>
+   <node id="2" name="C1" type="dynamips" template="c7200" image="c7200-adventerprisek9-mz.152-4.S6" console="telnet" delay="0" cpu="0" ram="256" nvram="128" idlepc="0x606df838" config="0" left="150" top="100">
+    <slot id="1" module="PA-8E"/>
+    <interface id="0" name="fa0/0" type="ethernet" network_id="1"/>
+    <interface id="16" name="e1/0" type="ethernet" network_id="2"/>
+   </node>
+   <node id="3" name="C2" type="dynamips" template="c7200" image="c7200-adventerprisek9-mz.152-4.S6" console="telnet" delay="0" cpu="0" ram="256" nvram="128" idlepc="0x606df838" config="0" left="150" top="250">
+    <slot id="1" module="PA-8E"/>
+    <interface id="0" name="fa0/0" type="ethernet" network_id="1"/>
+    <interface id="16" name="e1/0" type="ethernet" network_id="3"/>
+   </node>
+   <node id="4" name="C3" type="dynamips" template="c7200" image="c7200-adventerprisek9-mz.152-4.S6" console="telnet" delay="0" cpu="0" ram="256" nvram="128" idlepc="0x606df838" config="0" left="150" top="400">
+    <slot id="1" module="PA-8E"/>
+    <interface id="0" name="fa0/0" type="ethernet" network_id="1"/>
+    <interface id="16" name="e1/0" type="ethernet" network_id="4"/>
+   </node>
+  </nodes>
+  <networks>
+   <network id="1" type="pnet1" name="MGMT-Cloud1" left="900" top="50" visibility="1"/>
+   <network id="2" type="bridge" name="RR--C1" left="300" top="175" visibility="1"/>
+   <network id="3" type="bridge" name="RR--C2" left="300" top="250" visibility="1"/>
+   <network id="4" type="bridge" name="RR--C3" left="300" top="325" visibility="1"/>
+  </networks>
+ </topology>
+ <objects/>
+</lab>

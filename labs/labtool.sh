@@ -66,13 +66,13 @@ case "$CMD" in
       echo "########## $1"
       while IFS='|' read -r d c; do
         [ -z "$d" ] && continue; echo "--- $d# $c"
-        dock python scripts/run_scenario.py show "$d" "$c" </dev/null 2>&1
+        { dock python scripts/run_scenario.py show "$d" "$c" </dev/null 2>&1 || { sleep 20; dock python scripts/run_scenario.py show "$d" "$c" </dev/null 2>&1; }; } || true
       done < "$PROBES"
     }
     snap BASELINE
-    echo "########## APPLY";    dock python scripts/run_scenario.py apply "$SID" </dev/null 2>&1
+    echo "########## APPLY";    dock python scripts/run_scenario.py apply "$SID" </dev/null 2>&1 || true
     snap APPLIED
-    echo "########## ROLLBACK"; dock python scripts/run_scenario.py rollback "$SID" </dev/null 2>&1
+    echo "########## ROLLBACK"; dock python scripts/run_scenario.py rollback "$SID" </dev/null 2>&1 || true
     snap ROLLED_BACK
     echo DONE ;;
   capture2)
@@ -81,13 +81,13 @@ case "$CMD" in
       echo "########## $1"
       while IFS='|' read -r d c; do
         [ -z "$d" ] && continue; echo "--- $d# $c"
-        dock python scripts/run_scenario.py show "$d" "$c" </dev/null 2>&1
+        { dock python scripts/run_scenario.py show "$d" "$c" </dev/null 2>&1 || { sleep 20; dock python scripts/run_scenario.py show "$d" "$c" </dev/null 2>&1; }; } || true
       done < "$PROBES"
     }
-    echo "########## APPLY $S1";    dock python scripts/run_scenario.py apply "$S1" </dev/null 2>&1; snap "AFTER $S1"
-    echo "########## APPLY $S2";    dock python scripts/run_scenario.py apply "$S2" </dev/null 2>&1; snap "AFTER $S2"
-    echo "########## ROLLBACK $S2"; dock python scripts/run_scenario.py rollback "$S2" </dev/null 2>&1; snap "AFTER ROLLBACK OF $S2"
-    echo "########## ROLLBACK $S1"; dock python scripts/run_scenario.py rollback "$S1" </dev/null 2>&1; snap "AFTER ROLLBACK OF $S1"
+    echo "########## APPLY $S1";    dock python scripts/run_scenario.py apply "$S1" </dev/null 2>&1 || true; snap "AFTER $S1"
+    echo "########## APPLY $S2";    dock python scripts/run_scenario.py apply "$S2" </dev/null 2>&1 || true; snap "AFTER $S2"
+    echo "########## ROLLBACK $S2"; dock python scripts/run_scenario.py rollback "$S2" </dev/null 2>&1 || true; snap "AFTER ROLLBACK OF $S2"
+    echo "########## ROLLBACK $S1"; dock python scripts/run_scenario.py rollback "$S1" </dev/null 2>&1 || true; snap "AFTER ROLLBACK OF $S1"
     echo DONE ;;
   *) echo "unknown command: $CMD" >&2; exit 2 ;;
 esac

@@ -1,0 +1,64 @@
+# Lab 09_community: COMMUNITY, tagging a route toward one ISP
+# EDGE advertises 10.10.0.0/16 to two ISPs that both peer with CONTENT. Toward ISP-A it attaches a community and no-export.
+# ISP-A honours no-export and stops passing the route to CONTENT, so CONTENT hears it only through ISP-B. ISP-A prints communities in
+# AA:NN form (ip bgp-community new-format). Sending the tag also needs 'neighbor x send-community', which IOS does not do by default.
+# Generate the EVE-NG file with:  python backend/scripts/build_lab.py --inventory labs/09_community/inventory.yaml --out labs/09_community/09_community.unl
+
+defaults:
+  username: lab
+  password: lab123
+  secret: lab123
+  mgmt_gateway: 192.168.99.1
+  mgmt_mask: 255.255.255.0
+
+lab:
+  name: bgp-attr-09-community
+  uuid: 65e70274-bb78-404b-96c9-7df1da72218f
+  template: c7200
+  image: c7200-adventerprisek9-mz.152-4.S6
+  npe: npe-400
+  ram: 256
+  nvram: 128
+  idlepc: "0x606df838"
+  io_adapter: C7200-IO-FE
+  slots: [PA-8E]
+  mgmt_interface: fa0/0
+  mgmt_network:
+    type: pnet1
+    name: MGMT-Cloud1
+
+links:
+  - {a: EDGE, a_if: e1/0, b: ISP-A, b_if: e1/0}   # 172.16.1.0/30 eBGP
+  - {a: EDGE, a_if: e1/1, b: ISP-B, b_if: e1/0}   # 172.16.2.0/30 eBGP
+  - {a: ISP-A, a_if: e1/1, b: CONTENT, b_if: e1/0}   # 198.51.100.0/30 eBGP
+  - {a: ISP-B, a_if: e1/1, b: CONTENT, b_if: e1/1}   # 203.0.113.0/30 eBGP
+
+globals:
+  as_enterprise: 65000
+  ispa_neighbor: 172.16.1.1
+
+devices:
+  EDGE:
+    role: edge
+    asn: 65000
+    mgmt_ip: 192.168.99.11
+    router_id: 10.255.0.11
+    canvas: [150, 250]
+  ISP-A:
+    role: provider
+    asn: 65001
+    mgmt_ip: 192.168.99.31
+    router_id: 10.255.1.1
+    canvas: [450, 100]
+  ISP-B:
+    role: provider
+    asn: 65002
+    mgmt_ip: 192.168.99.32
+    router_id: 10.255.2.1
+    canvas: [450, 400]
+  CONTENT:
+    role: content
+    asn: 65100
+    mgmt_ip: 192.168.99.33
+    router_id: 10.255.100.1
+    canvas: [750, 250]

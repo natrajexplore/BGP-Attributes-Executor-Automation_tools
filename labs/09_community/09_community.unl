@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lab name="bgp-attr-09-community" id="65e70274-bb78-404b-96c9-7df1da72218f" version="1" scripttimeout="300" lock="0" sase="0">
+ <topology>
+  <nodes>
+   <node id="1" name="EDGE" type="dynamips" template="c7200" image="c7200-adventerprisek9-mz.152-4.S6" console="telnet" delay="0" cpu="0" ram="256" nvram="128" idlepc="0x606df838" config="0" left="150" top="250">
+    <slot id="1" module="PA-8E"/>
+    <interface id="0" name="fa0/0" type="ethernet" network_id="1"/>
+    <interface id="16" name="e1/0" type="ethernet" network_id="2"/>
+    <interface id="17" name="e1/1" type="ethernet" network_id="3"/>
+   </node>
+   <node id="2" name="ISP-A" type="dynamips" template="c7200" image="c7200-adventerprisek9-mz.152-4.S6" console="telnet" delay="0" cpu="0" ram="256" nvram="128" idlepc="0x606df838" config="0" left="450" top="100">
+    <slot id="1" module="PA-8E"/>
+    <interface id="0" name="fa0/0" type="ethernet" network_id="1"/>
+    <interface id="16" name="e1/0" type="ethernet" network_id="2"/>
+    <interface id="17" name="e1/1" type="ethernet" network_id="4"/>
+   </node>
+   <node id="3" name="ISP-B" type="dynamips" template="c7200" image="c7200-adventerprisek9-mz.152-4.S6" console="telnet" delay="0" cpu="0" ram="256" nvram="128" idlepc="0x606df838" config="0" left="450" top="400">
+    <slot id="1" module="PA-8E"/>
+    <interface id="0" name="fa0/0" type="ethernet" network_id="1"/>
+    <interface id="16" name="e1/0" type="ethernet" network_id="3"/>
+    <interface id="17" name="e1/1" type="ethernet" network_id="5"/>
+   </node>
+   <node id="4" name="CONTENT" type="dynamips" template="c7200" image="c7200-adventerprisek9-mz.152-4.S6" console="telnet" delay="0" cpu="0" ram="256" nvram="128" idlepc="0x606df838" config="0" left="750" top="250">
+    <slot id="1" module="PA-8E"/>
+    <interface id="0" name="fa0/0" type="ethernet" network_id="1"/>
+    <interface id="16" name="e1/0" type="ethernet" network_id="4"/>
+    <interface id="17" name="e1/1" type="ethernet" network_id="5"/>
+   </node>
+  </nodes>
+  <networks>
+   <network id="1" type="pnet1" name="MGMT-Cloud1" left="900" top="50" visibility="1"/>
+   <network id="2" type="bridge" name="EDGE--ISP-A" left="300" top="175" visibility="1"/>
+   <network id="3" type="bridge" name="EDGE--ISP-B" left="300" top="325" visibility="1"/>
+   <network id="4" type="bridge" name="ISP-A--CONTENT" left="600" top="175" visibility="1"/>
+   <network id="5" type="bridge" name="ISP-B--CONTENT" left="600" top="325" visibility="1"/>
+  </networks>
+ </topology>
+ <objects/>
+</lab>

@@ -1,0 +1,27 @@
+title: "ORIGINATOR_ID - a duplicate router-ID makes C3 discard C1's route"
+attribute: ORIGINATOR_ID
+summary: >
+  Run after 10_originator_id. C3 takes C1's router-ID (10.255.0.11). The reflector still has C1's prefix, but C3 sees its own ID as the
+  originator of the reflected route and discards it. Rolling back restores C3's own router-ID.
+template: 10_duplicate_id.j2
+targets: [C3]
+soft_clear: true             # the runner only waits (settle_seconds) inside the soft-clear branch
+settle_seconds: 75           # changing a router-ID resets the sessions; wait for them to come back
+verify:
+  # the session to the reflector must be up again (a numeric State/PfxRcd), otherwise a missing route proves nothing
+  - device: C3
+    command: "show ip bgp summary"
+    expect_regex: "10\\.255\\.0\\.1\\s+4\\s+65000\\s+\\d+\\s+\\d+\\s+\\d+\\s+\\d+\\s+\\d+\\s+\\S+\\s+\\d+\\s*$"
+  - device: C3
+    command: "show ip bgp 10.255.99.1/32"
+    expect_regex: "Network not in table"
+  - device: RR
+    command: "show ip bgp 10.255.99.1/32"
+    expect_regex: "10\\.255\\.99\\.1"
+rollback_verify:
+  - device: C3
+    command: "show ip bgp summary"
+    expect_regex: "10\\.255\\.0\\.1\\s+4\\s+65000\\s+\\d+\\s+\\d+\\s+\\d+\\s+\\d+\\s+\\d+\\s+\\S+\\s+\\d+\\s*$"
+  - device: C3
+    command: "show ip bgp 10.255.99.1/32"
+    expect_regex: "Originator: 10\\.255\\.0\\.11"

@@ -1,0 +1,4 @@
+C1|show ip bgp 10.255.99.1/32
+RR|show ip bgp 10.255.99.1/32
+C2|show ip bgp 10.255.99.1/32
+C3|show ip bgp 10.255.99.1/32

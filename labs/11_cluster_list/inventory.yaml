@@ -1,0 +1,71 @@
+# Lab 11_cluster_list: CLUSTER_LIST, a two-tier reflector hierarchy and a cluster-ID clash
+# RR-TOP is the top reflector with cluster-ID 1.1.1.1; RR-EU (2.2.2.2) and RR-US (3.3.3.3) are its clients and each reflect for one leaf.
+# A route from EU-1 reaches US-1 with the cluster list 3.3.3.3, 1.1.1.1, 2.2.2.2. Giving RR-US the same cluster-ID as RR-TOP makes both
+# reflectors discard each other's routes as loops: EU and US lose sight of each other, although every session stays up.
+# Generate the EVE-NG file with:  python backend/scripts/build_lab.py --inventory labs/11_cluster_list/inventory.yaml --out labs/11_cluster_list/11_cluster_list.unl
+
+defaults:
+  username: lab
+  password: lab123
+  secret: lab123
+  mgmt_gateway: 192.168.99.1
+  mgmt_mask: 255.255.255.0
+
+lab:
+  name: bgp-attr-11-cluster-list
+  uuid: 7dab0b29-e8a2-4963-bfc7-467e0d98e539
+  template: c7200
+  image: c7200-adventerprisek9-mz.152-4.S6
+  npe: npe-400
+  ram: 256
+  nvram: 128
+  idlepc: "0x606df838"
+  io_adapter: C7200-IO-FE
+  slots: [PA-8E]
+  mgmt_interface: fa0/0
+  mgmt_network:
+    type: pnet1
+    name: MGMT-Cloud1
+
+links:
+  - {a: RR-TOP, a_if: e1/0, b: RR-EU, b_if: e1/0}   # 10.0.0.0/30 (OSPF)
+  - {a: RR-TOP, a_if: e1/1, b: RR-US, b_if: e1/0}   # 10.0.0.4/30 (OSPF)
+  - {a: RR-EU, a_if: e1/1, b: EU-1, b_if: e1/0}   # 10.0.0.8/30 (OSPF)
+  - {a: RR-US, a_if: e1/1, b: US-1, b_if: e1/0}   # 10.0.0.12/30 (OSPF)
+
+globals:
+  as_enterprise: 65000
+  top_cluster_id: 1.1.1.1
+  us_cluster_id: 3.3.3.3
+
+devices:
+  RR-TOP:
+    role: route-reflector
+    asn: 65000
+    mgmt_ip: 192.168.99.21
+    router_id: 10.255.0.1
+    canvas: [450, 60]
+  RR-EU:
+    role: route-reflector
+    asn: 65000
+    mgmt_ip: 192.168.99.22
+    router_id: 10.255.0.2
+    canvas: [200, 250]
+  RR-US:
+    role: route-reflector
+    asn: 65000
+    mgmt_ip: 192.168.99.23
+    router_id: 10.255.0.3
+    canvas: [700, 250]
+  EU-1:
+    role: leaf
+    asn: 65000
+    mgmt_ip: 192.168.99.11
+    router_id: 10.255.0.11
+    canvas: [200, 450]
+  US-1:
+    role: leaf
+    asn: 65000
+    mgmt_ip: 192.168.99.12
+    router_id: 10.255.0.21
+    canvas: [700, 450]

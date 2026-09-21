@@ -1,0 +1,4 @@
+ISP-A|show ip bgp 10.10.0.0/16
+ISP-A|show ip bgp 10.10.1.0/24
+ISP-B|show ip bgp 10.10.1.0/24
+EDGE1|show ip bgp 10.10.0.0/16 longer-prefixes

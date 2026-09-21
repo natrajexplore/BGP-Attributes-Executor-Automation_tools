@@ -1,0 +1,31 @@
+title: "COMMUNITY - no-export toward ISP-A keeps the route away from CONTENT via that ISP"
+attribute: COMMUNITY
+summary: >
+  EDGE attaches 65001:120 and no-export to 10.10.0.0/16 toward ISP-A. ISP-A shows the community and does not re-advertise the route to
+  its eBGP peers, so CONTENT hears it only through ISP-B. The tag works on the path that carries it and nowhere else.
+template: 09_community.j2
+targets: [EDGE]
+vars:
+  community: "65001:120"
+soft_clear: true
+settle_seconds: 40
+verify:
+  - device: ISP-A
+    command: "show ip bgp 10.10.0.0/16"
+    expect_regex: "Community: 65001:120 no-export"
+  - device: ISP-A
+    command: "show ip bgp 10.10.0.0/16"
+    expect_regex: "not advertised to EBGP peer"
+  - device: CONTENT
+    command: "show ip bgp 10.10.0.0/16"
+    expect_regex: "^\\s*65002 65000"
+  - device: CONTENT
+    command: "show ip bgp 10.10.0.0/16"
+    must_not_match: "^\\s*65001 65000"
+rollback_verify:
+  - device: ISP-A
+    command: "show ip bgp 10.10.0.0/16"
+    must_not_match: "no-export"
+  - device: CONTENT
+    command: "show ip bgp 10.10.0.0/16"
+    expect_regex: "^\\s*65001 65000"

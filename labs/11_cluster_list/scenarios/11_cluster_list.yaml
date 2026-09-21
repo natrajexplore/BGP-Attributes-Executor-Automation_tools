@@ -1,0 +1,26 @@
+title: "CLUSTER_LIST - a cluster-ID clash between tiers makes the reflectors discard each other's routes"
+attribute: CLUSTER_LIST
+summary: >
+  RR-US takes RR-TOP's cluster-ID. RR-US discards the EU route reflected by RR-TOP (its own ID is in the cluster list), and RR-TOP discards
+  the US route reflected by RR-US, so US-1 loses 10.1.1.0/24 and EU-1 loses 10.2.1.0/24. All sessions stay up.
+template: 11_cluster_list.j2
+targets: [RR-US]
+soft_clear: true
+settle_seconds: 40
+verify:
+  - device: RR-US
+    command: "show ip bgp 10.1.1.0/24"
+    expect_regex: "Network not in table"
+  - device: US-1
+    command: "show ip bgp 10.1.1.0/24"
+    expect_regex: "Network not in table"
+  - device: RR-TOP
+    command: "show ip bgp 10.2.1.0/24"
+    expect_regex: "Network not in table"
+rollback_verify:
+  - device: US-1
+    command: "show ip bgp 10.1.1.0/24"
+    expect_regex: "Cluster list: 3\\.3\\.3\\.3, 1\\.1\\.1\\.1, 2\\.2\\.2\\.2"
+  - device: EU-1
+    command: "show ip bgp 10.2.1.0/24"
+    must_not_match: "Network not in table"

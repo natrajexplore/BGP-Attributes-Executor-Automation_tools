@@ -1,0 +1,65 @@
+# Lab 10_originator_id: ORIGINATOR_ID, following a route through a route reflector
+# One route reflector (RR) with three clients. C1 originates a new prefix. The reflector stamps ORIGINATOR_ID with C1's router-ID
+# as it reflects the route to C2 and C3, and the originator never shows the attribute for its own route. A second scenario gives C3
+# the same router-ID as C1: C3 then finds its own ID as the originator and discards C1's route, while the reflector still has it.
+# Generate the EVE-NG file with:  python backend/scripts/build_lab.py --inventory labs/10_originator_id/inventory.yaml --out labs/10_originator_id/10_originator_id.unl
+
+defaults:
+  username: lab
+  password: lab123
+  secret: lab123
+  mgmt_gateway: 192.168.99.1
+  mgmt_mask: 255.255.255.0
+
+lab:
+  name: bgp-attr-10-originator-id
+  uuid: 7b1b77e9-92e6-4099-adc0-0b0d0ff361d3
+  template: c7200
+  image: c7200-adventerprisek9-mz.152-4.S6
+  npe: npe-400
+  ram: 256
+  nvram: 128
+  idlepc: "0x606df838"
+  io_adapter: C7200-IO-FE
+  slots: [PA-8E]
+  mgmt_interface: fa0/0
+  mgmt_network:
+    type: pnet1
+    name: MGMT-Cloud1
+
+links:
+  - {a: RR, a_if: e1/0, b: C1, b_if: e1/0}   # 10.0.0.0/30 (OSPF)
+  - {a: RR, a_if: e1/1, b: C2, b_if: e1/0}   # 10.0.0.4/30 (OSPF)
+  - {a: RR, a_if: e1/2, b: C3, b_if: e1/0}   # 10.0.0.8/30 (OSPF)
+
+globals:
+  as_enterprise: 65000
+  probe_host: 10.255.99.1
+  c3_router_id: 10.255.0.13
+  c1_router_id: 10.255.0.11
+
+devices:
+  RR:
+    role: route-reflector
+    asn: 65000
+    mgmt_ip: 192.168.99.21
+    router_id: 10.255.0.1
+    canvas: [450, 250]
+  C1:
+    role: route-reflector-client
+    asn: 65000
+    mgmt_ip: 192.168.99.11
+    router_id: 10.255.0.11
+    canvas: [150, 100]
+  C2:
+    role: route-reflector-client
+    asn: 65000
+    mgmt_ip: 192.168.99.12
+    router_id: 10.255.0.12
+    canvas: [150, 250]
+  C3:
+    role: route-reflector-client
+    asn: 65000
+    mgmt_ip: 192.168.99.13
+    router_id: 10.255.0.13
+    canvas: [150, 400]

@@ -1,0 +1,9 @@
+{# Give C3 the router-ID of C1. C3 then recognises the reflected route's ORIGINATOR_ID as its own ID and discards it. Changing a router-ID
+   resets the router's BGP sessions, so the scenario waits for them to come back. Run this after 10_originator_id. #}
+{% if rollback %}
+router bgp {{ as_enterprise }}
+ bgp router-id {{ c3_router_id }}
+{% else %}
+router bgp {{ as_enterprise }}
+ bgp router-id {{ c1_router_id }}
+{% endif %}

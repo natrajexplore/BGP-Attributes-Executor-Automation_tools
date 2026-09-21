@@ -1,0 +1,73 @@
+# Lab 07_atomic_aggregate: ATOMIC_AGGREGATE, a summary on one edge and not the other
+# CE-LAN originates four /24 networks. EDGE1 (to ISP-A) and EDGE2 (to ISP-B) both learn them. Scenario 07 makes EDGE1 summarise
+# them into 10.10.0.0/16 without as-set: ISP-A sees the summary flagged ATOMIC_AGGREGATE, but still hears the /24 networks
+# through ISP-B, because EDGE2 does not summarise. Scenario 07_fix summarises on EDGE2 too, which removes them.
+# Generate the EVE-NG file with:  python backend/scripts/build_lab.py --inventory labs/07_atomic_aggregate/inventory.yaml --out labs/07_atomic_aggregate/07_atomic_aggregate.unl
+
+defaults:
+  username: lab
+  password: lab123
+  secret: lab123
+  mgmt_gateway: 192.168.99.1
+  mgmt_mask: 255.255.255.0
+
+lab:
+  name: bgp-attr-07-atomic-aggregate
+  uuid: b481a715-300c-4854-82c0-cd08112c077d
+  template: c7200
+  image: c7200-adventerprisek9-mz.152-4.S6
+  npe: npe-400
+  ram: 256
+  nvram: 128
+  idlepc: "0x606df838"
+  io_adapter: C7200-IO-FE
+  slots: [PA-8E]
+  mgmt_interface: fa0/0
+  mgmt_network:
+    type: pnet1
+    name: MGMT-Cloud1
+
+links:
+  - {a: CE-LAN, a_if: e1/0, b: EDGE1, b_if: e1/0}   # 10.0.0.0/30 (OSPF)
+  - {a: CE-LAN, a_if: e1/1, b: EDGE2, b_if: e1/0}   # 10.0.0.4/30 (OSPF)
+  - {a: EDGE1, a_if: e1/1, b: EDGE2, b_if: e1/1}   # 10.0.0.8/30 (OSPF)
+  - {a: EDGE1, a_if: e1/2, b: ISP-A, b_if: e1/0}   # 172.16.1.0/30 eBGP
+  - {a: EDGE2, a_if: e1/2, b: ISP-B, b_if: e1/0}   # 172.16.2.0/30 eBGP
+  - {a: ISP-A, a_if: e1/1, b: ISP-B, b_if: e1/1}   # 192.0.2.0/30 eBGP between the ISPs
+
+globals:
+  as_enterprise: 65000
+  aggregate_net: 10.10.0.0
+  aggregate_mask: 255.255.0.0
+
+devices:
+  CE-LAN:
+    role: internal
+    asn: 65000
+    mgmt_ip: 192.168.99.20
+    router_id: 10.255.0.20
+    canvas: [450, 450]
+  EDGE1:
+    role: edge
+    asn: 65000
+    mgmt_ip: 192.168.99.11
+    router_id: 10.255.0.11
+    canvas: [200, 250]
+  EDGE2:
+    role: edge
+    asn: 65000
+    mgmt_ip: 192.168.99.12
+    router_id: 10.255.0.12
+    canvas: [700, 250]
+  ISP-A:
+    role: provider
+    asn: 65001
+    mgmt_ip: 192.168.99.31
+    router_id: 10.255.1.1
+    canvas: [200, 60]
+  ISP-B:
+    role: provider
+    asn: 65002
+    mgmt_ip: 192.168.99.32
+    router_id: 10.255.2.1
+    canvas: [700, 60]

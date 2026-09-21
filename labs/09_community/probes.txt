@@ -1,0 +1,4 @@
+ISP-A|show ip bgp 10.10.0.0/16
+CONTENT|show ip bgp 10.10.0.0/16
+ISP-A|show ip bgp community no-export
+EDGE|show ip bgp neighbors 172.16.1.1 advertised-routes

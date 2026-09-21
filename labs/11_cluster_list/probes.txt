@@ -1,0 +1,5 @@
+US-1|show ip bgp 10.1.1.0/24
+RR-US|show ip bgp 10.1.1.0/24
+RR-TOP|show ip bgp 10.2.1.0/24
+EU-1|show ip bgp 10.2.1.0/24
+RR-US|show running-config | section router bgp

@@ -1,0 +1,20 @@
+title: "ATOMIC_AGGREGATE - make the summary consistent by summarising on EDGE2 too"
+attribute: ATOMIC_AGGREGATE
+summary: >
+  Run after 07_atomic_aggregate. EDGE2 builds the same summary, so ISP-B stops hearing the /24 networks and ISP-A no longer learns them
+  through ISP-B. Rolling back returns to the state where only EDGE1 summarises.
+template: 07_fix.j2
+targets: [EDGE2]
+soft_clear: true
+settle_seconds: 40
+verify:
+  - device: ISP-A
+    command: "show ip bgp 10.10.1.0/24"
+    expect_regex: "Network not in table"
+  - device: ISP-B
+    command: "show ip bgp 10.10.1.0/24"
+    expect_regex: "Network not in table"
+rollback_verify:
+  - device: ISP-A
+    command: "show ip bgp 10.10.1.0/24"
+    must_not_match: "Network not in table"

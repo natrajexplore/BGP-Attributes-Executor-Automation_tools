@@ -1,0 +1,20 @@
+{# COMMUNITY - EDGE tags 10.10.0.0/16 toward ISP-A with a custom community and no-export. 'send-community' must be enabled for the
+   neighbor or the tag never leaves the router. 'additive' keeps any communities the route already has. #}
+{% if rollback %}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  no neighbor {{ ispa_neighbor }} route-map ISPA-COMM out
+  no neighbor {{ ispa_neighbor }} send-community
+no route-map ISPA-COMM
+no ip prefix-list TAGGED
+{% else %}
+ip prefix-list TAGGED permit 10.10.0.0/16
+route-map ISPA-COMM permit 10
+ match ip address prefix-list TAGGED
+ set community {{ community }} no-export additive
+route-map ISPA-COMM permit 20
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  neighbor {{ ispa_neighbor }} send-community
+  neighbor {{ ispa_neighbor }} route-map ISPA-COMM out
+{% endif %}

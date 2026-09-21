@@ -15,8 +15,14 @@ scenario and a generated `.unl`. They are **not** served by the dashboard: you d
 | `01_weight/` | Branch with a local ISP and a WAN path to HQ; weight makes it exit locally | Tested on the lab |
 | `02_local_pref/` | Dual-homed enterprise with a core router; the whole AS follows one edge, and the transit side effect | Tested on the lab |
 | `03_as_path/` | Two ISPs and a content network; a prepend moves inbound traffic | Tested on the lab |
+| `04_origin/` | `network` versus `redistribute static` on two edges to one ISP; a real `Origin incomplete` | Tested on the lab |
 | `05_med/` | Two data centres linked to two POPs of the same provider (MED is compared between paths from one neighbor AS) | Tested on the lab |
+| `06_next_hop/` | ISP link outside the IGP behind a route reflector; `(inaccessible)` next hop | Tested on the lab |
+| `07_atomic_aggregate/` | A summary on one edge and not the other, then the fix (two scenarios) | Tested on the lab |
 | `08_aggregator/` | Two subsidiary ASes summarised at a hub, showing a real AS_SET | Tested on the lab |
+| `09_community/` | no-export and a custom community toward one of two ISPs | Tested on the lab |
+| `10_originator_id/` | Route reflector with three clients, plus a duplicate router-ID (two scenarios) | Tested on the lab |
+| `11_cluster_list/` | Two-tier reflector hierarchy and a cluster-ID clash between tiers | Tested on the lab |
 
 Each folder's `README.md` has the topology, addressing, commands and the router output captured while testing it.
 

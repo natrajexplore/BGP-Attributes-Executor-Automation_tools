@@ -1,0 +1,11 @@
+{# Complete the summary: EDGE2 summarises the same /16 with summary-only, so the /24 components stop leaking to ISP-B and on to ISP-A.
+   Run this after 07_atomic_aggregate. #}
+{% if rollback %}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  no aggregate-address {{ aggregate_net }} {{ aggregate_mask }} summary-only
+{% else %}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  aggregate-address {{ aggregate_net }} {{ aggregate_mask }} summary-only
+{% endif %}

@@ -1,0 +1,9 @@
+{# CLUSTER_LIST - give RR-US the SAME cluster-ID as RR-TOP. RR-TOP's reflections carry 1.1.1.1 in the cluster list, so RR-US sees its own ID
+   and discards them; RR-US's own reflections toward RR-TOP carry 1.1.1.1 too, so RR-TOP discards those. Rollback restores 3.3.3.3. #}
+{% if rollback %}
+router bgp {{ as_enterprise }}
+ bgp cluster-id {{ us_cluster_id }}
+{% else %}
+router bgp {{ as_enterprise }}
+ bgp cluster-id {{ top_cluster_id }}
+{% endif %}

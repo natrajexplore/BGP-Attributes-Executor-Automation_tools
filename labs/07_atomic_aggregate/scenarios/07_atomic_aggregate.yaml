@@ -1,0 +1,26 @@
+title: "ATOMIC_AGGREGATE - EDGE1 summarises 10.10.0.0/16, EDGE2 does not"
+attribute: ATOMIC_AGGREGATE
+summary: >
+  EDGE1 summarises the four /24 networks with summary-only and no as-set. ISP-A receives the /16 flagged atomic-aggregate and
+  aggregated by 65000 10.255.0.11, and no /24 from EDGE1. It still has the /24 networks through ISP-B, because EDGE2 does not summarise.
+template: 07_atomic_aggregate.j2
+targets: [EDGE1]
+soft_clear: true
+settle_seconds: 40
+verify:
+  - device: ISP-A
+    command: "show ip bgp 10.10.0.0/16"
+    expect_regex: "atomic-aggregate"
+  - device: ISP-A
+    command: "show ip bgp 10.10.0.0/16"
+    expect_regex: "aggregated by 65000 10\\.255\\.0\\.11"
+  - device: ISP-A
+    command: "show ip bgp 10.10.1.0/24"
+    must_not_match: "172\\.16\\.1\\.2 from"
+rollback_verify:
+  - device: ISP-A
+    command: "show ip bgp 10.10.0.0/16"
+    expect_regex: "Network not in table"
+  - device: ISP-A
+    command: "show ip bgp 10.10.1.0/24"
+    expect_regex: "172\\.16\\.1\\.2 from"
