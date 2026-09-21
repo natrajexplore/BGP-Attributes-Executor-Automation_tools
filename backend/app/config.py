@@ -11,6 +11,7 @@ INVENTORY_PATH = Path(os.getenv("BGP_INVENTORY", BASE_DIR / "inventory.yaml"))
 TEMPLATE_DIR = Path(os.getenv("BGP_TEMPLATES", BASE_DIR / "templates"))
 SCENARIO_DIR = Path(os.getenv("BGP_SCENARIOS", BASE_DIR / "scenarios"))
 BASELINE_DIR = Path(os.getenv("BGP_BASELINE", BASE_DIR / "baseline"))
+LABS_DIR = Path(os.getenv("BGP_LABS", BASE_DIR / "labs"))          # per-attribute lab folders (README.md is served to the Learn tab)
 RUNS_DIR = Path(os.getenv("BGP_RUNS", BASE_DIR / "runs"))
 RUNS_DIR.mkdir(parents=True, exist_ok=True)
 

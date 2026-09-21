@@ -112,6 +112,13 @@
   .selfcheck { margin:8px 0 12px; padding:10px 14px; background:var(--panel2); border:1px solid var(--line); border-radius:8px; font-size:13.5px; }
   .drill details { margin:6px 0; background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:8px 14px; } .drill summary { cursor:pointer; font-weight:600; color:var(--accent); }
   .trick { border-left:3px solid var(--accent); padding-left:12px; margin:0 0 16px; }
+  /* rendered lab README (learn-md.js) */
+  #learn-body .md h1 { font-size:17px; margin:16px 0 8px; } #learn-body .md h2 { font-size:15px; margin:22px 0 8px; padding-top:10px; border-top:1px solid var(--line); } #learn-body .md h3 { font-size:13.5px; margin:16px 0 6px; }
+  #learn-body .md p, #learn-body .md ul, #learn-body .md ol { max-width:84ch; margin:0 0 10px; } #learn-body .md ul, #learn-body .md ol { padding-left:22px; } #learn-body .md li { margin:5px 0; }
+  #learn-body .md code { font:12px ui-monospace,Menlo,monospace; background:#0b0f14; border:1px solid var(--line); border-radius:4px; padding:1px 5px; color:#cfe0f0; }
+  #learn-body .md pre.code { margin:8px 0 14px; } .md-tw { overflow-x:auto; margin:8px 0 14px; }
+  table.md-t { border-collapse:collapse; width:100%; font-size:12.5px; } .md-t th, .md-t td { padding:6px 10px; border:1px solid var(--line); text-align:left; vertical-align:top; }
+  .md-t th { background:var(--panel2); color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; white-space:nowrap; }
   .sim-bar { display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin:12px 0; font-size:13px; } .sim-bar label { display:flex; gap:6px; align-items:center; color:var(--muted); }
   table.sim-t, table.sim-tr { border-collapse:collapse; width:100%; font-size:12.5px; } .sim-t th, .sim-t td, .sim-tr th, .sim-tr td { padding:5px 8px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
   .sim-t td:first-child { color:var(--muted); white-space:nowrap; } .sim-t input:not([type=checkbox]), .sim-t select { width:100%; min-width:120px; box-sizing:border-box; }
@@ -331,6 +338,7 @@ setInterval(loadDevices, 30000);
 <script src="/static/learn-content-3.js"></script>
 <script src="/static/learn-content-4.js"></script>
 <script src="/static/learn-labs.js"></script>
+<script src="/static/learn-md.js"></script>
 <script src="/static/learn-sim.js"></script>
 <script src="/static/learn.js"></script>
 </body>

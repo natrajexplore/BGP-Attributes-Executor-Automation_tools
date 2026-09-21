@@ -19,6 +19,7 @@ services:
       - ./backend/scenarios:/app/scenarios:ro
       - ./backend/baseline:/app/baseline:ro
       - ./frontend:/app/frontend:ro
+      - ./labs:/app/labs:ro                   # lab READMEs are served to the Learn tab
       - bgp_runs:/app/runs
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health').status==200 else 1)"]

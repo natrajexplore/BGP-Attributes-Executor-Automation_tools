@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import bus, monitor, scenarios
-from .config import FRONTEND_DIR, settings
+from .config import FRONTEND_DIR, LABS_DIR, settings
 from .eveng import EveNGClient, EveNGError
 from .events import subscribe, unsubscribe
 from .inventory import build_devices
@@ -137,6 +137,27 @@ def device_show(name: str, cmd: str) -> dict:
     if len(cmd) > 120 or not any(p.fullmatch(cmd) for p in _SHOW_ALLOWED):
         raise HTTPException(400, "command not allowed (read-only BGP/route show commands only)")
     return {"device": name, "command": cmd, "output": dev_mod.show(devs[name], cmd)}
+
+
+_LAB_ID = re.compile(r"\d{2}_[a-z0-9_]+")        # lab folder names look like 05_med; anything else (../, slashes) is rejected
+
+
+@app.get("/api/labs")
+def labs_list() -> list[dict]:
+    """Per-attribute labs that have a README (folders under labs/)."""
+    if not LABS_DIR.is_dir():
+        return []
+    return [{"id": p.name} for p in sorted(LABS_DIR.iterdir())
+            if p.is_dir() and _LAB_ID.fullmatch(p.name) and (p / "README.md").is_file()]
+
+
+@app.get("/api/labs/{lab_id}/readme")
+def lab_readme(lab_id: str) -> dict:
+    """The lab's README.md as Markdown text, read-only."""
+    readme = LABS_DIR / lab_id / "README.md"
+    if not _LAB_ID.fullmatch(lab_id) or not readme.is_file():
+        raise HTTPException(404, lab_id)
+    return {"id": lab_id, "markdown": readme.read_text(encoding="utf-8")}
 
 
 @app.get("/api/scenarios")
