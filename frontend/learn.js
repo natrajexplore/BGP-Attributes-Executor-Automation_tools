@@ -432,7 +432,7 @@ router bgp 65000
       `<div class="facts"><div><small>Size</small>${L.routers} routers</div><div><small>Folder</small>labs/${esc(a.id)}/</div>` +
       `<div><small>Scenarios</small>${L.scenarios.map(([sid, t]) => `<code>${esc(sid)}</code>: ${esc(t)}`).join("<br>")}</div></div>` +
       `<h4 style="margin-top:12px">Run it</h4>${code(labCommands(a.id, L.scenarios))}` +
-      `<p class="hint">Using the downloaded <code>.unl</code> yourself: copy it into <code>/opt/unetlab/labs</code> on the EVE VM. The <code>up</code> command above does that for you.</p>` +
+      `<p class="hint">Using the downloaded <code>.unl</code> yourself: copy it into <code>/opt/unetlab/labs</code> on the EVE VM (the <code>up</code> command above does that for you), or put it in a <code>.zip</code> and use EVE's import. EVE's import rejects a bare <code>.unl</code> but accepts a zip containing it (tested through EVE's import API, not by clicking the web UI's Import button).</p>` +
       `<div class="tryit"><span>The lab folder has the inventory, baseline configs, scenario, the generated .unl and a README with the topology and the router output captured while testing it. It is a separate EVE-NG lab: never run it at the same time as the shared lab.</span>` +
       `<span style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn" href="#learn/${esc(a.id)}/lab">Read the lab README</a>` +
       `<a class="btn" href="/api/labs/${esc(a.id)}/unl" download="${esc(a.id)}.unl" title="The EVE-NG topology file for this lab">Download .unl</a>` +

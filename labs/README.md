@@ -51,5 +51,7 @@ python backend/scripts/build_lab.py --inventory labs/05_med/inventory.yaml --out
 The dashboard serves each lab's README and its `.unl` to the Learn tab (Practitioner page, section "Lab topology"):
 
 * `GET /api/labs` lists the labs, `GET /api/labs/<id>/readme` returns the README, `GET /api/labs/<id>/unl` downloads the topology file.
-* To use a downloaded `.unl` yourself, copy it into `/opt/unetlab/labs` on the EVE VM. `labs/labtool.sh <lab> import` does exactly that.
-  (Importing a bare `.unl` through the EVE web UI's Import button has not been tested; that button expects EVE's own zip export.)
+* To use a downloaded `.unl` yourself, either copy it into `/opt/unetlab/labs` on the EVE VM (`labs/labtool.sh <lab> import` does exactly that),
+  or import it through EVE. EVE's import **rejects a bare `.unl`** (`HTTP 400: Import file must be a Zip file`) but accepts a **zip that contains the
+  `.unl` at its top level** (`HTTP 200: UNetLab file imported`). This was tested through EVE's import API (lab 05, on 2026-09-21); the web UI's Import button itself was not clicked.
+  The imported test lab (05) kept its four nodes and the router image. Starting an imported lab was not tested; use the shared-lab stop/start routine first.
