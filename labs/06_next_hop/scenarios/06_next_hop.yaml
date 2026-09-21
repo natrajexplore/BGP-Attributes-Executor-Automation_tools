@@ -1,0 +1,26 @@
+title: "NEXT_HOP - without next-hop-self the route becomes inaccessible and is never reflected"
+attribute: NEXT_HOP
+summary: >
+  EDGE stops rewriting NEXT_HOP toward CORE. CORE keeps the path as 172.16.1.1 (inaccessible), because the IGP has no route to the
+  ISP link, and a route reflector only reflects a path it can use, so CLIENT never learns the prefix.
+template: 06_next_hop.j2
+targets: [EDGE]
+soft_clear: true
+settle_seconds: 20
+verify:
+  - device: CORE
+    command: "show ip bgp 100.100.100.0/24"
+    expect_regex: "172\\.16\\.1\\.1 \\(inaccessible\\)"
+  - device: CORE
+    command: "show ip route 172.16.1.1"
+    expect_regex: "Network not in table"
+  - device: CLIENT
+    command: "show ip bgp 100.100.100.0/24"
+    expect_regex: "Network not in table"
+rollback_verify:
+  - device: CORE
+    command: "show ip bgp 100.100.100.0/24"
+    must_not_match: "inaccessible"
+  - device: CLIENT
+    command: "show ip bgp 100.100.100.0/24"
+    must_not_match: "Network not in table"

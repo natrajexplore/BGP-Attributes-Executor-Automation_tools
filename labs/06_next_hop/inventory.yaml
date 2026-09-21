@@ -1,0 +1,63 @@
+# Lab 06_next_hop: NEXT_HOP, an ISP link that the IGP does not know
+# EDGE learns 100.100.100.0/24 from the ISP over a link that is not in the IGP. With next-hop-self toward the route reflector the
+# route is usable everywhere. Removing it leaves the ISP's link address as the next hop: CORE marks the path (inaccessible),
+# never reflects it, and CLIENT never learns the route, although every session is up.
+# Generate the EVE-NG file with:  python backend/scripts/build_lab.py --inventory labs/06_next_hop/inventory.yaml --out labs/06_next_hop/06_next_hop.unl
+
+defaults:
+  username: lab
+  password: lab123
+  secret: lab123
+  mgmt_gateway: 192.168.99.1
+  mgmt_mask: 255.255.255.0
+
+lab:
+  name: bgp-attr-06-next-hop
+  uuid: 58917b89-dfcc-4ae1-a59f-0345de7e26bc
+  template: c7200
+  image: c7200-adventerprisek9-mz.152-4.S6
+  npe: npe-400
+  ram: 256
+  nvram: 128
+  idlepc: "0x606df838"
+  io_adapter: C7200-IO-FE
+  slots: [PA-8E]
+  mgmt_interface: fa0/0
+  mgmt_network:
+    type: pnet1
+    name: MGMT-Cloud1
+
+links:
+  - {a: ISP, a_if: e1/0, b: EDGE, b_if: e1/0}   # 172.16.1.0/30 eBGP (not in the IGP)
+  - {a: EDGE, a_if: e1/1, b: CORE, b_if: e1/0}   # 10.0.0.0/30 (OSPF)
+  - {a: CORE, a_if: e1/1, b: CLIENT, b_if: e1/0}   # 10.0.0.4/30 (OSPF)
+
+globals:
+  as_enterprise: 65000
+  rr_loopback: 10.255.0.1
+
+devices:
+  ISP:
+    role: provider
+    asn: 65001
+    mgmt_ip: 192.168.99.31
+    router_id: 10.255.1.1
+    canvas: [100, 250]
+  EDGE:
+    role: edge
+    asn: 65000
+    mgmt_ip: 192.168.99.11
+    router_id: 10.255.0.11
+    canvas: [350, 250]
+  CORE:
+    role: route-reflector
+    asn: 65000
+    mgmt_ip: 192.168.99.21
+    router_id: 10.255.0.1
+    canvas: [600, 250]
+  CLIENT:
+    role: internal
+    asn: 65000
+    mgmt_ip: 192.168.99.22
+    router_id: 10.255.0.20
+    canvas: [850, 250]

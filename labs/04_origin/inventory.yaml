@@ -1,0 +1,55 @@
+# Lab 04_origin: ORIGIN, the difference between network and redistribute
+# Two edge routers of AS 65000 advertise the same prefix to one ISP. EDGE1 uses a network statement (ORIGIN IGP); EDGE2 uses
+# redistribute static (ORIGIN incomplete). Everything else is equal, so the ISP prefers EDGE1 only because of ORIGIN.
+# Setting the origin to igp on the redistribution removes that disadvantage: the tie is then broken by router-ID (EDGE2 is lower).
+# Generate the EVE-NG file with:  python backend/scripts/build_lab.py --inventory labs/04_origin/inventory.yaml --out labs/04_origin/04_origin.unl
+
+defaults:
+  username: lab
+  password: lab123
+  secret: lab123
+  mgmt_gateway: 192.168.99.1
+  mgmt_mask: 255.255.255.0
+
+lab:
+  name: bgp-attr-04-origin
+  uuid: d5015aad-98b2-470d-a0dc-f7a99f6180a0
+  template: c7200
+  image: c7200-adventerprisek9-mz.152-4.S6
+  npe: npe-400
+  ram: 256
+  nvram: 128
+  idlepc: "0x606df838"
+  io_adapter: C7200-IO-FE
+  slots: [PA-8E]
+  mgmt_interface: fa0/0
+  mgmt_network:
+    type: pnet1
+    name: MGMT-Cloud1
+
+links:
+  - {a: EDGE1, a_if: e1/0, b: ISP, b_if: e1/0}   # 172.16.1.0/30 eBGP
+  - {a: EDGE2, a_if: e1/0, b: ISP, b_if: e1/1}   # 172.16.2.0/30 eBGP
+
+globals:
+  as_enterprise: 65000
+
+devices:
+  EDGE1:
+    role: edge
+    asn: 65000
+    mgmt_ip: 192.168.99.11
+    router_id: 10.255.0.11
+    canvas: [150, 100]
+  EDGE2:
+    role: edge
+    asn: 65000
+    mgmt_ip: 192.168.99.12
+    router_id: 10.255.0.2
+    canvas: [150, 400]
+  ISP:
+    role: provider
+    asn: 65001
+    mgmt_ip: 192.168.99.31
+    router_id: 10.255.1.1
+    canvas: [500, 250]

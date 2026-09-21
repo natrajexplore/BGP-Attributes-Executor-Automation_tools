@@ -1,0 +1,11 @@
+{# NEXT_HOP - remove EDGE's next-hop-self toward the route reflector. The ISP link address (172.16.1.1) is then carried into iBGP
+   unchanged and is not in OSPF, so CORE marks the path (inaccessible) and never reflects it. Rollback restores next-hop-self. #}
+{% if rollback %}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  neighbor {{ rr_loopback }} next-hop-self
+{% else %}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  no neighbor {{ rr_loopback }} next-hop-self
+{% endif %}

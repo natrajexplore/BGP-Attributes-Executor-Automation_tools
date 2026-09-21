@@ -1,0 +1,24 @@
+title: "ORIGIN - normalising a redistributed route changes which edge the ISP prefers"
+attribute: ORIGIN
+summary: >
+  Both edges advertise 10.10.0.0/16. EDGE1 used a network statement (ORIGIN IGP), EDGE2 redistribute static (ORIGIN incomplete),
+  so the ISP prefers EDGE1. 'set origin igp' on EDGE2's redistribution removes the difference and the ISP falls through to the
+  router-ID step, where EDGE2 (10.255.0.2) beats EDGE1 (10.255.0.11).
+template: 04_origin.j2
+targets: [EDGE2]
+soft_clear: true
+settle_seconds: 40
+verify:
+  - device: ISP
+    command: "show ip bgp 10.10.0.0/16"
+    must_not_match: "Origin incomplete"
+  - device: ISP
+    command: "show ip bgp 10.10.0.0/16"
+    expect_regex: "172\\.16\\.2\\.2 from[^\\n]*\\n[^\\n]*Origin IGP[^\\n]*external, best"
+rollback_verify:
+  - device: ISP
+    command: "show ip bgp 10.10.0.0/16"
+    expect_regex: "Origin incomplete"
+  - device: ISP
+    command: "show ip bgp 10.10.0.0/16"
+    expect_regex: "172\\.16\\.1\\.2 from[^\\n]*\\n[^\\n]*Origin IGP[^\\n]*external, best"

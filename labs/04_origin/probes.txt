@@ -1,0 +1,3 @@
+ISP|show ip bgp 10.10.0.0/16
+EDGE2|show ip bgp 10.10.0.0/16
+EDGE2|show running-config | section router bgp

@@ -1,0 +1,4 @@
+CORE|show ip bgp 100.100.100.0/24
+CORE|show ip route 172.16.1.1
+CLIENT|show ip bgp 100.100.100.0/24
+EDGE|show running-config | include next-hop-self

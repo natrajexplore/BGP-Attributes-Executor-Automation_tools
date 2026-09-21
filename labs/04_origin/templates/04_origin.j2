@@ -1,0 +1,16 @@
+{# ORIGIN - EDGE2 redistributes a static route into BGP, which gives ORIGIN incomplete (?). Setting the origin to igp as the route is
+   redistributed lets it compete with EDGE1's network-statement route on equal terms; the ISP's next tie-break (lowest router-ID) decides. #}
+{% if rollback %}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  no redistribute static route-map REDIST-STATIC
+  redistribute static
+no route-map REDIST-STATIC
+{% else %}
+route-map REDIST-STATIC permit 10
+ set origin igp
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  no redistribute static
+  redistribute static route-map REDIST-STATIC
+{% endif %}

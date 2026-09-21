@@ -8,6 +8,7 @@
 #   labs/labtool.sh <lab> apply | rollback <id>  run the scenario in the lab's scenarios/ folder
 #   labs/labtool.sh <lab> show <DEVICE> "<cmd>"  read-only show command
 #   labs/labtool.sh <lab> capture <id>           show the lab's probes.txt commands before, after apply and after rollback
+#   labs/labtool.sh <lab> capture2 <id1> <id2>   apply id1, then id2 (which builds on it), snapshotting; then roll back id2 and id1
 #   labs/labtool.sh <lab> up                     import + start + bootstrap + baseline (a few minutes), then wait to converge
 #   labs/labtool.sh main stop | start            stop / start the shared 8-router lab (see below)
 #
@@ -73,6 +74,20 @@ case "$CMD" in
     snap APPLIED
     echo "########## ROLLBACK"; dock python scripts/run_scenario.py rollback "$SID" </dev/null 2>&1
     snap ROLLED_BACK
+    echo DONE ;;
+  capture2)
+    S1="${1:?usage: labtool.sh <lab> capture2 <id1> <id2>}"; S2="${2:?missing second scenario id}"; PROBES="$LABDIR/probes.txt"
+    snap() {
+      echo "########## $1"
+      while IFS='|' read -r d c; do
+        [ -z "$d" ] && continue; echo "--- $d# $c"
+        dock python scripts/run_scenario.py show "$d" "$c" </dev/null 2>&1
+      done < "$PROBES"
+    }
+    echo "########## APPLY $S1";    dock python scripts/run_scenario.py apply "$S1" </dev/null 2>&1; snap "AFTER $S1"
+    echo "########## APPLY $S2";    dock python scripts/run_scenario.py apply "$S2" </dev/null 2>&1; snap "AFTER $S2"
+    echo "########## ROLLBACK $S2"; dock python scripts/run_scenario.py rollback "$S2" </dev/null 2>&1; snap "AFTER ROLLBACK OF $S2"
+    echo "########## ROLLBACK $S1"; dock python scripts/run_scenario.py rollback "$S1" </dev/null 2>&1; snap "AFTER ROLLBACK OF $S1"
     echo DONE ;;
   *) echo "unknown command: $CMD" >&2; exit 2 ;;
 esac
