@@ -5,6 +5,11 @@
 `bgp-attributes.unl` is the 8-router lab that the dashboard's Lab tab and all 11 scenarios run on
 (see `docs/topology.md`). It is generated from `backend/inventory.yaml` by `backend/scripts/build_lab.py`.
 
+## Building a lab by hand
+
+Every lab folder has a generated `CONFIGS.md`: the links, every router's full configuration ready to paste on its console, and the scenario
+commands (apply and rollback) with the checks. Regenerate them with `python scripts/make-lab-configs.py [lab]` after changing a baseline or scenario.
+
 ## Per-attribute labs
 
 Standalone labs sized to one attribute's use case, each in its own folder with an inventory, baseline configs, a
