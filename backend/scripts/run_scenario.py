@@ -33,7 +33,7 @@ async def run(sid: str, rollback: bool) -> int:
 
 
 def main(argv: list[str]) -> int:
-    if len(argv) >= 3 and argv[0] in ("apply", "rollback"):
+    if len(argv) == 2 and argv[0] in ("apply", "rollback"):
         return asyncio.run(run(argv[1], argv[0] == "rollback"))
     if len(argv) == 3 and argv[0] == "show":
         devs = build_devices()

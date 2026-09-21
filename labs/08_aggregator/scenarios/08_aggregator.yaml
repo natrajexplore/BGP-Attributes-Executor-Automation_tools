@@ -11,13 +11,24 @@ settle_seconds: 40
 verify:
   - device: ISP
     command: "show ip bgp 10.10.0.0/16"
-    expect_regex: "\{650(10,65020|20,65010)\}"
+    expect_regex: "\\{650(10,65020|20,65010)\\}"
   - device: ISP
     command: "show ip bgp 10.10.0.0/16"
     must_not_match: "atomic-aggregate"
   - device: ISP
     command: "show ip bgp 10.10.0.0/16"
-    expect_regex: "aggregated by 65000 10\.255\.0\.1"
+    expect_regex: "aggregated by 65000 10\\.255\\.0\\.1"
   - device: SUB-A
     command: "show ip bgp 10.10.0.0/16"
     expect_regex: "Network not in table"
+rollback_verify:
+  # AGGREGATOR is present both with and without as-set, so the automatic inverse of the apply checks is wrong here.
+  - device: ISP
+    command: "show ip bgp 10.10.0.0/16"
+    must_not_match: "\\{650"
+  - device: ISP
+    command: "show ip bgp 10.10.0.0/16"
+    expect_regex: "atomic-aggregate"
+  - device: SUB-A
+    command: "show ip bgp 10.10.0.0/16"
+    must_not_match: "Network not in table"
