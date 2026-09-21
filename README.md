@@ -17,6 +17,7 @@ Everything below links to files in this repository. If you are reading this on G
 
 | I want to... | Go to |
 |---|---|
+| **New to networking?** Follow a guided path | [`docs/user-guide.md`](docs/user-guide.md): your first hour, a worked lab, reading output, an 8-week study plan |
 | **Learn** an attribute or MP-BGP from scratch | the dashboard's **Learn** tab: [how to open it](#the-learn-tab) |
 | **Run** the 11 scenarios one at a time with diffs | the dashboard's **Lab** tab: [the shared lab](#the-shared-8-router-lab-and-the-lab-tab) |
 | **Build a lab by hand** on the router consoles | [`labs/<lab>/CONFIGS.md`](#how-to-work-with-a-lab) (every router's config, ready to paste) |
@@ -274,6 +275,7 @@ After recreating the Kafka container, restart the exporter (`docker restart bgp-
 
 ## More documentation
 
+* [`docs/user-guide.md`](docs/user-guide.md): the user guide for a new network engineer
 * [`docs/topology.md`](docs/topology.md) and [`docs/addressing.md`](docs/addressing.md): the shared lab's design and address plan
 * [`docs/eve-setup.md`](docs/eve-setup.md): EVE-NG and network setup
 * [`docs/runbook.md`](docs/runbook.md): rebuild, baseline, health check
