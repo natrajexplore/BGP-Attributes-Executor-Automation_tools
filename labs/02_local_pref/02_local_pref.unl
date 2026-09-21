@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lab name="bgp-attr-02-local-pref" id="26db8026-a610-4c2c-b320-b1c23788a1bb" version="1" scripttimeout="300" lock="0" sase="0">
+ <topology>
+  <nodes>
+   <node id="1" name="CORE" type="dynamips" template="c7200" image="c7200-adventerprisek9-mz.152-4.S6" console="telnet" delay="0" cpu="0" ram="256" nvram="128" idlepc="0x606df838" config="0" left="450" top="250">
+    <slot id="1" module="PA-8E"/>
+    <interface id="0" name="fa0/0" type="ethernet" network_id="1"/>
+    <interface id="16" name="e1/0" type="ethernet" network_id="2"/>
+    <interface id="17" name="e1/1" type="ethernet" network_id="3"/>
+   </node>
+   <node id="2" name="EDGE1" type="dynamips" template="c7200" image="c7200-adventerprisek9-mz.152-4.S6" console="telnet" delay="0" cpu="0" ram="256" nvram="128" idlepc="0x606df838" config="0" left="200" top="250">
+    <slot id="1" module="PA-8E"/>
+    <interface id="0" name="fa0/0" type="ethernet" network_id="1"/>
+    <interface id="16" name="e1/0" type="ethernet" network_id="2"/>
+    <interface id="17" name="e1/1" type="ethernet" network_id="4"/>
+    <interface id="18" name="e1/2" type="ethernet" network_id="5"/>
+   </node>
+   <node id="3" name="EDGE2" type="dynamips" template="c7200" image="c7200-adventerprisek9-mz.152-4.S6" console="telnet" delay="0" cpu="0" ram="256" nvram="128" idlepc="0x606df838" config="0" left="700" top="250">
+    <slot id="1" module="PA-8E"/>
+    <interface id="0" name="fa0/0" type="ethernet" network_id="1"/>
+    <interface id="16" name="e1/0" type="ethernet" network_id="3"/>
+    <interface id="17" name="e1/1" type="ethernet" network_id="4"/>
+    <interface id="18" name="e1/2" type="ethernet" network_id="6"/>
+   </node>
+   <node id="4" name="ISP-A" type="dynamips" template="c7200" image="c7200-adventerprisek9-mz.152-4.S6" console="telnet" delay="0" cpu="0" ram="256" nvram="128" idlepc="0x606df838" config="0" left="200" top="100">
+    <slot id="1" module="PA-8E"/>
+    <interface id="0" name="fa0/0" type="ethernet" network_id="1"/>
+    <interface id="16" name="e1/0" type="ethernet" network_id="5"/>
+    <interface id="17" name="e1/1" type="ethernet" network_id="7"/>
+   </node>
+   <node id="5" name="ISP-B" type="dynamips" template="c7200" image="c7200-adventerprisek9-mz.152-4.S6" console="telnet" delay="0" cpu="0" ram="256" nvram="128" idlepc="0x606df838" config="0" left="700" top="100">
+    <slot id="1" module="PA-8E"/>
+    <interface id="0" name="fa0/0" type="ethernet" network_id="1"/>
+    <interface id="16" name="e1/0" type="ethernet" network_id="6"/>
+    <interface id="17" name="e1/1" type="ethernet" network_id="8"/>
+   </node>
+   <node id="6" name="CONTENT" type="dynamips" template="c7200" image="c7200-adventerprisek9-mz.152-4.S6" console="telnet" delay="0" cpu="0" ram="256" nvram="128" idlepc="0x606df838" config="0" left="450" top="40">
+    <slot id="1" module="PA-8E"/>
+    <interface id="0" name="fa0/0" type="ethernet" network_id="1"/>
+    <interface id="16" name="e1/0" type="ethernet" network_id="7"/>
+    <interface id="17" name="e1/1" type="ethernet" network_id="8"/>
+   </node>
+  </nodes>
+  <networks>
+   <network id="1" type="pnet1" name="MGMT-Cloud1" left="900" top="50" visibility="1"/>
+   <network id="2" type="bridge" name="CORE--EDGE1" left="325" top="250" visibility="1"/>
+   <network id="3" type="bridge" name="CORE--EDGE2" left="575" top="250" visibility="1"/>
+   <network id="4" type="bridge" name="EDGE1--EDGE2" left="450" top="250" visibility="1"/>
+   <network id="5" type="bridge" name="EDGE1--ISP-A" left="200" top="175" visibility="1"/>
+   <network id="6" type="bridge" name="EDGE2--ISP-B" left="700" top="175" visibility="1"/>
+   <network id="7" type="bridge" name="ISP-A--CONTENT" left="325" top="70" visibility="1"/>
+   <network id="8" type="bridge" name="ISP-B--CONTENT" left="575" top="70" visibility="1"/>
+  </networks>
+ </topology>
+ <objects/>
+</lab>

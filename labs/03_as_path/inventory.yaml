@@ -1,0 +1,64 @@
+# Lab 03_as_path: AS_PATH, steering inbound traffic with a prepend
+# An enterprise router (ENT) is dual-homed to two ISPs that both reach a content network. CONTENT breaks the tie between
+# two equal-length paths by router-ID (bgp bestpath compare-routerid), so the baseline is repeatable: it prefers ISP-A.
+# Prepending toward ISP-A makes that path longer, and CONTENT moves to ISP-B. ISP-A's own view changes too.
+# Generate the EVE-NG file with:  python backend/scripts/build_lab.py --inventory labs/03_as_path/inventory.yaml --out labs/03_as_path/03_as_path.unl
+
+defaults:
+  username: lab
+  password: lab123
+  secret: lab123
+  mgmt_gateway: 192.168.99.1
+  mgmt_mask: 255.255.255.0
+
+lab:
+  name: bgp-attr-03-as-path
+  uuid: 55d28267-0556-4b38-8a7a-f1aba867f5af
+  template: c7200
+  image: c7200-adventerprisek9-mz.152-4.S6
+  npe: npe-400
+  ram: 256
+  nvram: 128
+  idlepc: "0x606df838"
+  io_adapter: C7200-IO-FE
+  slots: [PA-8E]
+  mgmt_interface: fa0/0
+  mgmt_network:
+    type: pnet1
+    name: MGMT-Cloud1
+
+links:
+  - {a: ENT, a_if: e1/0, b: ISP-A, b_if: e1/0}   # 172.16.1.0/30 eBGP
+  - {a: ENT, a_if: e1/1, b: ISP-B, b_if: e1/0}   # 172.16.2.0/30 eBGP
+  - {a: ISP-A, a_if: e1/1, b: CONTENT, b_if: e1/0}   # 198.51.100.0/30 eBGP
+  - {a: ISP-B, a_if: e1/1, b: CONTENT, b_if: e1/1}   # 203.0.113.0/30 eBGP
+
+globals:
+  as_enterprise: 65000
+  ispa_neighbor: 172.16.1.1
+
+devices:
+  ENT:
+    role: edge
+    asn: 65000
+    mgmt_ip: 192.168.99.11
+    router_id: 10.255.0.11
+    canvas: [150, 250]
+  ISP-A:
+    role: provider
+    asn: 65001
+    mgmt_ip: 192.168.99.31
+    router_id: 10.255.1.1
+    canvas: [450, 100]
+  ISP-B:
+    role: provider
+    asn: 65002
+    mgmt_ip: 192.168.99.32
+    router_id: 10.255.2.1
+    canvas: [450, 400]
+  CONTENT:
+    role: content
+    asn: 65100
+    mgmt_ip: 192.168.99.33
+    router_id: 10.255.100.1
+    canvas: [750, 250]

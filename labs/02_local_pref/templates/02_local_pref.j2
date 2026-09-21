@@ -1,0 +1,14 @@
+{# LOCAL_PREF - EDGE2 gives routes learned from ISP-B Local-Pref 200. iBGP carries it to CORE and EDGE1, and the whole AS now
+   prefers the exit through ISP-B, EDGE1 included (Local-Pref is step 2, before the eBGP-over-iBGP rule at step 7). #}
+{% if rollback %}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  no neighbor {{ ispb_neighbor }} route-map ISPB-IN in
+no route-map ISPB-IN
+{% else %}
+route-map ISPB-IN permit 10
+ set local-preference {{ local_pref }}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  neighbor {{ ispb_neighbor }} route-map ISPB-IN in
+{% endif %}

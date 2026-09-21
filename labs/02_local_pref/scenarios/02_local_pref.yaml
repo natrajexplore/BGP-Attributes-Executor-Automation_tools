@@ -1,0 +1,28 @@
+title: "LOCAL_PREF - the whole AS follows one edge's ISP-B preference"
+attribute: LOCAL_PREF
+summary: >
+  EDGE2 sets Local-Pref 200 on routes from ISP-B. CORE, which has no ISP link, and EDGE1, which has its own eBGP path,
+  both switch to the path through EDGE2. The value stays inside the AS: ISP-A does not see it.
+template: 02_local_pref.j2
+targets: [EDGE2]
+vars:
+  local_pref: 200
+soft_clear: true
+settle_seconds: 40
+verify:
+  - device: CORE
+    command: "show ip bgp 100.100.100.0/24"
+    expect_regex: "localpref 200, valid, internal, best"
+  - device: EDGE1
+    command: "show ip bgp 100.100.100.0/24"
+    expect_regex: "localpref 200, valid, internal, best"
+  - device: ISP-A
+    command: "show ip bgp 100.100.100.0/24"
+    must_not_match: "localpref 200"
+rollback_verify:
+  - device: CORE
+    command: "show ip bgp 100.100.100.0/24"
+    must_not_match: "localpref 200"
+  - device: EDGE1
+    command: "show ip bgp 100.100.100.0/24"
+    expect_regex: "external, best"

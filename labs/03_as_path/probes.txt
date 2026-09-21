@@ -1,0 +1,3 @@
+ISP-A|show ip bgp 10.10.0.0/16
+ISP-B|show ip bgp 10.10.0.0/16
+CONTENT|show ip bgp 10.10.0.0/16

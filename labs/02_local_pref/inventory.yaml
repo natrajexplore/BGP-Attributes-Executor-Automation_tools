@@ -1,0 +1,79 @@
+# Lab 02_local_pref: LOCAL_PREF, a dual-homed enterprise choosing its exit
+# Two edge routers (EDGE1 to ISP-A, EDGE2 to ISP-B) and a core router that has no ISP link. At baseline CORE picks EDGE1
+# only because it has the lower router-ID. Setting LOCAL_PREF on ISP-B's routes at EDGE2 makes the whole AS follow, including
+# EDGE1, which abandons its own eBGP path. It also shows the side effect: the enterprise becomes a transit between the ISPs.
+# Generate the EVE-NG file with:  python backend/scripts/build_lab.py --inventory labs/02_local_pref/inventory.yaml --out labs/02_local_pref/02_local_pref.unl
+
+defaults:
+  username: lab
+  password: lab123
+  secret: lab123
+  mgmt_gateway: 192.168.99.1
+  mgmt_mask: 255.255.255.0
+
+lab:
+  name: bgp-attr-02-local-pref
+  uuid: 26db8026-a610-4c2c-b320-b1c23788a1bb
+  template: c7200
+  image: c7200-adventerprisek9-mz.152-4.S6
+  npe: npe-400
+  ram: 256
+  nvram: 128
+  idlepc: "0x606df838"
+  io_adapter: C7200-IO-FE
+  slots: [PA-8E]
+  mgmt_interface: fa0/0
+  mgmt_network:
+    type: pnet1
+    name: MGMT-Cloud1
+
+links:
+  - {a: CORE, a_if: e1/0, b: EDGE1, b_if: e1/0}   # 10.0.0.0/30 (OSPF)
+  - {a: CORE, a_if: e1/1, b: EDGE2, b_if: e1/0}   # 10.0.0.4/30 (OSPF)
+  - {a: EDGE1, a_if: e1/1, b: EDGE2, b_if: e1/1}   # 10.0.0.8/30 (OSPF)
+  - {a: EDGE1, a_if: e1/2, b: ISP-A, b_if: e1/0}   # 172.16.1.0/30 eBGP
+  - {a: EDGE2, a_if: e1/2, b: ISP-B, b_if: e1/0}   # 172.16.2.0/30 eBGP
+  - {a: ISP-A, a_if: e1/1, b: CONTENT, b_if: e1/0}   # 198.51.100.0/30 eBGP
+  - {a: ISP-B, a_if: e1/1, b: CONTENT, b_if: e1/1}   # 203.0.113.0/30 eBGP
+
+globals:
+  as_enterprise: 65000
+  ispb_neighbor: 172.16.2.1
+
+devices:
+  CORE:
+    role: core
+    asn: 65000
+    mgmt_ip: 192.168.99.21
+    router_id: 10.255.0.1
+    canvas: [450, 250]
+  EDGE1:
+    role: edge
+    asn: 65000
+    mgmt_ip: 192.168.99.11
+    router_id: 10.255.0.11
+    canvas: [200, 250]
+  EDGE2:
+    role: edge
+    asn: 65000
+    mgmt_ip: 192.168.99.12
+    router_id: 10.255.0.12
+    canvas: [700, 250]
+  ISP-A:
+    role: provider
+    asn: 65001
+    mgmt_ip: 192.168.99.31
+    router_id: 10.255.1.1
+    canvas: [200, 100]
+  ISP-B:
+    role: provider
+    asn: 65002
+    mgmt_ip: 192.168.99.32
+    router_id: 10.255.2.1
+    canvas: [700, 100]
+  CONTENT:
+    role: content
+    asn: 65100
+    mgmt_ip: 192.168.99.33
+    router_id: 10.255.100.1
+    canvas: [450, 40]

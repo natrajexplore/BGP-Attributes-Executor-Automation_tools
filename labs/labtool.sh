@@ -7,6 +7,8 @@
 #   labs/labtool.sh <lab> baseline               push baseline/<NODE>.cfg to every node
 #   labs/labtool.sh <lab> apply | rollback <id>  run the scenario in the lab's scenarios/ folder
 #   labs/labtool.sh <lab> show <DEVICE> "<cmd>"  read-only show command
+#   labs/labtool.sh <lab> capture <id>           show the lab's probes.txt commands before, after apply and after rollback
+#   labs/labtool.sh <lab> up                     import + start + bootstrap + baseline (a few minutes), then wait to converge
 #   labs/labtool.sh main stop | start            stop / start the shared 8-router lab (see below)
 #
 # Never run two labs at the same time: EVE keys Dynamips nodes by tenant and node id, so two labs collide.
@@ -54,5 +56,23 @@ case "$CMD" in
   bootstrap) dock python scripts/bootstrap.py "$@" ;;
   baseline)  dock python scripts/push_baseline.py "$@" ;;
   apply|rollback|show) dock python scripts/run_scenario.py "$CMD" "$@" ;;
+  up)
+    "$0" "$LAB" import; "$0" "$LAB" start; sleep 75
+    "$0" "$LAB" bootstrap; "$0" "$LAB" baseline; sleep 90; echo "lab $LAB is up" ;;
+  capture)
+    SID="${1:?usage: labtool.sh <lab> capture <scenario-id>}"; PROBES="$LABDIR/probes.txt"
+    snap() {
+      echo "########## $1"
+      while IFS='|' read -r d c; do
+        [ -z "$d" ] && continue; echo "--- $d# $c"
+        dock python scripts/run_scenario.py show "$d" "$c" </dev/null 2>&1
+      done < "$PROBES"
+    }
+    snap BASELINE
+    echo "########## APPLY";    dock python scripts/run_scenario.py apply "$SID" </dev/null 2>&1
+    snap APPLIED
+    echo "########## ROLLBACK"; dock python scripts/run_scenario.py rollback "$SID" </dev/null 2>&1
+    snap ROLLED_BACK
+    echo DONE ;;
   *) echo "unknown command: $CMD" >&2; exit 2 ;;
 esac

@@ -1,0 +1,23 @@
+title: "AS_PATH - a prepend toward ISP-A moves CONTENT to ISP-B"
+attribute: AS_PATH
+summary: >
+  ENT prepends AS 65000 three extra times toward ISP-A. CONTENT, which chose ISP-A by router-ID, now sees a longer path there
+  and chooses ISP-B. ISP-A's own view of the enterprise prefix changes too.
+template: 03_as_path.j2
+targets: [ENT]
+soft_clear: true
+settle_seconds: 40
+verify:
+  - device: ISP-A
+    command: "show ip bgp 10.10.0.0/16"
+    expect_regex: "65000 65000 65000 65000"
+  - device: CONTENT
+    command: "show ip bgp 10.10.0.0/16"
+    expect_regex: "^\\s*65002 65000\\s*\\n.*\\n.*best"
+rollback_verify:
+  - device: ISP-A
+    command: "show ip bgp 10.10.0.0/16"
+    must_not_match: "65000 65000 65000 65000"
+  - device: CONTENT
+    command: "show ip bgp 10.10.0.0/16"
+    expect_regex: "^\\s*65001 65000\\s*\\n.*\\n.*best"

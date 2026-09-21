@@ -12,6 +12,9 @@ scenario and a generated `.unl`. They are **not** served by the dashboard: you d
 
 | Lab | Use case | Status |
 |---|---|---|
+| `01_weight/` | Branch with a local ISP and a WAN path to HQ; weight makes it exit locally | Tested on the lab |
+| `02_local_pref/` | Dual-homed enterprise with a core router; the whole AS follows one edge, and the transit side effect | Tested on the lab |
+| `03_as_path/` | Two ISPs and a content network; a prepend moves inbound traffic | Tested on the lab |
 | `05_med/` | Two data centres linked to two POPs of the same provider (MED is compared between paths from one neighbor AS) | Tested on the lab |
 | `08_aggregator/` | Two subsidiary ASes summarised at a hub, showing a real AS_SET | Tested on the lab |
 
@@ -22,8 +25,7 @@ Each folder's `README.md` has the topology, addressing, commands and the router 
 ```
 # on the EVE VM, from /opt/bgp-attributes-executor
 labs/labtool.sh main stop ; docker stop bgp-attributes-executor       # never run two labs at once
-labs/labtool.sh <lab> import && labs/labtool.sh <lab> start
-labs/labtool.sh <lab> bootstrap ; labs/labtool.sh <lab> baseline
+labs/labtool.sh <lab> up                        # import + start + bootstrap + baseline
 labs/labtool.sh <lab> apply <scenario-id>
 ...
 labs/labtool.sh <lab> stop ; labs/labtool.sh main start ; docker start bgp-attributes-executor

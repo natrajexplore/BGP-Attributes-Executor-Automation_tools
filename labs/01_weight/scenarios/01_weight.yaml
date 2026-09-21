@@ -1,0 +1,25 @@
+title: "WEIGHT - the branch exits through its own local ISP"
+attribute: WEIGHT
+summary: >
+  SITE-R1 gives routes from its local ISP weight 300. At baseline it prefers the shorter path through HQ (AS_PATH 65100
+  versus 64500 65100); weight is checked first, so it now exits locally. The weight stays on SITE-R1: HQ-EDGE is unchanged.
+template: 01_weight.j2
+targets: [SITE-R1]
+vars:
+  weight: 300
+soft_clear: true
+settle_seconds: 30
+verify:
+  - device: SITE-R1
+    command: "show ip bgp 100.100.100.0/24"
+    expect_regex: "weight 300[^\\n]*external, best"
+  - device: HQ-EDGE
+    command: "show ip bgp 100.100.100.0/24"
+    must_not_match: "weight 300"
+rollback_verify:
+  - device: SITE-R1
+    command: "show ip bgp 100.100.100.0/24"
+    must_not_match: "weight 300"
+  - device: SITE-R1
+    command: "show ip bgp 100.100.100.0/24"
+    expect_regex: "internal, best"

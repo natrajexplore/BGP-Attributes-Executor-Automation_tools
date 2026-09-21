@@ -1,0 +1,14 @@
+{# AS_PATH prepend - ENT prepends its own AS three extra times toward ISP-A. Networks that compare path length now see the
+   ISP-A path as longer, so CONTENT moves to ISP-B, and ISP-A itself prefers to reach ENT the long way round. #}
+{% if rollback %}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  no neighbor {{ ispa_neighbor }} route-map ISPA-OUT-PREPEND out
+no route-map ISPA-OUT-PREPEND
+{% else %}
+route-map ISPA-OUT-PREPEND permit 10
+ set as-path prepend {{ as_enterprise }} {{ as_enterprise }} {{ as_enterprise }}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  neighbor {{ ispa_neighbor }} route-map ISPA-OUT-PREPEND out
+{% endif %}

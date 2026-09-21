@@ -1,0 +1,64 @@
+# Lab 01_weight: WEIGHT, a branch that breaks out through its own local ISP
+# A branch router (SITE-R1) has a local ISP link and a WAN link to HQ, which has its own upstream. At baseline the
+# shorter AS_PATH sends the branch out through HQ. WEIGHT, local to the branch router, makes it exit locally instead,
+# and no other router changes behaviour because weight is never advertised.
+# Generate the EVE-NG file with:  python backend/scripts/build_lab.py --inventory labs/01_weight/inventory.yaml --out labs/01_weight/01_weight.unl
+
+defaults:
+  username: lab
+  password: lab123
+  secret: lab123
+  mgmt_gateway: 192.168.99.1
+  mgmt_mask: 255.255.255.0
+
+lab:
+  name: bgp-attr-01-weight
+  uuid: c331d1e4-5851-4a86-a397-9aab12e98fdf
+  template: c7200
+  image: c7200-adventerprisek9-mz.152-4.S6
+  npe: npe-400
+  ram: 256
+  nvram: 128
+  idlepc: "0x606df838"
+  io_adapter: C7200-IO-FE
+  slots: [PA-8E]
+  mgmt_interface: fa0/0
+  mgmt_network:
+    type: pnet1
+    name: MGMT-Cloud1
+
+links:
+  - {a: SITE-R1, a_if: e1/0, b: LOCAL-ISP, b_if: e1/0}   # 198.51.100.0/30 eBGP, branch to its local ISP
+  - {a: SITE-R1, a_if: e1/1, b: HQ-EDGE, b_if: e1/0}   # 10.0.0.0/30 WAN (OSPF, iBGP)
+  - {a: HQ-EDGE, a_if: e1/1, b: INTERNET, b_if: e1/1}   # 172.16.12.0/30 eBGP, HQ upstream
+  - {a: LOCAL-ISP, a_if: e1/1, b: INTERNET, b_if: e1/0}   # 192.0.2.0/30 eBGP, local ISP upstream
+
+globals:
+  as_enterprise: 65000
+  localisp_neighbor: 198.51.100.1
+
+devices:
+  SITE-R1:
+    role: branch
+    asn: 65000
+    mgmt_ip: 192.168.99.11
+    router_id: 10.255.0.11
+    canvas: [150, 200]
+  HQ-EDGE:
+    role: edge
+    asn: 65000
+    mgmt_ip: 192.168.99.12
+    router_id: 10.255.0.12
+    canvas: [450, 350]
+  LOCAL-ISP:
+    role: provider
+    asn: 64500
+    mgmt_ip: 192.168.99.31
+    router_id: 10.255.64.1
+    canvas: [450, 60]
+  INTERNET:
+    role: content
+    asn: 65100
+    mgmt_ip: 192.168.99.32
+    router_id: 10.255.100.1
+    canvas: [750, 200]

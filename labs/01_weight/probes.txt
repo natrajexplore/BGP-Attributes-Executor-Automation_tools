@@ -1,0 +1,4 @@
+SITE-R1|show ip bgp 100.100.100.0/24
+HQ-EDGE|show ip bgp 100.100.100.0/24
+SITE-R1|show ip bgp neighbors 10.255.0.12 advertised-routes
+LOCAL-ISP|show ip bgp 100.100.100.0/24

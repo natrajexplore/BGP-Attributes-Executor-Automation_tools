@@ -1,0 +1,4 @@
+CORE|show ip bgp 100.100.100.0/24
+EDGE1|show ip bgp 100.100.100.0/24
+EDGE2|show ip bgp 100.100.100.0/24
+ISP-A|show ip bgp 100.100.100.0/24

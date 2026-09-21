@@ -1,0 +1,14 @@
+{# WEIGHT - local to SITE-R1. Routes learned from the local ISP get a high weight, so the branch exits locally
+   even though the path through HQ has a shorter AS_PATH. Weight is never advertised, so HQ-EDGE and everyone else are unaffected. #}
+{% if rollback %}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  no neighbor {{ localisp_neighbor }} route-map LOCAL-ISP-IN in
+no route-map LOCAL-ISP-IN
+{% else %}
+route-map LOCAL-ISP-IN permit 10
+ set weight {{ weight }}
+router bgp {{ as_enterprise }}
+ address-family ipv4
+  neighbor {{ localisp_neighbor }} route-map LOCAL-ISP-IN in
+{% endif %}
