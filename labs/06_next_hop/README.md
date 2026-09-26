@@ -14,10 +14,10 @@ route silently disappears from the far end of the network, although every BGP se
 
 | Router | AS | Loopback0 | Management | Links |
 |---|---|---|---|---|
-| ISP | 65001 | none | 192.168.99.31 | e1/0 172.16.1.1/30 to EDGE; Loopback1 100.100.100.1/24 |
-| EDGE | 65000 | 10.255.0.11 | 192.168.99.11 | e1/0 172.16.1.2/30 to ISP; e1/1 10.0.0.1/30 to CORE |
-| CORE | 65000 | 10.255.0.1 | 192.168.99.21 | e1/0 10.0.0.2/30 to EDGE; e1/1 10.0.0.5/30 to CLIENT |
-| CLIENT | 65000 | 10.255.0.20 | 192.168.99.22 | e1/0 10.0.0.6/30 to CORE |
+| ISP | 65001 | none | 192.168.99.131 | e1/0 172.16.1.1/30 to EDGE; Loopback1 100.100.100.1/24 |
+| EDGE | 65000 | 10.255.0.11 | 192.168.99.111 | e1/0 172.16.1.2/30 to ISP; e1/1 10.0.0.1/30 to CORE |
+| CORE | 65000 | 10.255.0.1 | 192.168.99.121 | e1/0 10.0.0.2/30 to EDGE; e1/1 10.0.0.5/30 to CLIENT |
+| CLIENT | 65000 | 10.255.0.20 | 192.168.99.122 | e1/0 10.0.0.6/30 to CORE |
 
 EDGE, CORE and CLIENT run OSPF for their loopbacks and links (the ISP link is left out). CORE is a route reflector with EDGE and
 CLIENT as its clients. iBGP runs over loopbacks, and EDGE has `neighbor 10.255.0.1 next-hop-self`.

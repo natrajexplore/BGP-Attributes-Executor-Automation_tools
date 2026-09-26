@@ -24,12 +24,12 @@ transit network between the ISPs.
 
 | Router | AS | Loopback0 | Management | Links |
 |---|---|---|---|---|
-| CORE | 65000 | 10.255.0.1 | 192.168.99.21 | e1/0 10.0.0.1/30 to EDGE1; e1/1 10.0.0.5/30 to EDGE2 |
-| EDGE1 | 65000 | 10.255.0.11 | 192.168.99.11 | e1/0 10.0.0.2/30 to CORE; e1/1 10.0.0.9/30 to EDGE2; e1/2 172.16.1.2/30 to ISP-A |
-| EDGE2 | 65000 | 10.255.0.12 | 192.168.99.12 | e1/0 10.0.0.6/30 to CORE; e1/1 10.0.0.10/30 to EDGE1; e1/2 172.16.2.2/30 to ISP-B |
-| ISP-A | 65001 | none | 192.168.99.31 | e1/0 172.16.1.1/30 to EDGE1; e1/1 198.51.100.1/30 to CONTENT |
-| ISP-B | 65002 | none | 192.168.99.32 | e1/0 172.16.2.1/30 to EDGE2; e1/1 203.0.113.1/30 to CONTENT |
-| CONTENT | 65100 | none | 192.168.99.33 | e1/0 198.51.100.2/30; e1/1 203.0.113.2/30; Loopback1 100.100.100.1/24 |
+| CORE | 65000 | 10.255.0.1 | 192.168.99.121 | e1/0 10.0.0.1/30 to EDGE1; e1/1 10.0.0.5/30 to EDGE2 |
+| EDGE1 | 65000 | 10.255.0.11 | 192.168.99.111 | e1/0 10.0.0.2/30 to CORE; e1/1 10.0.0.9/30 to EDGE2; e1/2 172.16.1.2/30 to ISP-A |
+| EDGE2 | 65000 | 10.255.0.12 | 192.168.99.112 | e1/0 10.0.0.6/30 to CORE; e1/1 10.0.0.10/30 to EDGE1; e1/2 172.16.2.2/30 to ISP-B |
+| ISP-A | 65001 | none | 192.168.99.131 | e1/0 172.16.1.1/30 to EDGE1; e1/1 198.51.100.1/30 to CONTENT |
+| ISP-B | 65002 | none | 192.168.99.132 | e1/0 172.16.2.1/30 to EDGE2; e1/1 203.0.113.1/30 to CONTENT |
+| CONTENT | 65100 | none | 192.168.99.133 | e1/0 198.51.100.2/30; e1/1 203.0.113.2/30; Loopback1 100.100.100.1/24 |
 
 The three enterprise routers run OSPF and a full iBGP mesh over their loopbacks; the edges use `next-hop-self`.
 

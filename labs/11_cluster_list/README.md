@@ -20,11 +20,11 @@ stays up), but the two reflectors now throw away each other's routes, and Europe
 
 | Router | Loopback0 | Management | Cluster-ID | Links |
 |---|---|---|---|---|
-| RR-TOP | 10.255.0.1 | 192.168.99.21 | 1.1.1.1 | e1/0 10.0.0.1/30 to RR-EU; e1/1 10.0.0.5/30 to RR-US |
-| RR-EU | 10.255.0.2 | 192.168.99.22 | 2.2.2.2 | e1/0 10.0.0.2/30 to RR-TOP; e1/1 10.0.0.9/30 to EU-1 |
-| RR-US | 10.255.0.3 | 192.168.99.23 | 3.3.3.3 | e1/0 10.0.0.6/30 to RR-TOP; e1/1 10.0.0.13/30 to US-1 |
-| EU-1 | 10.255.0.11 | 192.168.99.11 | none | e1/0 10.0.0.10/30 to RR-EU; Loopback1 10.1.1.1/24 |
-| US-1 | 10.255.0.21 | 192.168.99.12 | none | e1/0 10.0.0.14/30 to RR-US; Loopback1 10.2.1.1/24 |
+| RR-TOP | 10.255.0.1 | 192.168.99.121 | 1.1.1.1 | e1/0 10.0.0.1/30 to RR-EU; e1/1 10.0.0.5/30 to RR-US |
+| RR-EU | 10.255.0.2 | 192.168.99.122 | 2.2.2.2 | e1/0 10.0.0.2/30 to RR-TOP; e1/1 10.0.0.9/30 to EU-1 |
+| RR-US | 10.255.0.3 | 192.168.99.123 | 3.3.3.3 | e1/0 10.0.0.6/30 to RR-TOP; e1/1 10.0.0.13/30 to US-1 |
+| EU-1 | 10.255.0.11 | 192.168.99.111 | none | e1/0 10.0.0.10/30 to RR-EU; Loopback1 10.1.1.1/24 |
+| US-1 | 10.255.0.21 | 192.168.99.112 | none | e1/0 10.0.0.14/30 to RR-US; Loopback1 10.2.1.1/24 |
 
 All routers are in AS 65000 and run OSPF and iBGP over loopbacks. RR-TOP has RR-EU and RR-US as clients; RR-EU has EU-1 as a client;
 RR-US has US-1 as a client; RR-EU and RR-US treat RR-TOP as an ordinary iBGP peer.

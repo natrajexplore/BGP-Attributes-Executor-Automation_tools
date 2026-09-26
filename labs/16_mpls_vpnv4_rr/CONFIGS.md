@@ -29,13 +29,13 @@ captured output are in `README.md`.
 
 | Router | Role | AS | Management IP |
 |---|---|---|---|
-| CE1 | customer | 65101 | 192.168.99.11 |
-| CE4 | customer | 65104 | 192.168.99.14 |
-| PE1 | pe | 65000 | 192.168.99.21 |
-| PE2 | pe | 65000 | 192.168.99.22 |
-| PE3 | pe | 65000 | 192.168.99.23 |
-| PE4 | pe | 65000 | 192.168.99.24 |
-| RR | core | 65000 | 192.168.99.30 |
+| CE1 | customer | 65101 | 192.168.99.111 |
+| CE4 | customer | 65104 | 192.168.99.114 |
+| PE1 | pe | 65000 | 192.168.99.121 |
+| PE2 | pe | 65000 | 192.168.99.122 |
+| PE3 | pe | 65000 | 192.168.99.123 |
+| PE4 | pe | 65000 | 192.168.99.124 |
+| RR | core | 65000 | 192.168.99.130 |
 
 ## CE1
 
@@ -57,7 +57,7 @@ interface Loopback1
 interface FastEthernet0/0
  description === MGMT (Cloud1) ===
  ip vrf forwarding MGMT
- ip address 192.168.99.11 255.255.255.0
+ ip address 192.168.99.111 255.255.255.0
  duplex auto
  speed auto
  no shutdown
@@ -108,7 +108,7 @@ interface Loopback1
 interface FastEthernet0/0
  description === MGMT (Cloud1) ===
  ip vrf forwarding MGMT
- ip address 192.168.99.14 255.255.255.0
+ ip address 192.168.99.114 255.255.255.0
  duplex auto
  speed auto
  no shutdown
@@ -164,7 +164,7 @@ interface Loopback0
 interface FastEthernet0/0
  description === MGMT (Cloud1) ===
  ip vrf forwarding MGMT
- ip address 192.168.99.21 255.255.255.0
+ ip address 192.168.99.121 255.255.255.0
  duplex auto
  speed auto
  no shutdown
@@ -241,7 +241,7 @@ interface Loopback0
 interface FastEthernet0/0
  description === MGMT (Cloud1) ===
  ip vrf forwarding MGMT
- ip address 192.168.99.22 255.255.255.0
+ ip address 192.168.99.122 255.255.255.0
  duplex auto
  speed auto
  no shutdown
@@ -306,7 +306,7 @@ interface Loopback0
 interface FastEthernet0/0
  description === MGMT (Cloud1) ===
  ip vrf forwarding MGMT
- ip address 192.168.99.23 255.255.255.0
+ ip address 192.168.99.123 255.255.255.0
  duplex auto
  speed auto
  no shutdown
@@ -371,7 +371,7 @@ interface Loopback0
 interface FastEthernet0/0
  description === MGMT (Cloud1) ===
  ip vrf forwarding MGMT
- ip address 192.168.99.24 255.255.255.0
+ ip address 192.168.99.124 255.255.255.0
  duplex auto
  speed auto
  no shutdown
@@ -443,7 +443,7 @@ interface Loopback0
 interface FastEthernet0/0
  description === MGMT (Cloud1) ===
  ip vrf forwarding MGMT
- ip address 192.168.99.30 255.255.255.0
+ ip address 192.168.99.130 255.255.255.0
  duplex auto
  speed auto
  no shutdown

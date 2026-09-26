@@ -27,11 +27,11 @@ captured output are in `README.md`.
 
 | Router | Role | AS | Management IP |
 |---|---|---|---|
-| RR-TOP | route-reflector | 65000 | 192.168.99.21 |
-| RR-EU | route-reflector | 65000 | 192.168.99.22 |
-| RR-US | route-reflector | 65000 | 192.168.99.23 |
-| EU-1 | leaf | 65000 | 192.168.99.11 |
-| US-1 | leaf | 65000 | 192.168.99.12 |
+| RR-TOP | route-reflector | 65000 | 192.168.99.121 |
+| RR-EU | route-reflector | 65000 | 192.168.99.122 |
+| RR-US | route-reflector | 65000 | 192.168.99.123 |
+| EU-1 | leaf | 65000 | 192.168.99.111 |
+| US-1 | leaf | 65000 | 192.168.99.112 |
 
 ## EU-1
 
@@ -57,7 +57,7 @@ interface Loopback1
 interface FastEthernet0/0
  description === MGMT (Cloud1) ===
  ip vrf forwarding MGMT
- ip address 192.168.99.11 255.255.255.0
+ ip address 192.168.99.111 255.255.255.0
  duplex auto
  speed auto
  no shutdown
@@ -115,7 +115,7 @@ interface Loopback0
 interface FastEthernet0/0
  description === MGMT (Cloud1) ===
  ip vrf forwarding MGMT
- ip address 192.168.99.22 255.255.255.0
+ ip address 192.168.99.122 255.255.255.0
  duplex auto
  speed auto
  no shutdown
@@ -186,7 +186,7 @@ interface Loopback0
 interface FastEthernet0/0
  description === MGMT (Cloud1) ===
  ip vrf forwarding MGMT
- ip address 192.168.99.21 255.255.255.0
+ ip address 192.168.99.121 255.255.255.0
  duplex auto
  speed auto
  no shutdown
@@ -258,7 +258,7 @@ interface Loopback0
 interface FastEthernet0/0
  description === MGMT (Cloud1) ===
  ip vrf forwarding MGMT
- ip address 192.168.99.23 255.255.255.0
+ ip address 192.168.99.123 255.255.255.0
  duplex auto
  speed auto
  no shutdown
@@ -333,7 +333,7 @@ interface Loopback1
 interface FastEthernet0/0
  description === MGMT (Cloud1) ===
  ip vrf forwarding MGMT
- ip address 192.168.99.12 255.255.255.0
+ ip address 192.168.99.112 255.255.255.0
  duplex auto
  speed auto
  no shutdown

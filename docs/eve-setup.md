@@ -85,8 +85,8 @@ docker exec -it bgp-attributes-executor python scripts/healthcheck.py
 ## 7. Verify the path before touching the dashboard
 
 ```bash
-ping 192.168.99.11                 # from the EVE host
-ssh lab@192.168.99.11              # EDGE1
+ping 192.168.99.111                 # from the EVE host
+ssh lab@192.168.99.111              # EDGE1
 #   show ip ospf neighbor
 #   show ip bgp summary
 #   show ip bgp 100.100.100.0/24   # expect a path via ISP-A and via iBGP

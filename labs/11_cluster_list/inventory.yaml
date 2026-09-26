@@ -42,30 +42,30 @@ devices:
   RR-TOP:
     role: route-reflector
     asn: 65000
-    mgmt_ip: 192.168.99.21
+    mgmt_ip: 192.168.99.121
     router_id: 10.255.0.1
     canvas: [450, 60]
   RR-EU:
     role: route-reflector
     asn: 65000
-    mgmt_ip: 192.168.99.22
+    mgmt_ip: 192.168.99.122
     router_id: 10.255.0.2
     canvas: [200, 250]
   RR-US:
     role: route-reflector
     asn: 65000
-    mgmt_ip: 192.168.99.23
+    mgmt_ip: 192.168.99.123
     router_id: 10.255.0.3
     canvas: [700, 250]
   EU-1:
     role: leaf
     asn: 65000
-    mgmt_ip: 192.168.99.11
+    mgmt_ip: 192.168.99.111
     router_id: 10.255.0.11
     canvas: [200, 450]
   US-1:
     role: leaf
     asn: 65000
-    mgmt_ip: 192.168.99.12
+    mgmt_ip: 192.168.99.112
     router_id: 10.255.0.21
     canvas: [700, 450]

@@ -26,10 +26,10 @@ captured output are in `README.md`.
 
 | Router | Role | AS | Management IP |
 |---|---|---|---|
-| SUB-A | subsidiary | 65010 | 192.168.99.11 |
-| SUB-B | subsidiary | 65020 | 192.168.99.12 |
-| HQ-EDGE | edge | 65000 | 192.168.99.21 |
-| ISP | provider | 65001 | 192.168.99.31 |
+| SUB-A | subsidiary | 65010 | 192.168.99.111 |
+| SUB-B | subsidiary | 65020 | 192.168.99.112 |
+| HQ-EDGE | edge | 65000 | 192.168.99.121 |
+| ISP | provider | 65001 | 192.168.99.131 |
 
 ## HQ-EDGE
 
@@ -47,7 +47,7 @@ username lab privilege 15 secret lab123
 interface FastEthernet0/0
  description === MGMT (Cloud1) ===
  ip vrf forwarding MGMT
- ip address 192.168.99.21 255.255.255.0
+ ip address 192.168.99.121 255.255.255.0
  duplex auto
  speed auto
  no shutdown
@@ -112,7 +112,7 @@ username lab privilege 15 secret lab123
 interface FastEthernet0/0
  description === MGMT (Cloud1) ===
  ip vrf forwarding MGMT
- ip address 192.168.99.31 255.255.255.0
+ ip address 192.168.99.131 255.255.255.0
  duplex auto
  speed auto
  no shutdown
@@ -158,7 +158,7 @@ username lab privilege 15 secret lab123
 interface FastEthernet0/0
  description === MGMT (Cloud1) ===
  ip vrf forwarding MGMT
- ip address 192.168.99.11 255.255.255.0
+ ip address 192.168.99.111 255.255.255.0
  duplex auto
  speed auto
  no shutdown
@@ -209,7 +209,7 @@ username lab privilege 15 secret lab123
 interface FastEthernet0/0
  description === MGMT (Cloud1) ===
  ip vrf forwarding MGMT
- ip address 192.168.99.12 255.255.255.0
+ ip address 192.168.99.112 255.255.255.0
  duplex auto
  speed auto
  no shutdown

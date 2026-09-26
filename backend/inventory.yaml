@@ -64,48 +64,48 @@ devices:
   CORE-RR1:
     role: route-reflector
     asn: 65000
-    mgmt_ip: 192.168.99.21
+    mgmt_ip: 192.168.99.121
     router_id: 10.255.0.1
     canvas: [400, 460]
   CORE-RR2:
     role: route-reflector
     asn: 65000
-    mgmt_ip: 192.168.99.22
+    mgmt_ip: 192.168.99.122
     router_id: 10.255.0.2
     canvas: [640, 460]
   EDGE1:
     role: edge
     asn: 65000
-    mgmt_ip: 192.168.99.11
+    mgmt_ip: 192.168.99.111
     router_id: 10.255.0.11
     canvas: [340, 310]
   EDGE2:
     role: edge
     asn: 65000
-    mgmt_ip: 192.168.99.12
+    mgmt_ip: 192.168.99.112
     router_id: 10.255.0.12
     canvas: [700, 310]
   CE-LAN:
     role: internal
     asn: 65000
-    mgmt_ip: 192.168.99.20
+    mgmt_ip: 192.168.99.120
     router_id: 10.255.0.20
     canvas: [520, 600]
   ISPA-1:
     role: provider
     asn: 65001
-    mgmt_ip: 192.168.99.31
+    mgmt_ip: 192.168.99.131
     router_id: 10.255.1.1
     canvas: [320, 150]
   ISPB-1:
     role: provider
     asn: 65002
-    mgmt_ip: 192.168.99.32
+    mgmt_ip: 192.168.99.132
     router_id: 10.255.2.1
     canvas: [720, 150]
   CONTENT:
     role: content
     asn: 65100
-    mgmt_ip: 192.168.99.33
+    mgmt_ip: 192.168.99.133
     router_id: 10.255.100.1
     canvas: [520, 40]

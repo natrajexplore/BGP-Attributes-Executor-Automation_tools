@@ -16,11 +16,11 @@ route. There are two standard fixes, one on the provider's PE (`as-override`) an
 
 | Router | Role | AS | Loopback0 | Management | Links |
 |---|---|---|---|---|---|
-| CE1 | customer site 1 | 65100 | (none) | 192.168.99.11 | e1/0 172.16.0.2/30 to PE1; Loopback1 10.1.1.1/24 |
-| PE1 | provider edge | 65000 | 10.255.0.1 | 192.168.99.21 | e1/0 10.0.1.1/30 to P; e1/1 172.16.0.1/30 (VRF CUST) |
-| P | provider core | 65000 | 10.255.0.2 | 192.168.99.22 | e1/0 10.0.1.2/30; e1/1 10.0.2.1/30 (no BGP) |
-| PE2 | provider edge | 65000 | 10.255.0.3 | 192.168.99.23 | e1/0 10.0.2.2/30 to P; e1/1 172.16.0.1/30 (VRF CUST) |
-| CE2 | customer site 2 | 65100 | (none) | 192.168.99.12 | e1/0 172.16.0.2/30 to PE2; Loopback1 10.2.1.1/24 |
+| CE1 | customer site 1 | 65100 | (none) | 192.168.99.111 | e1/0 172.16.0.2/30 to PE1; Loopback1 10.1.1.1/24 |
+| PE1 | provider edge | 65000 | 10.255.0.1 | 192.168.99.121 | e1/0 10.0.1.1/30 to P; e1/1 172.16.0.1/30 (VRF CUST) |
+| P | provider core | 65000 | 10.255.0.2 | 192.168.99.122 | e1/0 10.0.1.2/30; e1/1 10.0.2.1/30 (no BGP) |
+| PE2 | provider edge | 65000 | 10.255.0.3 | 192.168.99.123 | e1/0 10.0.2.2/30 to P; e1/1 172.16.0.1/30 (VRF CUST) |
+| CE2 | customer site 2 | 65100 | (none) | 192.168.99.112 | e1/0 172.16.0.2/30 to PE2; Loopback1 10.2.1.1/24 |
 
 Both PE-CE links use the same subnet, 172.16.0.0/30: each PE holds it inside a VRF and nobody else sees it, so one standard
 numbering plan works for every site (and one scenario template fits both PEs and both CEs).

@@ -22,10 +22,10 @@ Here the components come from two different ASes, so the AS_SET holds real numbe
 
 | Router | AS | Management | Links |
 |---|---|---|---|
-| SUB-A | 65010 | 192.168.99.11 | e1/0 172.16.10.1/30 to HQ-EDGE; Loopback1 10.10.1.1/24 |
-| SUB-B | 65020 | 192.168.99.12 | e1/0 172.16.20.1/30 to HQ-EDGE; Loopback1 10.10.2.1/24 |
-| HQ-EDGE | 65000 | 192.168.99.21 | e1/0 172.16.10.2/30, e1/1 172.16.20.2/30, e1/2 172.16.100.2/30 |
-| ISP | 65001 | 192.168.99.31 | e1/0 172.16.100.1/30 to HQ-EDGE |
+| SUB-A | 65010 | 192.168.99.111 | e1/0 172.16.10.1/30 to HQ-EDGE; Loopback1 10.10.1.1/24 |
+| SUB-B | 65020 | 192.168.99.112 | e1/0 172.16.20.1/30 to HQ-EDGE; Loopback1 10.10.2.1/24 |
+| HQ-EDGE | 65000 | 192.168.99.121 | e1/0 172.16.10.2/30, e1/1 172.16.20.2/30, e1/2 172.16.100.2/30 |
+| ISP | 65001 | 192.168.99.131 | e1/0 172.16.100.1/30 to HQ-EDGE |
 
 All sessions are eBGP. The baseline summary is `aggregate-address 10.10.0.0 255.255.0.0 summary-only` (no `as-set`).
 

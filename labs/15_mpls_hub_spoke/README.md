@@ -19,13 +19,13 @@ the branches directly. In an L3VPN the topology is not fixed by the cables but b
 
 | Router | Role | AS | Loopback0 | Management | Links |
 |---|---|---|---|---|---|
-| CE-S1 | spoke 1 | 65101 | (none) | 192.168.99.11 | e1/0 172.16.1.2/30 to PE1; Loopback1 10.1.0.1/24 |
-| CE-S2 | spoke 2 | 65102 | (none) | 192.168.99.12 | e1/0 172.16.2.2/30 to PE2; Loopback1 10.2.0.1/24 |
-| CE-HUB | hub / firewall | 65900 | (none) | 192.168.99.15 | e1/0 172.16.3.2/30 to PE3 (HUB-IN); e1/1 172.16.4.2/30 to PE3 (HUB-OUT); Loopback1 10.100.0.1/24 |
-| PE1 | provider edge | 65000 | 10.255.0.1 | 192.168.99.21 | e1/0 10.0.1.1/30 to P; e1/1 172.16.1.1/30 (VRF SPOKE) |
-| P | provider core | 65000 | 10.255.0.2 | 192.168.99.22 | e1/0 10.0.1.2/30; e1/1 10.0.2.1/30; e1/2 10.0.3.1/30 (no BGP) |
-| PE2 | provider edge | 65000 | 10.255.0.3 | 192.168.99.23 | e1/0 10.0.2.2/30 to P; e1/1 172.16.2.1/30 (VRF SPOKE) |
-| PE3 | provider edge (hub) | 65000 | 10.255.0.4 | 192.168.99.24 | e1/0 10.0.3.2/30 to P; e1/1 172.16.3.1/30 (VRF HUB-IN); e1/2 172.16.4.1/30 (VRF HUB-OUT) |
+| CE-S1 | spoke 1 | 65101 | (none) | 192.168.99.111 | e1/0 172.16.1.2/30 to PE1; Loopback1 10.1.0.1/24 |
+| CE-S2 | spoke 2 | 65102 | (none) | 192.168.99.112 | e1/0 172.16.2.2/30 to PE2; Loopback1 10.2.0.1/24 |
+| CE-HUB | hub / firewall | 65900 | (none) | 192.168.99.115 | e1/0 172.16.3.2/30 to PE3 (HUB-IN); e1/1 172.16.4.2/30 to PE3 (HUB-OUT); Loopback1 10.100.0.1/24 |
+| PE1 | provider edge | 65000 | 10.255.0.1 | 192.168.99.121 | e1/0 10.0.1.1/30 to P; e1/1 172.16.1.1/30 (VRF SPOKE) |
+| P | provider core | 65000 | 10.255.0.2 | 192.168.99.122 | e1/0 10.0.1.2/30; e1/1 10.0.2.1/30; e1/2 10.0.3.1/30 (no BGP) |
+| PE2 | provider edge | 65000 | 10.255.0.3 | 192.168.99.123 | e1/0 10.0.2.2/30 to P; e1/1 172.16.2.1/30 (VRF SPOKE) |
+| PE3 | provider edge (hub) | 65000 | 10.255.0.4 | 192.168.99.124 | e1/0 10.0.3.2/30 to P; e1/1 172.16.3.1/30 (VRF HUB-IN); e1/2 172.16.4.1/30 (VRF HUB-OUT) |
 
 Route-target design:
 

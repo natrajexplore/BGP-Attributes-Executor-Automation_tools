@@ -21,10 +21,10 @@ so CONTENT breaks the tie with the neighbor's router-ID, and always chooses ISP-
 
 | Router | AS | Management | Links |
 |---|---|---|---|
-| ENT | 65000 | 192.168.99.11 | e1/0 172.16.1.2/30 to ISP-A; e1/1 172.16.2.2/30 to ISP-B; originates 10.10.0.0/16 |
-| ISP-A | 65001 | 192.168.99.31 | e1/0 172.16.1.1/30 to ENT; e1/1 198.51.100.1/30 to CONTENT |
-| ISP-B | 65002 | 192.168.99.32 | e1/0 172.16.2.1/30 to ENT; e1/1 203.0.113.1/30 to CONTENT |
-| CONTENT | 65100 | 192.168.99.33 | e1/0 198.51.100.2/30; e1/1 203.0.113.2/30; `bgp bestpath compare-routerid` |
+| ENT | 65000 | 192.168.99.111 | e1/0 172.16.1.2/30 to ISP-A; e1/1 172.16.2.2/30 to ISP-B; originates 10.10.0.0/16 |
+| ISP-A | 65001 | 192.168.99.131 | e1/0 172.16.1.1/30 to ENT; e1/1 198.51.100.1/30 to CONTENT |
+| ISP-B | 65002 | 192.168.99.132 | e1/0 172.16.2.1/30 to ENT; e1/1 203.0.113.1/30 to CONTENT |
+| CONTENT | 65100 | 192.168.99.133 | e1/0 198.51.100.2/30; e1/1 203.0.113.2/30; `bgp bestpath compare-routerid` |
 
 All sessions are eBGP; there is no IGP.
 

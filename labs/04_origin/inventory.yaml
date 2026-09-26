@@ -38,18 +38,18 @@ devices:
   EDGE1:
     role: edge
     asn: 65000
-    mgmt_ip: 192.168.99.11
+    mgmt_ip: 192.168.99.111
     router_id: 10.255.0.11
     canvas: [150, 100]
   EDGE2:
     role: edge
     asn: 65000
-    mgmt_ip: 192.168.99.12
+    mgmt_ip: 192.168.99.112
     router_id: 10.255.0.2
     canvas: [150, 400]
   ISP:
     role: provider
     asn: 65001
-    mgmt_ip: 192.168.99.31
+    mgmt_ip: 192.168.99.131
     router_id: 10.255.1.1
     canvas: [500, 250]

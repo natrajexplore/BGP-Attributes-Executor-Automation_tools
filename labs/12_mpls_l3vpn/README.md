@@ -17,11 +17,11 @@ traffic across a core that knows nothing about the customer.
 
 | Router | Role | AS | Loopback0 | Management | Links |
 |---|---|---|---|---|---|
-| CE1 | customer edge | 65101 | (none) | 192.168.99.11 | e1/0 172.16.1.2/30 to PE1; Loopback1 10.1.1.1/24 (the LAN) |
-| PE1 | provider edge | 65000 | 10.255.0.1 | 192.168.99.21 | e1/0 10.0.1.1/30 to P (MPLS); e1/1 172.16.1.1/30 to CE1 (VRF CUST) |
-| P | provider core | 65000 | 10.255.0.2 | 192.168.99.22 | e1/0 10.0.1.2/30 to PE1; e1/1 10.0.2.1/30 to PE2 (both MPLS) |
-| PE2 | provider edge | 65000 | 10.255.0.3 | 192.168.99.23 | e1/0 10.0.2.2/30 to P (MPLS); e1/1 172.16.2.1/30 to CE2 (VRF CUST) |
-| CE2 | customer edge | 65102 | (none) | 192.168.99.12 | e1/0 172.16.2.2/30 to PE2; Loopback1 10.2.1.1/24 (the LAN) |
+| CE1 | customer edge | 65101 | (none) | 192.168.99.111 | e1/0 172.16.1.2/30 to PE1; Loopback1 10.1.1.1/24 (the LAN) |
+| PE1 | provider edge | 65000 | 10.255.0.1 | 192.168.99.121 | e1/0 10.0.1.1/30 to P (MPLS); e1/1 172.16.1.1/30 to CE1 (VRF CUST) |
+| P | provider core | 65000 | 10.255.0.2 | 192.168.99.122 | e1/0 10.0.1.2/30 to PE1; e1/1 10.0.2.1/30 to PE2 (both MPLS) |
+| PE2 | provider edge | 65000 | 10.255.0.3 | 192.168.99.123 | e1/0 10.0.2.2/30 to P (MPLS); e1/1 172.16.2.1/30 to CE2 (VRF CUST) |
+| CE2 | customer edge | 65102 | (none) | 192.168.99.112 | e1/0 172.16.2.2/30 to PE2; Loopback1 10.2.1.1/24 (the LAN) |
 
 The customer's VRF is `CUST` on both PEs: `rd 65000:1`, `route-target both 65000:1`. The **P router has no BGP at all**:
 it only runs OSPF and LDP, so it never learns a customer route. PE1 and PE2 peer with each other over their loopbacks with

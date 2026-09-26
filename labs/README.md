@@ -5,6 +5,11 @@
 `bgp-attributes.unl` is the 8-router lab that the dashboard's Lab tab and all 11 scenarios run on
 (see `docs/topology.md`). It is generated from `backend/inventory.yaml` by `backend/scripts/build_lab.py`.
 
+## Management addresses
+
+Every lab in this repository uses management addresses **192.168.99.101 to .199** (Fa0/0 in VRF `MGMT`, gateway 192.168.99.1). Other projects on the same EVE
+bridge (for example an `ospf-sla` lab on 192.168.99.11 to .14) keep the lower addresses. See [`docs/addressing.md`](../docs/addressing.md).
+
 ## Building a lab by hand
 
 Every lab folder has a generated `CONFIGS.md`: the links, every router's full configuration ready to paste on its console, and the scenario

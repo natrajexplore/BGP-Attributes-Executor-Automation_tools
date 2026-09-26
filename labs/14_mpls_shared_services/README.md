@@ -21,12 +21,12 @@ service, and the customers and the service import each other's RT, while the cus
 
 | Router | Role | AS | Loopback0 | Management | Links |
 |---|---|---|---|---|---|
-| CE-A | customer A | 65101 | (none) | 192.168.99.11 | e1/0 172.16.1.2/30 to PE1; Loopback1 10.1.0.1/24 |
-| CE-B | customer B | 65201 | (none) | 192.168.99.13 | e1/0 172.16.2.2/30 to PE1; Loopback1 10.2.0.1/24 |
-| CE-SVC | shared services | 65900 | (none) | 192.168.99.14 | e1/0 172.16.3.2/30 to PE2; Loopback1 10.9.0.1/24 |
-| PE1 | provider edge | 65000 | 10.255.0.1 | 192.168.99.21 | e1/0 10.0.1.1/30 to P; e1/1 172.16.1.1/30 (VRF CUST-A); e1/2 172.16.2.1/30 (VRF CUST-B) |
-| P | provider core | 65000 | 10.255.0.2 | 192.168.99.22 | e1/0 10.0.1.2/30; e1/1 10.0.2.1/30 (no BGP) |
-| PE2 | provider edge | 65000 | 10.255.0.3 | 192.168.99.23 | e1/0 10.0.2.2/30 to P; e1/1 172.16.3.1/30 (VRF SHARED) |
+| CE-A | customer A | 65101 | (none) | 192.168.99.111 | e1/0 172.16.1.2/30 to PE1; Loopback1 10.1.0.1/24 |
+| CE-B | customer B | 65201 | (none) | 192.168.99.113 | e1/0 172.16.2.2/30 to PE1; Loopback1 10.2.0.1/24 |
+| CE-SVC | shared services | 65900 | (none) | 192.168.99.114 | e1/0 172.16.3.2/30 to PE2; Loopback1 10.9.0.1/24 |
+| PE1 | provider edge | 65000 | 10.255.0.1 | 192.168.99.121 | e1/0 10.0.1.1/30 to P; e1/1 172.16.1.1/30 (VRF CUST-A); e1/2 172.16.2.1/30 (VRF CUST-B) |
+| P | provider core | 65000 | 10.255.0.2 | 192.168.99.122 | e1/0 10.0.1.2/30; e1/1 10.0.2.1/30 (no BGP) |
+| PE2 | provider edge | 65000 | 10.255.0.3 | 192.168.99.123 | e1/0 10.0.2.2/30 to P; e1/1 172.16.3.1/30 (VRF SHARED) |
 
 Route-target design (RD in brackets):
 

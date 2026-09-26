@@ -40,24 +40,24 @@ devices:
   ISP:
     role: provider
     asn: 65001
-    mgmt_ip: 192.168.99.31
+    mgmt_ip: 192.168.99.131
     router_id: 10.255.1.1
     canvas: [100, 250]
   EDGE:
     role: edge
     asn: 65000
-    mgmt_ip: 192.168.99.11
+    mgmt_ip: 192.168.99.111
     router_id: 10.255.0.11
     canvas: [350, 250]
   CORE:
     role: route-reflector
     asn: 65000
-    mgmt_ip: 192.168.99.21
+    mgmt_ip: 192.168.99.121
     router_id: 10.255.0.1
     canvas: [600, 250]
   CLIENT:
     role: internal
     asn: 65000
-    mgmt_ip: 192.168.99.22
+    mgmt_ip: 192.168.99.122
     router_id: 10.255.0.20
     canvas: [850, 250]

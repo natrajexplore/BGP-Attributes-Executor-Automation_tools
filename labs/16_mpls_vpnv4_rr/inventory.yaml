@@ -41,42 +41,42 @@ devices:
   CE1:
     role: customer
     asn: 65101
-    mgmt_ip: 192.168.99.11
+    mgmt_ip: 192.168.99.111
     router_id: 10.255.101.1
     canvas: [80, 60]
   CE4:
     role: customer
     asn: 65104
-    mgmt_ip: 192.168.99.14
+    mgmt_ip: 192.168.99.114
     router_id: 10.255.104.1
     canvas: [80, 380]
   PE1:
     role: pe
     asn: 65000
-    mgmt_ip: 192.168.99.21
+    mgmt_ip: 192.168.99.121
     router_id: 10.255.0.1
     canvas: [230, 60]
   PE2:
     role: pe
     asn: 65000
-    mgmt_ip: 192.168.99.22
+    mgmt_ip: 192.168.99.122
     router_id: 10.255.0.2
     canvas: [230, 180]
   PE3:
     role: pe
     asn: 65000
-    mgmt_ip: 192.168.99.23
+    mgmt_ip: 192.168.99.123
     router_id: 10.255.0.3
     canvas: [230, 270]
   PE4:
     role: pe
     asn: 65000
-    mgmt_ip: 192.168.99.24
+    mgmt_ip: 192.168.99.124
     router_id: 10.255.0.4
     canvas: [230, 380]
   RR:
     role: core
     asn: 65000
-    mgmt_ip: 192.168.99.30
+    mgmt_ip: 192.168.99.130
     router_id: 10.255.0.10
     canvas: [400, 225]

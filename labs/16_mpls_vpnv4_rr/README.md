@@ -18,13 +18,13 @@ design with four PEs and one RR, and then breaks it in the most common way: PEs 
 
 | Router | Role | AS | Loopback0 | Management | Links |
 |---|---|---|---|---|---|
-| CE1 | customer at PE1 | 65101 | (none) | 192.168.99.11 | e1/0 172.16.1.2/30 to PE1; Loopback1 10.1.0.1/24 |
-| CE4 | customer at PE4 | 65104 | (none) | 192.168.99.14 | e1/0 172.16.4.2/30 to PE4; Loopback1 10.4.0.1/24 |
-| PE1 | provider edge | 65000 | 10.255.0.1 | 192.168.99.21 | e1/0 10.0.1.1/30 to RR; e1/1 172.16.1.1/30 (VRF CUST) |
-| PE2 | provider edge | 65000 | 10.255.0.2 | 192.168.99.22 | e1/0 10.0.2.1/30 to RR (VRF CUST, no CE) |
-| PE3 | provider edge | 65000 | 10.255.0.3 | 192.168.99.23 | e1/0 10.0.3.1/30 to RR (VRF CUST, no CE) |
-| PE4 | provider edge | 65000 | 10.255.0.4 | 192.168.99.24 | e1/0 10.0.4.1/30 to RR; e1/1 172.16.4.1/30 (VRF CUST) |
-| RR | route reflector and core | 65000 | 10.255.0.10 | 192.168.99.30 | e1/0 10.0.1.2/30, e1/1 10.0.2.2/30, e1/2 10.0.3.2/30, e1/3 10.0.4.2/30 |
+| CE1 | customer at PE1 | 65101 | (none) | 192.168.99.111 | e1/0 172.16.1.2/30 to PE1; Loopback1 10.1.0.1/24 |
+| CE4 | customer at PE4 | 65104 | (none) | 192.168.99.114 | e1/0 172.16.4.2/30 to PE4; Loopback1 10.4.0.1/24 |
+| PE1 | provider edge | 65000 | 10.255.0.1 | 192.168.99.121 | e1/0 10.0.1.1/30 to RR; e1/1 172.16.1.1/30 (VRF CUST) |
+| PE2 | provider edge | 65000 | 10.255.0.2 | 192.168.99.122 | e1/0 10.0.2.1/30 to RR (VRF CUST, no CE) |
+| PE3 | provider edge | 65000 | 10.255.0.3 | 192.168.99.123 | e1/0 10.0.3.1/30 to RR (VRF CUST, no CE) |
+| PE4 | provider edge | 65000 | 10.255.0.4 | 192.168.99.124 | e1/0 10.0.4.1/30 to RR; e1/1 172.16.4.1/30 (VRF CUST) |
+| RR | route reflector and core | 65000 | 10.255.0.10 | 192.168.99.130 | e1/0 10.0.1.2/30, e1/1 10.0.2.2/30, e1/2 10.0.3.2/30, e1/3 10.0.4.2/30 |
 
 Every PE has VRF `CUST` (RD 65000:<PE number>, RT 65000:1 both ways) and one VPNv4 neighbor: the RR. The RR is also the only core
 router (the PEs connect to it), so it runs OSPF and LDP too. On the RR every PE is a `route-reflector-client` in `address-family vpnv4`,

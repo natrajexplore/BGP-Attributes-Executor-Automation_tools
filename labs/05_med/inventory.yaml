@@ -40,24 +40,24 @@ devices:
   DC-EAST:
     role: edge
     asn: 65000
-    mgmt_ip: 192.168.99.11
+    mgmt_ip: 192.168.99.111
     router_id: 10.255.0.1
     canvas: [200, 150]
   DC-WEST:
     role: edge
     asn: 65000
-    mgmt_ip: 192.168.99.12
+    mgmt_ip: 192.168.99.112
     router_id: 10.255.0.2
     canvas: [200, 400]
   ISP-E:
     role: provider
     asn: 65001
-    mgmt_ip: 192.168.99.31
+    mgmt_ip: 192.168.99.131
     router_id: 10.255.1.1
     canvas: [550, 150]
   ISP-W:
     role: provider
     asn: 65001
-    mgmt_ip: 192.168.99.32
+    mgmt_ip: 192.168.99.132
     router_id: 10.255.1.2
     canvas: [550, 400]

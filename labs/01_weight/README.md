@@ -19,10 +19,10 @@ never advertised.
 
 | Router | AS | Loopback0 | Management | Links |
 |---|---|---|---|---|
-| SITE-R1 | 65000 | 10.255.0.11 | 192.168.99.11 | e1/0 198.51.100.2/30 to LOCAL-ISP; e1/1 10.0.0.1/30 to HQ-EDGE |
-| HQ-EDGE | 65000 | 10.255.0.12 | 192.168.99.12 | e1/0 10.0.0.2/30 to SITE-R1; e1/1 172.16.12.2/30 to INTERNET |
-| LOCAL-ISP | 64500 | none | 192.168.99.31 | e1/0 198.51.100.1/30 to SITE-R1; e1/1 192.0.2.1/30 to INTERNET |
-| INTERNET | 65100 | none | 192.168.99.32 | e1/0 192.0.2.2/30; e1/1 172.16.12.1/30; Loopback1 100.100.100.1/24 |
+| SITE-R1 | 65000 | 10.255.0.11 | 192.168.99.111 | e1/0 198.51.100.2/30 to LOCAL-ISP; e1/1 10.0.0.1/30 to HQ-EDGE |
+| HQ-EDGE | 65000 | 10.255.0.12 | 192.168.99.112 | e1/0 10.0.0.2/30 to SITE-R1; e1/1 172.16.12.2/30 to INTERNET |
+| LOCAL-ISP | 64500 | none | 192.168.99.131 | e1/0 198.51.100.1/30 to SITE-R1; e1/1 192.0.2.1/30 to INTERNET |
+| INTERNET | 65100 | none | 192.168.99.132 | e1/0 192.0.2.2/30; e1/1 172.16.12.1/30; Loopback1 100.100.100.1/24 |
 
 SITE-R1 and HQ-EDGE run OSPF for their loopbacks and iBGP over them with `next-hop-self`. INTERNET originates 100.100.100.0/24.
 

@@ -42,24 +42,24 @@ devices:
   RR:
     role: route-reflector
     asn: 65000
-    mgmt_ip: 192.168.99.21
+    mgmt_ip: 192.168.99.121
     router_id: 10.255.0.1
     canvas: [450, 250]
   C1:
     role: route-reflector-client
     asn: 65000
-    mgmt_ip: 192.168.99.11
+    mgmt_ip: 192.168.99.111
     router_id: 10.255.0.11
     canvas: [150, 100]
   C2:
     role: route-reflector-client
     asn: 65000
-    mgmt_ip: 192.168.99.12
+    mgmt_ip: 192.168.99.112
     router_id: 10.255.0.12
     canvas: [150, 250]
   C3:
     role: route-reflector-client
     asn: 65000
-    mgmt_ip: 192.168.99.13
+    mgmt_ip: 192.168.99.113
     router_id: 10.255.0.13
     canvas: [150, 400]

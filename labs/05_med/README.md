@@ -22,10 +22,10 @@ between paths from different neighbor ASes. Here every path to the enterprise co
 
 | Router | AS | Loopback0 | Management | Links |
 |---|---|---|---|---|
-| DC-EAST | 65000 | 10.255.0.1 | 192.168.99.11 | e1/0 10.0.0.1/30 to DC-WEST; e1/1 172.16.1.2/30 to ISP-E |
-| DC-WEST | 65000 | 10.255.0.2 | 192.168.99.12 | e1/0 10.0.0.2/30 to DC-EAST; e1/1 172.16.2.2/30 to ISP-W |
-| ISP-E | 65001 | 10.255.1.1 | 192.168.99.31 | e1/0 172.16.1.1/30 to DC-EAST; e1/1 192.0.2.1/30 to ISP-W |
-| ISP-W | 65001 | 10.255.1.2 | 192.168.99.32 | e1/0 172.16.2.1/30 to DC-WEST; e1/1 192.0.2.2/30 to ISP-E |
+| DC-EAST | 65000 | 10.255.0.1 | 192.168.99.111 | e1/0 10.0.0.1/30 to DC-WEST; e1/1 172.16.1.2/30 to ISP-E |
+| DC-WEST | 65000 | 10.255.0.2 | 192.168.99.112 | e1/0 10.0.0.2/30 to DC-EAST; e1/1 172.16.2.2/30 to ISP-W |
+| ISP-E | 65001 | 10.255.1.1 | 192.168.99.131 | e1/0 172.16.1.1/30 to DC-EAST; e1/1 192.0.2.1/30 to ISP-W |
+| ISP-W | 65001 | 10.255.1.2 | 192.168.99.132 | e1/0 172.16.2.1/30 to DC-WEST; e1/1 192.0.2.2/30 to ISP-E |
 
 Each DC originates its own /16 (a static route to Null0 plus a `network` statement) and advertises **both** /16s to
 its provider router. The routers use OSPF for loopbacks and iBGP over loopbacks with `next-hop-self`.

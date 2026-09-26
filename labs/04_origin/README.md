@@ -20,9 +20,9 @@ tie-break decides. The ISP runs `bgp bestpath compare-routerid` so that tie-brea
 
 | Router | AS | Management | Links |
 |---|---|---|---|
-| EDGE1 | 65000 | 192.168.99.11 | e1/0 172.16.1.2/30 to ISP; static 10.10.0.0/16 to Null0, advertised with `network` |
-| EDGE2 | 65000 | 192.168.99.12 | e1/0 172.16.2.2/30 to ISP; static 10.10.0.0/16 to Null0, advertised with `redistribute static` |
-| ISP | 65001 | 192.168.99.31 | e1/0 172.16.1.1/30 to EDGE1; e1/1 172.16.2.1/30 to EDGE2; `bgp bestpath compare-routerid` |
+| EDGE1 | 65000 | 192.168.99.111 | e1/0 172.16.1.2/30 to ISP; static 10.10.0.0/16 to Null0, advertised with `network` |
+| EDGE2 | 65000 | 192.168.99.112 | e1/0 172.16.2.2/30 to ISP; static 10.10.0.0/16 to Null0, advertised with `redistribute static` |
+| ISP | 65001 | 192.168.99.131 | e1/0 172.16.1.1/30 to EDGE1; e1/1 172.16.2.1/30 to EDGE2; `bgp bestpath compare-routerid` |
 
 The two edges have no session between them; all sessions are eBGP and there is no IGP.
 

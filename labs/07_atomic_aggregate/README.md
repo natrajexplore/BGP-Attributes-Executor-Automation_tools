@@ -23,11 +23,11 @@ steps and shows what goes wrong in the middle: summarising on **one** edge is no
 
 | Router | AS | Loopback0 | Management | Links |
 |---|---|---|---|---|
-| CE-LAN | 65000 | 10.255.0.20 | 192.168.99.20 | e1/0 10.0.0.2/30 to EDGE1; e1/1 10.0.0.6/30 to EDGE2; Loopback1 to 4 are the four /24 networks |
-| EDGE1 | 65000 | 10.255.0.11 | 192.168.99.11 | e1/0 10.0.0.1/30 to CE-LAN; e1/1 10.0.0.9/30 to EDGE2; e1/2 172.16.1.2/30 to ISP-A |
-| EDGE2 | 65000 | 10.255.0.12 | 192.168.99.12 | e1/0 10.0.0.5/30 to CE-LAN; e1/1 10.0.0.10/30 to EDGE1; e1/2 172.16.2.2/30 to ISP-B |
-| ISP-A | 65001 | none | 192.168.99.31 | e1/0 172.16.1.1/30 to EDGE1; e1/1 192.0.2.1/30 to ISP-B |
-| ISP-B | 65002 | none | 192.168.99.32 | e1/0 172.16.2.1/30 to EDGE2; e1/1 192.0.2.2/30 to ISP-A |
+| CE-LAN | 65000 | 10.255.0.20 | 192.168.99.120 | e1/0 10.0.0.2/30 to EDGE1; e1/1 10.0.0.6/30 to EDGE2; Loopback1 to 4 are the four /24 networks |
+| EDGE1 | 65000 | 10.255.0.11 | 192.168.99.111 | e1/0 10.0.0.1/30 to CE-LAN; e1/1 10.0.0.9/30 to EDGE2; e1/2 172.16.1.2/30 to ISP-A |
+| EDGE2 | 65000 | 10.255.0.12 | 192.168.99.112 | e1/0 10.0.0.5/30 to CE-LAN; e1/1 10.0.0.10/30 to EDGE1; e1/2 172.16.2.2/30 to ISP-B |
+| ISP-A | 65001 | none | 192.168.99.131 | e1/0 172.16.1.1/30 to EDGE1; e1/1 192.0.2.1/30 to ISP-B |
+| ISP-B | 65002 | none | 192.168.99.132 | e1/0 172.16.2.1/30 to EDGE2; e1/1 192.0.2.2/30 to ISP-A |
 
 The three enterprise routers run OSPF and a full iBGP mesh over loopbacks, and the edges use `next-hop-self`. The two ISPs peer with each other.
 

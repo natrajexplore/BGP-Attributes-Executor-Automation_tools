@@ -44,16 +44,22 @@ ISP / content router-ids: ISPA-1 `10.255.1.1`, ISPB-1 `10.255.2.1`, CONTENT `10.
 
 ## Out-of-band management — VRF `MGMT` on `Fa0/0`, 192.168.99.0/24 (EVE `Cloud1` / `pnet1`)
 
+> **This project uses 192.168.99.101 to 192.168.99.199 only** (the last octet is 100 plus a per-router number: .111 to .114 for CE/edge routers, .120 to .124 for core and PE routers, .130 to .133 for ISPs and content).
+> Other projects share the same `pnet1` bridge and subnet: for example the `ospf-sla` lab uses 192.168.99.11 to .14. Two routers with the same address on the bridge
+> answer in turn, and an automation tool can then configure the wrong one, so never use an address below .100 here. The dashboard also checks the hostname of every
+> router it logs in to and refuses to start a lab whose addresses another router already answers on.
+
+
 | Node | MGMT IP |
 |------|---------|
 | gateway (EVE `pnet1` bridge) | 192.168.99.1 |
-| CORE-RR1 | 192.168.99.21 |
-| CORE-RR2 | 192.168.99.22 |
-| EDGE1 | 192.168.99.11 |
-| EDGE2 | 192.168.99.12 |
-| CE-LAN | 192.168.99.20 |
-| ISPA-1 | 192.168.99.31 |
-| ISPB-1 | 192.168.99.32 |
-| CONTENT | 192.168.99.33 |
+| CORE-RR1 | 192.168.99.121 |
+| CORE-RR2 | 192.168.99.122 |
+| EDGE1 | 192.168.99.111 |
+| EDGE2 | 192.168.99.112 |
+| CE-LAN | 192.168.99.120 |
+| ISPA-1 | 192.168.99.131 |
+| ISPB-1 | 192.168.99.132 |
+| CONTENT | 192.168.99.133 |
 
 Login: `lab / lab123`, enable secret `lab123`, `privilege 15`.
