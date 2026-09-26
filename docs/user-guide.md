@@ -47,8 +47,7 @@ You need: a browser, and the EVE VM running with the dashboard up. Check with `h
 
 ### Step 1. Open the dashboard (2 minutes)
 
-Go to `http://192.168.186.128:8000`. You see two tabs at the top: **Lab** (run scenarios) and **Learn** (the course). The **BGP session monitor** card on the Lab tab should
-show 22 sessions Established.
+Go to `http://192.168.186.128:8000`. You see three tabs at the top: **Live labs** (run any scenario on its own topology, with a 3D view), **Shared lab** (the original view of the 8-router lab) and **Learn** (the course).
 
 ### Step 2. Read one attribute page (15 minutes)
 
@@ -65,13 +64,16 @@ Still on the **Practitioner** page, scroll to **Hands-on exercise**. Each step i
 
 Work through the steps in order. When every check is green the exercise is marked complete in your browser.
 
-### Step 4. Run a scenario from the Lab tab (10 minutes)
+### Step 4. Run a scenario on the Live labs tab (10 minutes)
 
-1. Click **Lab**, find scenario **01_weight**, click **Run**.
-2. Watch the live log, then the **before / after** view: the router output before the change, after it, and the difference.
-3. Click **Rollback** and confirm the diff goes back to normal.
+1. Click **Live labs**. On the left every lab lists its scenarios. Open **05 MED** and click **View in 3D**: the topology appears with its routers on tiers and the BGP sessions as arcs.
+2. Click **Run** on `05_med`. The dashboard stops the lab that is running, starts lab 05, waits for the routers, and then runs the scenario. The **Steps** panel shows each stage; the
+   first run on a lab that was never configured takes 10 to 15 minutes, later switches 2 to 5.
+3. Watch the **SSH / CLI** panel: it shows the real commands (`configure terminal`, each line, `write memory`) and the router that receives them pulses in the 3D view.
+4. When the run ends you see the checks with the **before / after** difference. Click **Rollback** and confirm it goes back.
 
-The **Reset lab to baseline** button (top right) pushes every router's known-good configuration again. Use it whenever something looks wrong.
+Only one lab runs at a time, so running a scenario of another lab switches the VM to it. The **Shared lab** tab keeps the original view of the 8-router lab (it also has a
+**Reset lab to baseline** button). More detail: [`live-labs.md`](live-labs.md).
 
 ### Step 5. Try the simulator (10 minutes)
 

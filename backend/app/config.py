@@ -43,6 +43,7 @@ class Settings:
 settings = Settings()
 
 
-def load_inventory() -> dict:
-    with open(INVENTORY_PATH) as fh:
+def load_inventory(path: Path | None = None) -> dict:
+    """The inventory of the lab this process is configured for, or of the given one (see labmgr)."""
+    with open(path or INVENTORY_PATH, encoding="utf-8") as fh:
         return yaml.safe_load(fh)

@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BGP Attributes Executor</title>
+<link rel="stylesheet" href="/static/live.css">
 <style>
   :root {
     --bg:#0f141a; --panel:#171f29; --panel2:#1e2833; --line:#2b3947;
@@ -133,7 +134,7 @@
 <body>
 <header>
   <h1>BGP Attributes Executor</h1>
-  <nav class="tabs"><a id="tab-lab" href="#lab">Lab</a><a id="tab-learn" href="#learn">Learn</a></nav>
+  <nav class="tabs"><a id="tab-live" href="#live">Live labs</a><a id="tab-lab" href="#lab" title="The original view: the 11 scenarios on the shared 8-router lab">Shared lab</a><a id="tab-learn" href="#learn">Learn</a></nav>
   <span id="conn" class="dev"><span class="dot"></span>connecting</span>
   <span class="grow"></span>
   <a id="grafana" class="btn" target="_blank" rel="noopener" hidden>Grafana dashboard &#8599;</a>
@@ -141,7 +142,37 @@
   <button id="reset" class="ghost">Reset lab to baseline</button>
 </header>
 
-<div class="wrap" id="view-lab">
+<div class="live" id="view-live" hidden>
+  <aside class="live-side">
+    <div class="card">
+      <h2>Live labs &middot; 31 scenarios</h2>
+      <div id="live-status" class="live-status"></div>
+      <div id="live-cat"><div class="live-empty">loading&hellip;</div></div>
+    </div>
+  </aside>
+  <section class="live-main">
+    <div class="card live-3d-card wide">
+      <div class="live-bar"><h2>3D topology</h2><span id="live-title"></span>
+        <span class="live-tools"><button id="t-rot" class="ghost on" title="Rotate slowly">Rotate</button><button id="t-lab" class="ghost on" title="Show router names">Names</button><button id="t-reset" class="ghost">Reset view</button></span></div>
+      <div id="live-3d"></div>
+      <div id="live-legend" class="live-legend"></div>
+    </div>
+    <div class="card">
+      <h2>Steps <span id="live-run-title" class="live-run-title"></span><span id="live-timer" class="live-timer"></span></h2>
+      <ol id="live-steps" class="steps2"></ol>
+      <div id="live-results"></div>
+    </div>
+    <div class="card">
+      <h2>SSH / CLI</h2>
+      <div id="cli-tabs"></div>
+      <pre id="cli-out"></pre>
+      <div class="cli-bar"><input id="cli-cmd" placeholder="show command on the selected router, for example: show ip bgp summary" spellcheck="false"><button id="cli-run">Run show</button>
+        <label style="color:var(--muted);font-size:12px"><input type="checkbox" id="cli-follow" checked> follow</label><button id="cli-copy" class="ghost">Copy</button><button id="cli-clear" class="ghost">Clear</button></div>
+    </div>
+  </section>
+</div>
+
+<div class="wrap" id="view-lab" hidden>
   <div>
     <div class="card" style="margin-bottom:16px">
       <h2>Devices</h2>
@@ -334,6 +365,10 @@ loadScenarios();
 initMonitor();
 setInterval(loadDevices, 30000);
 </script>
+<script src="/static/vendor/three.min.js"></script>
+<script src="/static/vendor/OrbitControls.js"></script>
+<script src="/static/live3d.js"></script>
+<script src="/static/live.js"></script>
 <script src="/static/learn-content.js"></script>
 <script src="/static/learn-content-2.js"></script>
 <script src="/static/learn-content-3.js"></script>

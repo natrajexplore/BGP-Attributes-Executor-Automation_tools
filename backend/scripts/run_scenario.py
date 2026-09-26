@@ -20,7 +20,7 @@ from app.inventory import build_devices       # noqa: E402
 
 
 async def run(sid: str, rollback: bool) -> int:
-    run_id = await scenarios.run_scenario(sid, rollback=rollback)
+    run_id = scenarios.run_scenario(sid, rollback=rollback)      # starts the run in the background; not a coroutine
     while scenarios.RUNS[run_id]["state"] == "running":
         await asyncio.sleep(1)
     r = scenarios.RUNS[run_id]

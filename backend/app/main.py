@@ -11,16 +11,16 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import bus, monitor, scenarios
+from . import bus, graph, labmgr, monitor, scenarios
 from .config import FRONTEND_DIR, LABS_DIR, settings
-from .eveng import EveNGClient, EveNGError
+from .eveng import EveNGError
 from .events import subscribe, unsubscribe
 from .inventory import build_devices
 
 
-
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    detect = asyncio.create_task(asyncio.to_thread(labmgr.detect_active))      # which lab is EVE-NG running? (does not delay startup)
     task = asyncio.create_task(monitor.run_forever()) if settings.monitor_enabled else None
     yield
     if task:
@@ -29,7 +29,7 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="bgp-attributes-executor", lifespan=lifespan)
-_eve = EveNGClient()
+_eve = labmgr.eve()
 
 
 @app.get("/api/health")
@@ -75,7 +75,7 @@ async def events_stream() -> StreamingResponse:
 def devices() -> list[dict]:
     devs = build_devices(_eve)
     return [
-        {"name": d.name, "role": d.role, "asn": d.asn, "mgmt_ip": d.mgmt_ip,
+        {"lab": labmgr.ACTIVE.id, "name": d.name, "role": d.role, "asn": d.asn, "mgmt_ip": d.mgmt_ip,
          "router_id": d.router_id, "status": d.status,
          "console": f"{d.console_host}:{d.console_port}" if d.console else None}
         for d in devs.values()
@@ -124,6 +124,12 @@ _SHOW_ALLOWED = [re.compile(p) for p in (
     r"show route-map(?: [\w.-]{1,32})?",
     r"show ip prefix-list(?: [\w.-]{1,32})?",
     r"show running-config \| (?:section|include) [\w .:/-]{1,40}",
+    r"show bgp vpnv4 unicast all(?: summary)?",
+    rf"show bgp vpnv4 unicast all {_PFX}",
+    r"show ip vrf(?: detail)?(?: [\w-]{1,32})?",
+    rf"show ip route vrf [\w-]{{1,32}}(?: {_IP})?",
+    r"show mpls ldp neighbor",
+    r"show mpls forwarding-table",
 )]
 
 
@@ -134,7 +140,7 @@ def device_show(name: str, cmd: str) -> dict:
 
     devs = build_devices()
     if name not in devs:
-        raise HTTPException(404, name)
+        raise HTTPException(404, f"{name} is not in the active lab ({labmgr.ACTIVE.id}). Run a scenario of the lab you want, or use the Live labs tab.")
     cmd = " ".join(cmd.split())
     if len(cmd) > 120 or not any(p.fullmatch(cmd) for p in _SHOW_ALLOWED):
         raise HTTPException(400, "command not allowed (read-only BGP/route show commands only)")
@@ -184,32 +190,119 @@ def lab_zip(lab_id: str) -> Response:
                     headers={"Content-Disposition": f'attachment; filename="{lab_id}.zip"'})
 
 
+# ---------------------------------------------------------------- live labs: every lab, switching, 3D graph
+def _ctx(lab_id: str) -> labmgr.LabContext:
+    if not labmgr.CTX_ID.fullmatch(lab_id):
+        raise HTTPException(404, lab_id)
+    try:
+        return labmgr.get_context(lab_id)
+    except KeyError:
+        raise HTTPException(404, lab_id)
+
+
+def _busy(exc: RuntimeError) -> HTTPException:
+    return HTTPException(409, str(exc))
+
+
+def _scenario_summary(ctx: labmgr.LabContext) -> list[dict]:
+    return [{"id": sc["id"], "title": sc.get("title", sc["id"]), "attribute": sc.get("attribute"),
+             "summary": " ".join(str(sc.get("summary", "")).split()), "targets": sc.get("targets", []),
+             "checks": len(sc.get("verify", []))} for sc in scenarios.list_scenarios(ctx)]
+
+
+@app.get("/api/catalog")
+def catalog() -> dict:
+    """Every lab with its scenarios: what the Live labs tab shows."""
+    labs = []
+    for ctx in labmgr.contexts().values():
+        labs.append({"id": ctx.id, "title": ctx.title, "short": ctx.short, "group": ctx.group, "routers": ctx.routers,
+                     "prepared": labmgr.state["prepared"].get(ctx.id), "applied": labmgr.state["applied"].get(ctx.id, []),
+                     "active": ctx.id == labmgr.ACTIVE.id and bool(labmgr.STATUS["running"]), "selected": ctx.id == labmgr.ACTIVE.id,
+                     "scenarios": _scenario_summary(ctx)})
+    return {"status": labmgr.status_dict(), "labs": labs}
+
+
+@app.get("/api/lab/status")
+def lab_status() -> dict:
+    return labmgr.status_dict()
+
+
+@app.get("/api/labs/{lab_id}/graph")
+async def lab_graph(lab_id: str) -> dict:
+    """Routers, links and BGP sessions of a lab for the 3D view (live state overlaid when it is the running lab)."""
+    return await asyncio.to_thread(graph.build_graph, _ctx(lab_id))
+
+
+@app.post("/api/labs/{lab_id}/activate")
+async def lab_activate(lab_id: str, force_prepare: bool = False) -> dict:
+    """Stop the running lab and bring this one up (configured, BGP converged). Progress: /api/stream/<run_id>."""
+    try:
+        return {"run_id": labmgr.activate_job(_ctx(lab_id), force_prepare)}
+    except RuntimeError as exc:
+        raise _busy(exc)
+
+
+@app.post("/api/labs/{lab_id}/scenarios/{sid}/run")
+async def lab_scenario_run(lab_id: str, sid: str) -> dict:
+    try:
+        return {"run_id": scenarios.run_scenario(sid, False, _ctx(lab_id), switch=True)}
+    except FileNotFoundError:
+        raise HTTPException(404, sid)
+    except RuntimeError as exc:
+        raise _busy(exc)
+
+
+@app.post("/api/labs/{lab_id}/scenarios/{sid}/rollback")
+async def lab_scenario_rollback(lab_id: str, sid: str) -> dict:
+    try:
+        return {"run_id": scenarios.run_scenario(sid, True, _ctx(lab_id), switch=True)}
+    except FileNotFoundError:
+        raise HTTPException(404, sid)
+    except RuntimeError as exc:
+        raise _busy(exc)
+
+
+@app.post("/api/prewarm")
+async def prewarm(labs: list[str] | None = None) -> dict:
+    """Bring every lab up once so it is configured and saved (a long background job)."""
+    try:
+        return {"run_id": labmgr.prewarm_job(labs)}
+    except RuntimeError as exc:
+        raise _busy(exc)
+
+
+# The original endpoints (Lab tab, Learn-tab exercises) drive the shared 8-router lab; running one switches back to it.
 @app.get("/api/scenarios")
 def scenario_list() -> list[dict]:
-    return scenarios.list_scenarios()
+    return scenarios.list_scenarios(labmgr.shared_context())
 
 
 @app.post("/api/scenarios/{sid}/run")
 async def scenario_run(sid: str) -> dict:
     try:
-        run_id = await scenarios.run_scenario(sid, rollback=False)
+        return {"run_id": scenarios.run_scenario(sid, False, labmgr.shared_context(), switch=True)}
     except FileNotFoundError:
         raise HTTPException(404, sid)
-    return {"run_id": run_id}
+    except RuntimeError as exc:
+        raise _busy(exc)
 
 
 @app.post("/api/scenarios/{sid}/rollback")
 async def scenario_rollback(sid: str) -> dict:
     try:
-        run_id = await scenarios.run_scenario(sid, rollback=True)
+        return {"run_id": scenarios.run_scenario(sid, True, labmgr.shared_context(), switch=True)}
     except FileNotFoundError:
         raise HTTPException(404, sid)
-    return {"run_id": run_id}
+    except RuntimeError as exc:
+        raise _busy(exc)
 
 
 @app.post("/api/lab/reset")
 async def lab_reset(nodes: list[str] | None = None) -> dict:
-    return {"run_id": await scenarios.reset_baseline(nodes)}
+    try:
+        return {"run_id": scenarios.reset_baseline(nodes)}
+    except RuntimeError as exc:
+        raise _busy(exc)
 
 
 @app.get("/api/runs/{run_id}")
@@ -221,16 +314,20 @@ def run_detail(run_id: str) -> dict:
 
 @app.get("/api/stream/{run_id}")
 async def stream(run_id: str) -> StreamingResponse:
+    """Server-sent events of a run: log, plan, step, cli, result. A client that connects late (or after the run
+    ended) still receives everything from the start."""
+    if run_id not in scenarios.RUNS:
+        raise HTTPException(404, run_id)
     q = subscribe(run_id)
 
     async def gen():
         try:
-            # replay terminal state if the run already finished
-            if run_id in scenarios.RUNS and scenarios.RUNS[run_id]["state"] not in ("running",):
-                yield f"event: result\ndata: {scenarios.RUNS[run_id]['state']}\n\n"
-                return
             while True:
-                msg = await q.get()
+                try:
+                    msg = await asyncio.wait_for(q.get(), timeout=15)
+                except asyncio.TimeoutError:
+                    yield ": keepalive\n\n"
+                    continue
                 if msg is None:
                     yield "event: end\ndata: end\n\n"
                     return

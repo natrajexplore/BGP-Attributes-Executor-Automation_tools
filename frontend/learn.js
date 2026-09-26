@@ -572,9 +572,12 @@ router bgp 65000
         b.disabled = true; chk.className = "chk"; chk.textContent = "running…";
         try {
           const r = await netfetch(`/api/scenarios/${s.id}/${s.mode === "rollback" ? "rollback" : "run"}`, { method: "POST" });
-          const { run_id } = await r.json();
+          const j = await r.json();
+          if (!r.ok) throw new Error(j.detail || r.status);          // for example: another run is in progress
+          const { run_id } = j;
+          chk.textContent = "running… (this switches back to the shared lab first if another lab is running: a few minutes)";
           let run;
-          for (let n = 0; n < 120; n++) {
+          for (let n = 0; n < 400; n++) {
             run = await (await netfetch(`/api/runs/${run_id}`)).json();
             if (run.state !== "running") break;
             await new Promise(res => setTimeout(res, 2000));
@@ -712,12 +715,13 @@ router bgp 65000
   }
 
   function route() {
-    const learn = location.hash.startsWith("#learn");
-    document.getElementById("view-lab").hidden = learn;
-    document.getElementById("view-learn").hidden = !learn;
-    document.getElementById("tab-lab").classList.toggle("on", !learn);
-    document.getElementById("tab-learn").classList.toggle("on", learn);
-    if (learn) renderLearn();
+    const h = location.hash, view = h.startsWith("#learn") ? "learn" : h.startsWith("#lab") ? "lab" : "live";
+    for (const v of ["live", "lab", "learn"]) {
+      document.getElementById("view-" + v).hidden = v !== view;
+      document.getElementById("tab-" + v).classList.toggle("on", v === view);
+    }
+    if (view === "learn") renderLearn();
+    window.dispatchEvent(new CustomEvent("viewchange", { detail: view }));
   }
 
   window.addEventListener("hashchange", route);

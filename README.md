@@ -17,6 +17,7 @@ Everything below links to files in this repository. If you are reading this on G
 
 | I want to... | Go to |
 |---|---|
+| **Run any of the 31 scenarios on its own topology**, with a 3D view and the live SSH commands | the dashboard's **Live labs** tab: [Live labs](#live-labs-any-scenario-on-its-own-topology) |
 | **New to networking?** Follow a guided path | [`docs/user-guide.md`](docs/user-guide.md): your first hour, a worked lab, reading output, an 8-week study plan |
 | **Learn** an attribute or MP-BGP from scratch | the dashboard's **Learn** tab: [how to open it](#the-learn-tab) |
 | **Run** the 11 scenarios one at a time with diffs | the dashboard's **Lab** tab: [the shared lab](#the-shared-8-router-lab-and-the-lab-tab) |
@@ -44,6 +45,19 @@ Monitoring (optional):  poller (20 s) ─> Kafka :9094 ─> exporter :9108 ─> 
 * **Frontend:** a single-page app in vanilla JavaScript (SSE for live logs), no build step.
 * **Labs:** generated `.unl` topology files and per-router baseline configs, driven by the same code through environment variables, so any
   lab folder can be run without changing the backend.
+
+---
+
+## Live labs: any scenario on its own topology
+
+The dashboard opens on **Live labs** (`http://<eve-vm-ip>:8000/`). Every scenario, from the 11 BGP attributes to the MPLS VPN use cases, lists its lab. **Run** switches the VM to that
+scenario's topology (stopping the lab that is running, starting the routers, setting them up if needed), runs the scenario over SSH and verifies it. A **3D topology** shows the routers,
+links and BGP sessions with live state, and the **SSH / CLI** panel shows the real commands as they are sent (`configure terminal`, each line, `write memory`, the checks).
+
+* Full description, times, API and troubleshooting: [`docs/live-labs.md`](docs/live-labs.md).
+* Only one lab runs at a time. A first run on a lab that was never configured takes 10 to 15 minutes; **Prepare all labs** does this once for every lab in the background.
+* **Management addresses:** this project uses **192.168.99.101 to .199**. Other projects on the same EVE bridge (for example an OSPF lab on 192.168.99.11 to .14) must keep to their own
+  addresses. The dashboard checks every router's hostname before it sends anything, and refuses to start a lab whose addresses another router already answers on. See [`docs/addressing.md`](docs/addressing.md).
 
 ---
 
@@ -235,13 +249,14 @@ Regenerate every lab's `CONFIGS.md`: `python scripts/make-lab-configs.py [lab]`.
 
 ```
 backend/
-  app/              FastAPI application (scenarios, devices, EVE client, monitor, lab endpoints)
+  app/              FastAPI application (labmgr = lab switching, scenarios, devices, graph, EVE client, monitor)
+  tests/            offline tests of the switch workflow and the hostname guard
   templates/        Jinja2, one per scenario (apply + {% if rollback %})
   scenarios/        YAML: targets, vars, verify assertions
   baseline/         full per-device IOS configs of the shared lab
   scripts/          build_lab.py, bootstrap.py, push_baseline.py, run_scenario.py, healthcheck.py
   inventory.yaml    devices, ASNs, mgmt IPs, router-ids, lab and link map
-frontend/           dashboard and Learn tab (vanilla JS): learn.js, learn-content*.js, learn-mp*.js, learn-labs.js, learn-sim.js
+frontend/           dashboard, Live labs and Learn tab (vanilla JS): live.js, live3d.js, learn.js, learn-content*.js, learn-mp*.js, learn-labs.js, learn-sim.js; vendor/ = Three.js
 labs/
   README.md         index and notes for the 17 labs
   labtool.sh        run any lab (import, start, bootstrap, baseline, apply, rollback, capture)
@@ -276,6 +291,7 @@ After recreating the Kafka container, restart the exporter (`docker restart bgp-
 ## More documentation
 
 * [`docs/user-guide.md`](docs/user-guide.md): the user guide for a new network engineer
+* [`docs/live-labs.md`](docs/live-labs.md): the Live labs tab, its safety rules, API and code map
 * [`docs/topology.md`](docs/topology.md) and [`docs/addressing.md`](docs/addressing.md): the shared lab's design and address plan
 * [`docs/eve-setup.md`](docs/eve-setup.md): EVE-NG and network setup
 * [`docs/runbook.md`](docs/runbook.md): rebuild, baseline, health check
