@@ -47,7 +47,7 @@ You need: a browser, and the EVE VM running with the dashboard up. Check with `h
 
 ### Step 1. Open the dashboard (2 minutes)
 
-Go to `http://192.168.186.128:8000`. You see two tabs at the top: **Live labs** (run any scenario on its own topology, with a 3D view) and **Learn** (the course). The original 8-router lab is one of the labs in Live labs.
+Go to `http://192.168.186.128:8000`. You see three tabs at the top: **Live labs** (run any scenario on its own topology, with a 3D view), **Learn** (the course) and **Credentials** (the login and enable password of every router). The original 8-router lab is one of the labs in Live labs.
 
 ### Step 2. Read one attribute page (15 minutes)
 
@@ -71,6 +71,8 @@ Work through the steps in order. When every check is green the exercise is marke
    first run on a lab that was never configured takes 10 to 15 minutes, later switches 2 to 5.
 3. Watch the **SSH / CLI** panel: it shows the real commands (`configure terminal`, each line, `write memory`) and the router that receives them pulses in the 3D view.
 4. When the run ends you see the checks with the **before / after** difference. Click **Rollback** and confirm it goes back.
+5. Use the **Light / Dark** button on the 3D view if the scene is hard to read. It changes only the 3D scene, and the browser remembers your choice. The Learn pages have the same 3D view, with a packet that follows the path the scenario changes.
+6. To look at a router yourself, use the **EVE-NG** card below: **CLI tab** selects the router in the SSH / CLI panel and shows its BGP summary, and you can type any read-only `show` command there. **Copy SSH command** gives you a command for your own terminal. Router login and enable passwords are on the **Credentials** tab (hidden until you click Reveal).
 
 Only one lab runs at a time, so running a scenario of another lab switches the VM to it. The **EVE-NG** card gives each router's SSH command (routers are reached by SSH through the VM, not by telnet). To see the running lab in the EVE-NG web page you need an EVE-NG account in **pod 1**
 (the dashboard's own account is in pod 1; your admin account is not): create one under System -> User management, then log in with it. More detail: [`live-labs.md`](live-labs.md).
