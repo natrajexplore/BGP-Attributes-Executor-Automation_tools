@@ -1,35 +1,55 @@
 # BGP Attributes Executor
 
-A hands-on BGP platform on **EVE-NG** with real Cisco IOS routers (7206VXR / c7200, Dynamips). It has four parts that share the same
-lab files:
+A hands-on BGP platform on **EVE-NG** with real Cisco IOS routers (7206VXR / c7200, Dynamips): click **Run** on a scenario and the platform starts that scenario's own lab,
+configures the routers over SSH, verifies the result and shows it in 3D. It has five parts that share the same lab files:
 
 | Part | What it is | Where |
 |---|---|---|
 | **Live labs** | Run any of **31 scenarios** (11 BGP attributes, 6 MPLS VPN use cases and their variants) on **its own topology**: the VM switches labs for you, with a **3D topology view**, live BGP session state and a **live SSH/CLI transcript** | `http://<eve-vm>:8000/` (default tab), [`docs/live-labs.md`](docs/live-labs.md) |
 | **Shared lab** | The original 8-router lab and its 11 scenarios, with before/after `show` diffs and a session monitor. It is now one of the 18 labs in Live labs | [`backend/`](backend/), [`frontend/`](frontend/) |
 | **Learn tab** | A from-scratch-to-pro course: 11 attributes plus an MP-BGP / MPLS VPN track, with diagrams, **3D lab views with an animated packet path**, exercises, drills, quizzes, cheat-sheets and a best-path simulator | `http://<eve-vm>:8000/#learn` |
+| **Credentials tab** | The login and enable password of every router in all 18 labs (hidden until you click Reveal), each with an **SSH session** button that opens the router in its own PuTTY window | `http://<eve-vm>:8000/#cred` |
 | **17 standalone labs** | One small EVE lab per topic (3 to 7 routers), each with a README, every router's configuration, and a scenario you can apply and roll back | [`labs/`](labs/) |
 
 Everything below links to files in this repository. If you are reading this on GitHub, the links open the files directly.
 
 ## What's new
 
-* **Live labs tab (now the default).** One click on **Run** takes a scenario from "which lab is that?" to a verified result: the dashboard stops the running lab, starts the scenario's own
+### Running scenarios
+
+* **Live labs tab (the default, and the only place scenarios run).** One click on **Run** takes a scenario from "which lab is that?" to a verified result: the dashboard stops the running lab, starts the scenario's own
   topology, waits for the routers, checks their baseline and BGP, pushes the change over SSH, verifies it, and rolls it back on request. [Details](#live-labs-any-scenario-on-its-own-topology).
-* **The Lab tab is gone.** Run always goes through Live labs and uses each scenario's own lab; `#lab` opens `#live/shared`. The shared lab is one of the 18 labs.
-* **EVE-NG state, SSH access and pod-1 view.** The page shows each router's EVE-NG state and an **SSH session** button that opens the router in its own PuTTY window (routers are reached by SSH only), and explains how to see the running lab in the EVE-NG web page ([below](#seeing-the-running-lab-in-the-eve-ng-web-page)).
-* **Credentials tab.** Login user, login password and enable secret of all 92 routers in the 18 labs, grouped by lab, hidden until you click Reveal, with Copy buttons and an SSH session button. Values come from each lab's `inventory.yaml` and are checked against its baseline (`GET /api/credentials`).
-* **Light or dark 3D scene.** A **Light / Dark** button on the 3D view (Live labs and the Learn pages) switches the scene only, not the rest of the dashboard. The choice is remembered in the browser.
-* **3D in the Learn tab.** Every attribute and MP-BGP page has a 3D view of its lab: the routers the scenario configures glow and a packet follows a path across the topology with a caption per hop. [Learn tab](#the-learn-tab).
-* **3D topology view.** Routers on tiers, physical links, and BGP sessions as arcs (iBGP, eBGP, MP-BGP VPNv4, PE-CE in a VRF) with live up/down state. Every router that receives configuration pulses
-  and an "SSH executor" sends a beam to it.
-* **Live SSH / CLI transcript.** The real commands, per router, exactly as they are typed: `ssh lab@<address>`, `configure terminal`, each line with the prompt of its config mode, `end`,
-  `write memory`, and the `show` commands of the checks with their output.
+* **The old Lab tab is gone.** Run always uses each scenario's own lab; `#lab` now opens `#live/shared`. The shared 8-router lab is one of the 18 labs.
 * **One lab at a time, managed for you.** A lab manager switches between 18 labs (the 17 standalone labs and the shared lab), rolls back leftovers before leaving a lab, and remembers which labs are
   configured. **Prepare all labs** sets every lab up once, so a later switch is only a boot.
 * **Safer automation.** Every SSH session verifies the router's hostname before sending anything, and a lab refuses to start if another router already answers on one of its management addresses.
 * **New management addresses: 192.168.99.101 to .199.** The block below .100 belongs to other projects on the same EVE bridge. [Addressing rule](#management-addresses).
-* **Tests.** Offline tests of the switch workflow, the hostname guard and the retry helper (`backend/tests/`).
+
+### Reaching the routers
+
+* **SSH only.** Routers accept SSH on their management address and nothing else (`transport input ssh`); the dashboard no longer offers telnet consoles. The **EVE-NG** card of Live labs lists every router of the shown lab with its
+  EVE-NG state and an **SSH session** button.
+* **One PuTTY window per router.** **SSH session** opens that router in its own PuTTY window through a `bgpputty:` link. A one-time script (`scripts/putty-setup.ps1`) creates the 92 saved sessions and the link handler for
+  your Windows user only. [How it works](#one-putty-window-per-router).
+* **CLI tab.** A **CLI tab** button per router selects it in the SSH / CLI panel, scrolls there and runs `show ip bgp summary` so the panel answers right away; the command box runs any whitelisted read-only `show`.
+* **Credentials tab.** Login user, login password and enable secret of all 92 routers in the 18 labs, grouped by lab, hidden until you click Reveal, with Copy buttons and an SSH session button. Values come from each lab's
+  `inventory.yaml` and are checked against its baseline (`GET /api/credentials`). [Details](#credentials-tab).
+* **See the running lab in the EVE-NG web page.** The dashboard runs labs as the `bgpapi` account in **pod 1**, so an admin in pod -1 sees nothing running. Create a pod-1 account for the web page: [steps](#seeing-the-running-lab-in-the-eve-ng-web-page).
+
+### 3D views
+
+* **3D topology view.** Routers on tiers, physical links, and BGP sessions as arcs (iBGP, eBGP, MP-BGP VPNv4, PE-CE in a VRF) with live up/down state. Every router that receives configuration pulses
+  and an "SSH executor" sends a beam to it.
+* **Live SSH / CLI transcript.** The real commands, per router, exactly as they are typed: `ssh lab@<address>`, `configure terminal`, each line with the prompt of its config mode, `end`,
+  `write memory`, and the `show` commands of the checks with their output.
+* **Light or dark 3D scene.** A **Light / Dark** button on the 3D view (Live labs and the Learn pages) switches the scene only, not the rest of the dashboard. The choice is remembered in the browser.
+* **3D in the Learn tab.** All 11 attribute pages and all 8 MP-BGP pages have a 3D view of their lab: the routers the scenario configures glow and a packet follows a path across the topology with a caption per hop. [Learn tab](#the-learn-tab).
+
+### Housekeeping
+
+* **No stale pages.** The dashboard sends `Cache-Control: no-cache` and versions its script URLs, so a browser never runs an old script against a new page. The EVE-NG card and the lab list are only redrawn when their content changes, so clicks are not lost.
+* **MIT License** and a [third-party notice](THIRD-PARTY-NOTICES.md) (Three.js, Python dependencies, and a note that the Cisco IOS images are not included).
+* **Tests.** Offline tests of the switch workflow, the hostname guard, the retry helper and the credentials list (`backend/tests/`).
 
 ---
 
@@ -38,6 +58,9 @@ Everything below links to files in this repository. If you are reading this on G
 | I want to... | Go to |
 |---|---|
 | **Run any of the 31 scenarios on its own topology**, with a 3D view and the live SSH commands | the dashboard's **Live labs** tab: [Live labs](#live-labs-any-scenario-on-its-own-topology) |
+| **Look up a router's login and enable password** | the dashboard's **Credentials** tab: [Credentials](#credentials-tab) |
+| **Open a router in its own PuTTY window** | **SSH session** on Live labs or Credentials, after a one-time [PuTTY setup](#one-putty-window-per-router) |
+| **See the running lab in the EVE-NG web page** | [a pod-1 account](#seeing-the-running-lab-in-the-eve-ng-web-page) |
 | **New to networking?** Follow a guided path | [`docs/user-guide.md`](docs/user-guide.md): your first hour, a worked lab, reading output, an 8-week study plan |
 | **Learn** an attribute or MP-BGP from scratch | the dashboard's **Learn** tab: [how to open it](#the-learn-tab) |
 | **Run** the shared 8-router lab's 11 scenarios | **Live labs**, group "Shared 8-router lab": [the shared lab](#the-shared-8-router-lab) |
@@ -46,6 +69,22 @@ Everything below links to files in this repository. If you are reading this on G
 | **Import a lab into the EVE web UI** | the `.zip` next to each lab: [import notes](#3-import-through-eve-web-ui) |
 | **Deploy the whole platform** | [Quick start](#quick-start-deploy-the-platform) |
 | **Watch sessions in Grafana** | [Monitoring](#monitoring-kafka---prometheus---grafana) |
+
+---
+
+## The dashboard at a glance
+
+| Tab | Address | What it is for |
+|---|---|---|
+| **Live labs** | `#live`, or `#live/<lab>` (for example `#live/05_med`, `#live/shared`) | Run and roll back scenarios, 3D topology, steps, live SSH / CLI, EVE-NG state and SSH sessions |
+| **Learn** | `#learn`, `#learn/05_med/practitioner`, `#learn/simulator` | The course, with 3D lab views |
+| **Credentials** | `#cred` | Router logins and enable secrets of all labs |
+
+**Once, on your PC** (each takes a minute; the dashboard works without them):
+
+1. **PuTTY sessions:** run `powershell -ExecutionPolicy Bypass -File scripts\putty-setup.ps1` in the repository folder. It needs PuTTY and the Windows OpenSSH client. [Details](#one-putty-window-per-router).
+2. **A pod-1 EVE-NG account** for the EVE web page, if you want to watch the lab canvas: [steps](#seeing-the-running-lab-in-the-eve-ng-web-page).
+3. If a page looks out of date after an update, press **Ctrl+Shift+R** once.
 
 ---
 
@@ -96,9 +135,10 @@ rolls it back first, so every lab is stopped at its baseline.
 | Area | What it shows |
 |---|---|
 | **Catalogue** (left) | Every lab and scenario. A dot marks the running lab (green), labs that are configured and saved (blue) and labs never configured (grey). **Prepare all labs** sets every lab up once |
-| **3D topology** | Routers on tiers (customers or outside, edge, core), physical links, and BGP sessions as arcs: iBGP blue, eBGP orange, MP-BGP VPNv4 magenta, PE-CE in a VRF cyan. Rings are green when a router answers, amber while starting, red when it does not, grey when stopped; a down session turns red. Orbit, zoom, click a router to open its CLI tab. Any lab can be previewed in 3D without starting it |
+| **3D topology** | Routers on tiers (customers or outside, edge, core), physical links, and BGP sessions as arcs: iBGP blue, eBGP orange, MP-BGP VPNv4 magenta, PE-CE in a VRF cyan. Rings are green when a router answers, amber while starting, red when it does not, grey when stopped; a down session turns red. Orbit, zoom, click a router to open its CLI tab. **Rotate**, **Names**, **Light / Dark** and **Reset view** buttons. Any lab can be previewed in 3D without starting it |
 | **Steps** | The stages above, each pending, running, done, skipped or failed, with a timer and the reason for a failure |
 | **SSH / CLI** | The real SSH sessions, per router, with the prompt highlighted: `$ ssh lab@192.168.99.121`, `PE2#configure terminal`, `PE2(config-vrf)#route-target import 65000:11`, `end`, `write memory`, and the `show` commands of the checks. A box runs whitelisted read-only `show` commands on the selected router; Copy and Clear are there too |
+| **EVE-NG** | The EVE path of the shown lab, each router's EVE-NG state, its SSH address, an **SSH session** button (PuTTY) and a **CLI tab** button that selects the router in the SSH / CLI panel and shows its BGP summary |
 | **Verification** | Each check with PASS or FAIL and a before/after diff |
 
 A page reload while a run is in progress follows that run from its start: the stream of a run is kept, so a late viewer receives everything.
@@ -131,6 +171,15 @@ The first click makes the browser ask once to allow the link. Run the setup agai
 
 Buttons appear only for routers that answer SSH, that is for the lab that is really running. Without PuTTY, the same works from any terminal:
 `ssh -J root@<eve-vm-ip> -o KexAlgorithms=+diffie-hellman-group14-sha1 -o HostKeyAlgorithms=+ssh-rsa -o Ciphers=+aes128-cbc lab@192.168.99.111`.
+
+### Credentials tab
+
+`http://<eve-vm-ip>:8000/#cred` lists every router of all 18 labs (92 routers) with its SSH address, login user, login password and enable secret, one folder per lab, with a filter box.
+
+* Passwords show as dots. **Reveal** shows one, **Reveal all** shows every one, **Copy** puts a value on the clipboard. Leaving the tab hides them again.
+* **SSH session** opens the router in its own PuTTY window ([setup](#one-putty-window-per-router)). After the login, type `enable` and the enable secret.
+* The values come from each lab's `inventory.yaml`, which is what the dashboard logs in with, and are compared with the login and `enable secret` lines of the router's baseline file. A row says **baseline differs** if they ever disagree (all 92 agree today: user `lab`, password `lab123`, enable `lab123`).
+* The tab is read-only. The dots only hide the values on screen: `GET /api/credentials` returns them to anyone who can open the dashboard, which is fine for a private lab VM and something to remember before exposing it.
 
 ### Times (measured on the lab VM with four CPUs)
 
@@ -168,6 +217,8 @@ and an automation tool can then configure the wrong one. See [`docs/addressing.m
 | `POST /api/labs/{lab}/activate` | Switch to a lab without running a scenario |
 | `POST /api/prewarm` | Configure and save every lab once |
 | `GET /api/stream/{run_id}` | Server-sent events: `plan`, `step`, `cli`, `log`, `result` |
+| `GET /api/credentials` | Login user, password and enable secret of every router of every lab, with whether each matches its baseline |
+| `GET /api/devices/{name}/show?cmd=...` | A whitelisted read-only `show` on a router of the active lab (the CLI panel's command box) |
 
 `{lab}` is `shared` or a lab folder name such as `05_med`. The original `/api/scenarios/...` endpoints still exist and drive the shared lab. Full description, troubleshooting and the code map:
 [`docs/live-labs.md`](docs/live-labs.md).
@@ -180,8 +231,12 @@ and an automation tool can then configure the wrong one. See [`docs/addressing.m
 | [`backend/app/scenarios.py`](backend/app/scenarios.py) | Scenario runs for any lab, with the steps and the CLI stream |
 | [`backend/app/devices.py`](backend/app/devices.py) | SSH with the hostname check; streams every command to the CLI panel |
 | [`backend/app/graph.py`](backend/app/graph.py) | The 3D graph, read from `inventory.yaml` and `baseline/*.cfg` |
-| [`frontend/live.js`](frontend/live.js), [`live3d.js`](frontend/live3d.js), [`live.css`](frontend/live.css) | The tab; `frontend/vendor/` holds Three.js r128 (MIT) |
-| [`backend/tests/`](backend/tests/) | Offline tests: `cd backend && ../venv/Scripts/python.exe tests/test_flow.py` (also `test_guard.py`, `test_retry.py`) |
+| [`backend/app/credentials.py`](backend/app/credentials.py) | The Credentials list: inventory logins checked against the baselines |
+| [`frontend/live.js`](frontend/live.js), [`live3d.js`](frontend/live3d.js), [`live.css`](frontend/live.css) | The Live labs tab and the 3D scene (with its light and dark themes); `frontend/vendor/` holds Three.js r128 (MIT) |
+| [`frontend/credentials.js`](frontend/credentials.js) | The Credentials tab |
+| [`frontend/learn3d.js`](frontend/learn3d.js), [`learn-3d.js`](frontend/learn-3d.js) | The 3D boxes on the Learn pages and their per-page path and captions |
+| [`scripts/putty-setup.ps1`](scripts/putty-setup.ps1), [`putty-launch.ps1`](scripts/putty-launch.ps1) | PuTTY sessions and the `bgpputty:` link handler (Windows, current user) |
+| [`backend/tests/`](backend/tests/) | Offline tests: `cd backend && ../venv/Scripts/python.exe tests/test_flow.py` (also `test_guard.py`, `test_retry.py`, `test_credentials.py`) |
 
 ---
 
@@ -199,7 +254,7 @@ Open `http://<eve-vm-ip>:8000/#learn` (or click **Learn** at the top of the dash
 | MP-BGP use-case pages | `#learn/12_mpls_l3vpn` ... `#learn/17_mpls_as_override` |
 
 Every attribute page and every MP-BGP page also has a **3D view** of its lab (Foundations: "where it happens", Practitioner: "your lab in 3D"): the routers the scenario configures glow amber, the BGP sessions are drawn, an animated packet follows a path with a caption per hop
-(for example CONTENT to ISP-B to ENT for AS_PATH, or CE1 to PE1 to P to PE2 to CE2 with the VPN and transport labels for lab 12), and a button opens the lab in Live labs. The view shows live state when the lab is running.
+(for example CONTENT to ISP-B to ENT for AS_PATH, or CE1 to PE1 to P to PE2 to CE2 with the VPN and transport labels for lab 12), and a button opens the lab in Live labs. The view shows live state when the lab is running, and has the same **Light / Dark** button as Live labs.
 Each page has **Foundations** (theory, worked example, quiz), **Practitioner** (production use case, configuration, verification, pitfalls,
 hands-on exercise, and the topic's lab with downloads), and **Pro** (tactics, interactions, edge cases, a troubleshooting drill and a harder quiz).
 Cheat-sheets download as Markdown. Progress is kept in your browser only.
@@ -341,6 +396,8 @@ Before starting another lab: `docker stop bgp-attributes-executor` and `labs/lab
   [`scripts/set-eve-user.sh`](scripts/set-eve-user.sh). Stop the dashboard before running `labtool.sh`, because both use the same account.
 * **Each account runs its nodes in its own tenant.** Labs started by `bgpapi` do not show as running in the admin account's EVE GUI. Use SSH through the VM (the EVE-NG card of the Live labs page has the command)
   or the dashboard. A lab started in a new tenant boots without configuration: run `bootstrap` and `baseline`.
+* **PuTTY asks about the host key once per router.** Click **Accept**. A router that was wiped and rebuilt has a new key, so the alert comes back for it.
+* **A stale page after an update.** The dashboard tells browsers to revalidate, so this should not happen; if it does, press Ctrl+Shift+R.
 * **First boot takes minutes.** Allow about 10 to 15 minutes for `up` on a 7-router lab. `bootstrap` may print `FAILED` for a node on a console-prompt timeout while the node is fine;
   the baseline push is what counts.
 * **Do not run two labs at once**, and never step the VM clock backwards while routers are running.
@@ -382,14 +439,15 @@ backend/
   baseline/         full per-device IOS configs of the shared lab
   scripts/          build_lab.py, bootstrap.py, push_baseline.py, run_scenario.py, healthcheck.py
   inventory.yaml    devices, ASNs, mgmt IPs, router-ids, lab and link map
-frontend/           dashboard, Live labs and Learn tab (vanilla JS): live.js, live3d.js, learn.js, learn-content*.js, learn-mp*.js, learn-labs.js, learn-sim.js; vendor/ = Three.js
+frontend/           dashboard, Live labs, Credentials and Learn tab (vanilla JS): live.js, live3d.js, credentials.js, learn.js, learn3d.js, learn-3d.js, learn-content*.js, learn-mp*.js, learn-labs.js, learn-sim.js; vendor/ = Three.js
 labs/
   README.md         index and notes for the 17 labs
   labtool.sh        run any lab (import, start, bootstrap, baseline, apply, rollback, capture)
   NN_<topic>/       README.md, CONFIGS.md, <lab>.unl, inventory.yaml, baseline/, scenarios/, templates/, probes.txt
 docs/               topology, addressing, EVE setup, runbook
 monitoring/         Kafka exporter, Prometheus and Grafana configuration
-scripts/            make-lab-configs.py, set-eve-user.sh, setup-windows.ps1
+scripts/            make-lab-configs.py, set-eve-user.sh, setup-windows.ps1, putty-setup.ps1, putty-launch.ps1
+LICENSE             MIT License (THIRD-PARTY-NOTICES.md lists Three.js and the dependencies)
 ```
 
 ---
