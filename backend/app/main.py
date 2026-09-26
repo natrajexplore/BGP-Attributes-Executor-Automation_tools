@@ -11,7 +11,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import bus, graph, labmgr, monitor, scenarios
+from . import bus, credentials, graph, labmgr, monitor, scenarios
 from .config import FRONTEND_DIR, LABS_DIR, settings
 from .eveng import EveNGError
 from .events import subscribe, unsubscribe
@@ -220,6 +220,12 @@ def catalog() -> dict:
                      "active": ctx.id == labmgr.ACTIVE.id and bool(labmgr.STATUS["running"]), "selected": ctx.id == labmgr.ACTIVE.id,
                      "scenarios": _scenario_summary(ctx)})
     return {"status": labmgr.status_dict(), "labs": labs}
+
+
+@app.get("/api/credentials")
+def router_credentials() -> dict:
+    """Logins of every router of every lab (lab passwords from the lab files; the Credentials tab hides them until clicked)."""
+    return {"labs": credentials.all_credentials()}
 
 
 @app.get("/api/lab/status")

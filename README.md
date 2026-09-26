@@ -18,6 +18,8 @@ Everything below links to files in this repository. If you are reading this on G
   topology, waits for the routers, checks their baseline and BGP, pushes the change over SSH, verifies it, and rolls it back on request. [Details](#live-labs-any-scenario-on-its-own-topology).
 * **The Lab tab is gone.** Run always goes through Live labs and uses each scenario's own lab; `#lab` opens `#live/shared`. The shared lab is one of the 18 labs.
 * **EVE-NG state, SSH access and pod-1 view.** The page shows each router's EVE-NG state and a copy-ready SSH command (routers are reached by SSH only, through the VM as a jump host), and explains how to see the running lab in the EVE-NG web page ([below](#seeing-the-running-lab-in-the-eve-ng-web-page)).
+* **Credentials tab.** Login user, login password and enable secret of all 92 routers in the 18 labs, grouped by lab, hidden until you click Reveal, with Copy buttons and a copy-ready SSH command. Values come from each lab's `inventory.yaml` and are checked against its baseline (`GET /api/credentials`).
+* **Light or dark 3D scene.** A **Light / Dark** button on the 3D view (Live labs and the Learn pages) switches the scene only, not the rest of the dashboard. The choice is remembered in the browser.
 * **3D in the Learn tab.** Every attribute and MP-BGP page has a 3D view of its lab: the routers the scenario configures glow and a packet follows a path across the topology with a caption per hop. [Learn tab](#the-learn-tab).
 * **3D topology view.** Routers on tiers, physical links, and BGP sessions as arcs (iBGP, eBGP, MP-BGP VPNv4, PE-CE in a VRF) with live up/down state. Every router that receives configuration pulses
   and an "SSH executor" sends a beam to it.

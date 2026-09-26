@@ -97,3 +97,28 @@ table.eve-t { width:calc(100% - 28px); margin:0 14px 14px; border-collapse:colla
 .l3d-foot { display:flex; gap:14px; flex-wrap:wrap; align-items:center; padding:8px 14px 12px; font-size:12px; color:var(--muted); }
 .l3d-foot span { display:inline-flex; align-items:center; gap:6px; } .l3d-foot i { width:9px; height:9px; border-radius:50%; display:inline-block; }
 .l3d-foot a.btn { margin-left:auto; font-size:12px; padding:3px 10px; }
+
+/* Credentials tab */
+.cred { padding:16px 20px; max-width:1400px; }
+.cred-tools { display:flex; gap:10px; align-items:center; padding:0 14px 10px; flex-wrap:wrap; }
+.cred-tools input { min-width:240px; background:var(--panel2); color:var(--fg); border:1px solid var(--line); border-radius:6px; padding:5px 8px; font-size:13px; }
+.cred-tools button, .cred-t button { font-size:12px; padding:3px 9px; }
+.cred details.lab { margin:0 14px 8px; border:1px solid var(--line); border-radius:8px; background:var(--panel2); }
+.cred details.lab > summary { border-top:0; }
+.cred-t { width:calc(100% - 28px); margin:0 14px 12px; border-collapse:collapse; font-size:12.5px; }
+.cred-t th, .cred-t td { padding:6px 8px; border-bottom:1px solid var(--line); text-align:left; white-space:nowrap; }
+.cred-t th { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; }
+.cred-t code { font:12px ui-monospace,Menlo,Consolas,monospace; color:#cfe0f0; }
+.cred-t .pw { letter-spacing:.12em; } .cred-t .bad { color:var(--bad); }
+.cred-t td:last-child { white-space:normal; }
+.cred-t td.pwc { min-width:210px; }
+
+/* light scene: the frame around the canvas follows the theme (the rest of the page stays as it is) */
+#live-3d[data-t3d="light"], .l3d-canvas[data-t3d="light"] { background:#eef2f7; }
+#live-3d[data-t3d="light"] .nogl, .l3d-canvas[data-t3d="light"] .l3d-none { color:#546578; }
+.l3d.light { background:#eef2f7; border-color:#c5cfda; }
+.l3d.light .l3d-bar { background:#e1e8f0; border-bottom-color:#c5cfda; color:#1b2733; }
+.l3d.light .l3d-lab, .l3d.light .l3d-note, .l3d.light .l3d-foot { color:#546578; }
+.l3d.light .l3d-cap { background:#f6f1e4; color:#7c2d12; border-top-color:#c5cfda; }
+.l3d.light .l3d-tools button { background:#fff; color:#1b2733; border-color:#c5cfda; }
+.l3d.light .l3d-tools button.on { border-color:#1d6fd6; color:#1d6fd6; }

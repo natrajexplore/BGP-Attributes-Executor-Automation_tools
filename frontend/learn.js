@@ -721,8 +721,8 @@ router bgp 65000
   function route() {
     const h = location.hash;
     if (h.startsWith("#lab")) { location.replace("#live/shared"); return; }      // the shared lab is one of the labs in Live labs now
-    const view = h.startsWith("#learn") ? "learn" : "live";
-    for (const v of ["live", "learn"]) {
+    const view = h.startsWith("#learn") ? "learn" : h.startsWith("#cred") ? "cred" : "live";
+    for (const v of ["live", "learn", "cred"]) {
       document.getElementById("view-" + v).hidden = v !== view;
       document.getElementById("tab-" + v).classList.toggle("on", v === view);
     }

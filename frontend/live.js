@@ -294,6 +294,9 @@
     if (S.ready) return;
     S.ready = true;
     $("t-rot").onclick = e => { const on = !e.currentTarget.classList.contains("on"); e.currentTarget.classList.toggle("on", on); S.v3 && S.v3.setAutoRotate(on); };
+    const themeBtn = $("t-theme"), showTheme = () => { themeBtn.textContent = window.Live3D && Live3D.preferred() === "light" ? "Dark" : "Light"; };
+    showTheme();
+    themeBtn.onclick = () => { const next = Live3D.preferred() === "light" ? "dark" : "light"; Live3D.setPreferred(next); S.v3 && S.v3.setTheme(next); showTheme(); };
     $("t-lab").onclick = e => { const on = !e.currentTarget.classList.contains("on"); e.currentTarget.classList.toggle("on", on); S.v3 && S.v3.setLabels(on); };
     $("t-reset").onclick = () => S.v3 && S.v3.resetCamera();
     $("cli-clear").onclick = () => { S.cli = []; renderCli(); };

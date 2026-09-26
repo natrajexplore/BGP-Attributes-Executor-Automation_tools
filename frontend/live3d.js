@@ -5,7 +5,8 @@
    v.setGraph(graph)        rebuild the scene           v.update(graph)   refresh state (rebuilds only if the topology changed)
    v.pulse(name, kind)      router is being configured  v.beam(name)      an SSH command travels from the executor to a router
    v.select(name)  v.setAutoRotate(bool)  v.resetCamera()  v.setLabels(bool)  v.dispose()
-   v.highlight(names, tag)  routers a scenario configures (Learn tab)      v.tracePath(names, {captions, onHop})  a packet follows a path   */
+   v.highlight(names, tag)  routers a scenario configures (Learn tab)      v.tracePath(names, {captions, onHop})  a packet follows a path
+   v.setTheme('dark'|'light')  the scene only (never the page); Live3D.preferred() / Live3D.setPreferred(name) remember the choice in this browser   */
 (() => {
   const TIER = { customer: 0, content: 0, provider: 0, subsidiary: 0, branch: 1, edge: 1, pe: 1, internal: 1, leaf: 1,
     "route-reflector-client": 1, core: 2, "route-reflector": 2 };
@@ -13,6 +14,17 @@
   const ROLE_COLOR = { customer: 0x3fb950, content: 0x3fb950, provider: 0xd29922, subsidiary: 0x3fb950, branch: 0x4aa3ff, edge: 0x4aa3ff, pe: 0x4aa3ff,
     internal: 0x8b9bb0, leaf: 0x8b9bb0, "route-reflector-client": 0x8b9bb0, core: 0xa371f7, "route-reflector": 0xa371f7 };
   const SESSION_COLOR = { ibgp: 0x4aa3ff, ebgp: 0xf0883e, vpnv4: 0xe879f9, vrf: 0x22d3ee };
+  const THEMES = {
+    dark: { bg: 0x0b1017, fogNear: 26, fogFar: 60, amb: 0x8fa4bd, ambI: 0.85, sunI: 0.9, grid: [0x22303d, 0x16212b], link: 0x4b5a6a, body: 0x1b2632, plate: 0.05,
+      label: "#e6edf3", sub: "#8b9bb0", stroke: "rgba(11,15,20,.92)", hl: "#fbbf24", hlHex: 0xfbbf24, cap: "#fff3c4", pkt: 0xfff3c4,
+      tipBg: "rgba(15,20,26,.94)", tipBd: "#2b3947", tipFg: "#e6edf3", css: "#0b1017" },
+    light: { bg: 0xeef2f7, fogNear: 30, fogFar: 70, amb: 0xffffff, ambI: 1.0, sunI: 0.7, grid: [0xb7c3d0, 0xdbe3ec], link: 0x8595a6, body: 0x5c6d80, plate: 0.12,
+      label: "#1b2733", sub: "#546578", stroke: "rgba(238,242,247,.95)", hl: "#b45309", hlHex: 0xd97706, cap: "#7c2d12", pkt: 0xb45309,
+      tipBg: "rgba(255,255,255,.97)", tipBd: "#c5cfda", tipFg: "#1b2733", css: "#eef2f7" },
+  };
+  const KEY = "bgp3dTheme";
+  function preferred() { try { const v = localStorage.getItem(KEY); return v in THEMES ? v : "dark"; } catch (e) { return "dark"; } }
+  function setPreferred(v) { try { localStorage.setItem(KEY, v in THEMES ? v : "dark"); } catch (e) { /* storage blocked: the choice lasts for this view only */ } }
   const UP = 0x3fb950, DOWN = 0xf85149, WAIT = 0xd29922, IDLE = 0x5b6b7c;
 
   function supported() {
@@ -24,10 +36,11 @@
     const c = document.createElement("canvas"), g = c.getContext("2d"), w = opts.w || 320, h = opts.h || 96;
     c.width = w; c.height = h;
     g.font = `600 ${opts.size || 40}px -apple-system, Segoe UI, Roboto, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle";
-    g.lineWidth = 6; g.strokeStyle = "rgba(11,15,20,.92)"; g.fillStyle = opts.color || "#e6edf3";
+    const th = opts.th || THEMES.dark;
+    g.lineWidth = 6; g.strokeStyle = th.stroke; g.fillStyle = th[opts.role || "label"];
     g.strokeText(lines[0], w / 2, lines[1] ? h * 0.36 : h / 2); g.fillText(lines[0], w / 2, lines[1] ? h * 0.36 : h / 2);
     if (lines[1]) {
-      g.font = `500 ${Math.round((opts.size || 40) * 0.62)}px -apple-system, Segoe UI, Roboto, sans-serif`; g.fillStyle = "#8b9bb0";
+      g.font = `500 ${Math.round((opts.size || 40) * 0.62)}px -apple-system, Segoe UI, Roboto, sans-serif`; g.fillStyle = th.sub;
       g.strokeText(lines[1], w / 2, h * 0.76); g.fillText(lines[1], w / 2, h * 0.76);
     }
     const tex = new T.CanvasTexture(c); tex.minFilter = T.LinearFilter;
@@ -40,26 +53,30 @@
   function create(container, handlers = {}) {
     const T = window.THREE;
     if (!T || !supported()) return null;
+    let TH = THEMES[handlers.theme] || THEMES[preferred()], themeName = TH === THEMES.light ? "light" : "dark";
+    const spr = (lines, o) => textSprite(T, lines, { ...o, th: TH });
     const renderer = new T.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    renderer.setClearColor(0x0b1017, 1);
-    container.appendChild(renderer.domElement);
+    renderer.setClearColor(TH.bg, 1);
+    container.appendChild(renderer.domElement); container.dataset.t3d = themeName;
     renderer.domElement.style.cssText = "display:block;width:100%;height:100%;outline:none";
     const scene = new T.Scene();
-    scene.fog = new T.Fog(0x0b1017, 26, 60);
+    scene.fog = new T.Fog(TH.bg, TH.fogNear, TH.fogFar);
     const camera = new T.PerspectiveCamera(48, 1, 0.1, 200);
     const controls = new T.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true; controls.dampingFactor = 0.08; controls.maxPolarAngle = Math.PI * 0.49; controls.minDistance = 4; controls.maxDistance = 45;
     controls.autoRotate = true; controls.autoRotateSpeed = 0.5;
     controls.addEventListener("start", () => { controls.autoRotate = false; state.rotate = false; handlers.onRotate && handlers.onRotate(false); });
-    scene.add(new T.AmbientLight(0x8fa4bd, 0.85));
-    const sun = new T.DirectionalLight(0xffffff, 0.9); sun.position.set(6, 14, 8); scene.add(sun);
+    const amb = new T.AmbientLight(TH.amb, TH.ambI); scene.add(amb);
+    const sun = new T.DirectionalLight(0xffffff, TH.sunI); sun.position.set(6, 14, 8); scene.add(sun);
     const world = new T.Group(); scene.add(world);
     const tip = document.createElement("div");
-    tip.style.cssText = "position:absolute;pointer-events:none;display:none;background:rgba(15,20,26,.94);border:1px solid #2b3947;border-radius:6px;padding:6px 9px;font:12px/1.45 -apple-system,Segoe UI,sans-serif;color:#e6edf3;z-index:5;max-width:260px";
+    tip.style.cssText = "position:absolute;pointer-events:none;display:none;border-radius:6px;padding:6px 9px;font:12px/1.45 -apple-system,Segoe UI,sans-serif;z-index:5;max-width:260px";
+    const styleTip = () => { tip.style.background = TH.tipBg; tip.style.border = "1px solid " + TH.tipBd; tip.style.color = TH.tipFg; };
+    styleTip();
     container.style.position = container.style.position || "relative"; container.appendChild(tip);
 
-    const state = { hl: {}, trace: null, graph: null, sig: "", rotate: true, labels: true, nodes: {}, sessions: [], pulses: [], beams: [], selected: null, extent: 10, center: new T.Vector3(), exec: null };
+    const state = { hl: {}, hlArgs: null, traceArgs: null, trace: null, graph: null, sig: "", rotate: true, labels: true, nodes: {}, sessions: [], pulses: [], beams: [], selected: null, extent: 10, center: new T.Vector3(), exec: null };
     const clock = new T.Clock();
     const ray = new T.Raycaster(), mouse = new T.Vector2();
     let raf = 0, disposed = false, hoverName = null;
@@ -97,15 +114,15 @@
       if (handlers.compact) state.center.set(0, 1.4, 0);
       const usedTiers = [...new Set(graph.nodes.map(n => roleTier(n.role)))].sort();
       // floor and tier plates
-      const grid = new T.GridHelper(Math.max(w, d) + 14, 24, 0x22303d, 0x16212b); grid.position.y = -0.3; world.add(grid);
+      const grid = new T.GridHelper(Math.max(w, d) + 14, 24, TH.grid[0], TH.grid[1]); grid.position.y = -0.3; world.add(grid);
       for (const t of usedTiers) {
-        const plate = new T.Mesh(new T.PlaneGeometry(w + 6, d + 5), new T.MeshBasicMaterial({ color: [0x3fb950, 0x4aa3ff, 0xa371f7][t] || 0x4aa3ff, transparent: true, opacity: 0.05, side: T.DoubleSide, depthWrite: false }));
+        const plate = new T.Mesh(new T.PlaneGeometry(w + 6, d + 5), new T.MeshBasicMaterial({ color: [0x3fb950, 0x4aa3ff, 0xa371f7][t] || 0x4aa3ff, transparent: true, opacity: TH.plate, side: T.DoubleSide, depthWrite: false }));
         plate.rotation.x = -Math.PI / 2; plate.position.y = t * 2.1 - 0.28; world.add(plate);
-        const lab = textSprite(T, [TIER_NAME[t] || "Tier"], { w: 420, h: 70, size: 34, color: "#8b9bb0", scale: 3.0 });
+        const lab = spr([TIER_NAME[t] || "Tier"], { w: 420, h: 70, size: 34, role: "sub", scale: 3.0 });
         lab.position.set(-(w + 6) / 2 - 2.3, t * 2.1 - 0.05, 0); world.add(lab); lab.userData.tier = true;
       }
       // physical links
-      const linkMat = new T.MeshStandardMaterial({ color: 0x4b5a6a, roughness: 0.6, metalness: 0.2 });
+      const linkMat = new T.MeshStandardMaterial({ color: TH.link, roughness: 0.6, metalness: 0.2 });
       for (const lk of graph.links) {
         if (!pos[lk.a] || !pos[lk.b]) continue;
         const m = cylBetween(pos[lk.a], pos[lk.b], 0.045, linkMat); m.userData = { link: lk }; world.add(m);
@@ -114,14 +131,14 @@
       for (const n of graph.nodes) {
         const g = new T.Group(); g.position.copy(pos[n.name]);
         const col = nodeColor(n.role);
-        const body = new T.Mesh(new T.CylinderGeometry(0.62, 0.7, 0.34, 6), new T.MeshStandardMaterial({ color: 0x1b2632, roughness: 0.45, metalness: 0.5 }));
+        const body = new T.Mesh(new T.CylinderGeometry(0.62, 0.7, 0.34, 6), new T.MeshStandardMaterial({ color: TH.body, roughness: 0.45, metalness: 0.5 }));
         const cap = new T.Mesh(new T.CylinderGeometry(0.5, 0.5, 0.06, 6), new T.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.55 }));
         cap.position.y = 0.2;
         const ring = new T.Mesh(new T.RingGeometry(0.82, 0.92, 40), new T.MeshBasicMaterial({ color: IDLE, transparent: true, opacity: 0.9, side: T.DoubleSide }));
         ring.rotation.x = -Math.PI / 2; ring.position.y = -0.16;
         const sel = new T.Mesh(new T.RingGeometry(1.0, 1.08, 48), new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: T.DoubleSide }));
         sel.rotation.x = -Math.PI / 2; sel.position.y = -0.15;
-        const label = textSprite(T, [n.name, `AS ${n.asn}`], { size: 44, scale: 3.0 }); label.position.y = 1.05;
+        const label = spr([n.name, `AS ${n.asn}`], { size: 44, scale: 3.0 }); label.position.y = 1.05;
         g.add(body, cap, ring, sel, label);
         g.userData = { name: n.name, node: n, cap, ring, sel, label, body, col };
         world.add(g); state.nodes[n.name] = g;
@@ -149,7 +166,7 @@
       const ex = new T.Group(); ex.visible = !handlers.compact;
       const box = new T.Mesh(new T.OctahedronGeometry(0.5), new T.MeshStandardMaterial({ color: 0x22d3ee, emissive: 0x22d3ee, emissiveIntensity: 0.6 }));
       ex.add(box);
-      const exl = textSprite(T, ["SSH executor", "ssh lab@192.168.99.x"], { size: 40, scale: 2.5 }); exl.position.y = 1.0; ex.add(exl);
+      const exl = spr(["SSH executor", "ssh lab@192.168.99.x"], { size: 40, scale: 2.5 }); exl.position.y = 1.0; ex.add(exl);
       ex.position.set(0, 0.9, d / 2 + 4.6); world.add(ex);
       state.exec = ex;
       const ctr = new T.Vector3(0, 1, 0);
@@ -233,37 +250,54 @@
 
     // ---- teaching aids (Learn tab): routers a scenario configures, and a packet that follows a path
     function highlight(names, tag) {
+      state.hlArgs = [names, tag];
       for (const m of Object.values(state.hl)) { world.remove(m.ring, m.tag); m.ring.geometry.dispose(); m.ring.material.dispose(); m.tag.material.map.dispose(); m.tag.material.dispose(); }
       state.hl = {};
       for (const name of names || []) {
         const g = state.nodes[name]; if (!g) continue;
-        const ring = new T.Mesh(new T.RingGeometry(1.12, 1.26, 48), new T.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.9, side: T.DoubleSide, depthWrite: false }));
+        const ring = new T.Mesh(new T.RingGeometry(1.12, 1.26, 48), new T.MeshBasicMaterial({ color: TH.hlHex, transparent: true, opacity: 0.9, side: T.DoubleSide, depthWrite: false }));
         ring.rotation.x = -Math.PI / 2; ring.position.copy(g.position); ring.position.y -= 0.12;
-        const label = textSprite(T, [tag || "configured here"], { w: 360, h: 64, size: 30, color: "#fbbf24", scale: 2.2 });
+        const label = spr([tag || "configured here"], { w: 360, h: 64, size: 30, role: "hl", scale: 2.2 });
         label.position.copy(g.position); label.position.y += 1.75;
         world.add(ring, label); state.hl[name] = { ring, tag: label };
       }
     }
     function tracePath(names, opts = {}) {
       stopTrace();
+      state.traceArgs = [names, opts];
       const pts = (names || []).map(n => state.nodes[n]).filter(Boolean).map(g => g.position.clone().add(new T.Vector3(0, 0.55, 0)));
       if (pts.length < 2) return false;
       const curve = new T.CatmullRomCurve3(pts, false, "catmullrom", 0.15);
-      const path = new T.Mesh(new T.TubeGeometry(curve, 12 * pts.length, 0.045, 6, false), new T.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.32 }));
-      const pkt = new T.Mesh(new T.SphereGeometry(0.2, 14, 14), new T.MeshBasicMaterial({ color: 0xfff3c4 }));
-      const halo = new T.Mesh(new T.SphereGeometry(0.34, 14, 14), new T.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.35, depthWrite: false }));
+      const path = new T.Mesh(new T.TubeGeometry(curve, 12 * pts.length, 0.045, 6, false), new T.MeshBasicMaterial({ color: TH.hlHex, transparent: true, opacity: 0.32 }));
+      const pkt = new T.Mesh(new T.SphereGeometry(0.2, 14, 14), new T.MeshBasicMaterial({ color: TH.pkt }));
+      const halo = new T.Mesh(new T.SphereGeometry(0.34, 14, 14), new T.MeshBasicMaterial({ color: TH.hlHex, transparent: true, opacity: 0.35, depthWrite: false }));
       pkt.add(halo);
       const dists = [0]; for (let i = 1; i < pts.length; i++) dists.push(dists[i - 1] + pts[i].distanceTo(pts[i - 1]));
       const u = dists.map(d => d / dists[dists.length - 1]);
-      const caps = (opts.captions || []).map(c => { const sp = textSprite(T, [c], { w: 520, h: 64, size: 30, color: "#fff3c4", scale: 3.4 }); sp.visible = false; world.add(sp); return sp; });
+      const caps = (opts.captions || []).map(c => { const sp = spr([c], { w: 520, h: 64, size: 30, role: "cap", scale: 3.4 }); sp.visible = false; world.add(sp); return sp; });
       world.add(path, pkt);
       state.trace = { curve, path, pkt, u, caps, speed: opts.speed || 0.07, onHop: opts.onHop, last: -1, names };
       return true;
     }
-    function stopTrace() {
+    function stopTrace(keep) {
+      if (!keep) state.traceArgs = null;
       const t = state.trace; if (!t) return;
       world.remove(t.path, t.pkt, ...t.caps); t.path.geometry.dispose(); t.pkt.geometry.dispose();
       t.caps.forEach(c => { c.material.map.dispose(); c.material.dispose(); }); state.trace = null;
+    }
+
+    // ---- theme: light or dark scene (the page around it is not touched)
+    function setTheme(name) {
+      if (!(name in THEMES) || name === themeName) return;
+      TH = THEMES[name]; themeName = name; container.dataset.t3d = name;
+      renderer.setClearColor(TH.bg, 1); scene.fog.color.setHex(TH.bg); scene.fog.near = TH.fogNear; scene.fog.far = TH.fogFar;
+      amb.color.setHex(TH.amb); amb.intensity = TH.ambI; sun.intensity = TH.sunI; styleTip();
+      if (!state.graph) return;
+      const sel = state.selected, hl = state.hlArgs, tr = state.traceArgs;      // build() clears these: draw them again in the new colors
+      build(state.graph);
+      if (hl) highlight(hl[0], hl[1]);
+      if (tr) tracePath(tr[0], tr[1]);
+      if (sel) select(sel);
     }
 
     // ---- interaction
@@ -284,10 +318,10 @@
       const r = container.getBoundingClientRect();
       if (h.router) {
         const g = state.nodes[h.router].userData, n = g.node;
-        tip.innerHTML = `<b>${h.router}</b> <span style="color:#8b9bb0">${n.role}</span><br>AS ${n.asn} &middot; ${n.mgmt_ip}<br><span style="color:#8b9bb0">${g.status}</span>`;
+        tip.innerHTML = `<b>${h.router}</b> <span style="color:${TH.sub}">${n.role}</span><br>AS ${n.asn} &middot; ${n.mgmt_ip}<br><span style="color:${TH.sub}">${g.status}</span>`;
       } else {
         const s = h.session;
-        tip.innerHTML = `<b>${s.a} &harr; ${s.b}</b><br>${({ ibgp: "iBGP", ebgp: "eBGP", vpnv4: "MP-BGP VPNv4", vrf: "eBGP in VRF (PE-CE)" })[s.kind] || s.kind}<br><span style="color:${s.established === true ? "#3fb950" : s.established === false ? "#f85149" : "#8b9bb0"}">${s.state}${s.established ? " &middot; " + s.prefixes + " prefixes" : ""}</span>`;
+        tip.innerHTML = `<b>${s.a} &harr; ${s.b}</b><br>${({ ibgp: "iBGP", ebgp: "eBGP", vpnv4: "MP-BGP VPNv4", vrf: "eBGP in VRF (PE-CE)" })[s.kind] || s.kind}<br><span style="color:${s.established === true ? "#3fb950" : s.established === false ? "#f85149" : TH.sub}">${s.state}${s.established ? " &middot; " + s.prefixes + " prefixes" : ""}</span>`;
       }
       tip.style.display = "block"; tip.style.left = Math.min(ev.clientX - r.left + 14, r.width - 270) + "px"; tip.style.top = (ev.clientY - r.top + 14) + "px";
     });
@@ -353,7 +387,7 @@
     frame();
 
     return {
-      setGraph, update, pulse, beam, select, resize, resetCamera, highlight, tracePath, stopTrace,
+      setGraph, update, pulse, beam, select, resize, resetCamera, highlight, tracePath, stopTrace, setTheme, theme: () => themeName,
       setAutoRotate(v) { state.rotate = !!v; controls.autoRotate = !!v; },
       setLabels(v) { state.labels = !!v; },
       snapshot() { renderer.render(scene, camera); return renderer.domElement.toDataURL("image/png"); },
@@ -361,5 +395,5 @@
     };
   }
 
-  window.Live3D = { create, supported };
+  window.Live3D = { create, supported, preferred, setPreferred };
 })();
