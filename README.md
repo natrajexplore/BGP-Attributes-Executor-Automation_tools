@@ -410,3 +410,7 @@ After recreating the Kafka container, restart the exporter (`docker restart bgp-
 * [`docs/eve-setup.md`](docs/eve-setup.md): EVE-NG and network setup
 * [`docs/runbook.md`](docs/runbook.md): rebuild, baseline, health check
 * [`labs/README.md`](labs/README.md): the lab index, run routine, dashboard endpoints and EVE notes
+
+## License
+
+This project is released under the [MIT License](LICENSE). Third-party components and the Cisco IOS images the labs need are covered in [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
