@@ -32,13 +32,25 @@ running and their consoles open. Keep it separate from `bgpapi`: EVE-NG allows o
 ### Reaching the routers: SSH only
 
 Routers accept **SSH only** (`line vty`, `transport input ssh`, user `lab`); the EVE-NG telnet consoles are not offered in the dashboard. The management network `192.168.99.0/24` exists inside the EVE-NG VM, so a PC reaches a router
-through the VM as a jump host. The **EVE-NG** card lists each router of the shown lab with its EVE-NG state and a **Copy SSH command** button. The command looks like this (IOS 15.2 needs the legacy algorithms):
+through the VM as a jump host. The **EVE-NG** card lists each router of the shown lab with its EVE-NG state and an **SSH session** button, shown only for routers that answer SSH (so only for the lab that is really running).
+
+### One PuTTY window per router
+
+The **EVE-NG** card of Live labs and the **Credentials** tab have an **SSH session** button on every router. It opens that router in its own PuTTY window (user `lab`, PuTTY asks for the password: see the Credentials tab).
+A web page cannot start programs, so the PC needs a small handler, installed once (your Windows user only, no administrator rights):
 
 ```
-ssh -J root@<eve-vm-ip> -o KexAlgorithms=+diffie-hellman-group14-sha1 -o HostKeyAlgorithms=+ssh-rsa -o Ciphers=+aes128-cbc lab@192.168.99.111
+powershell -ExecutionPolicy Bypass -File scripts\putty-setup.ps1            # install
+powershell -ExecutionPolicy Bypass -File scripts\putty-setup.ps1 -DryRun    # show what it would do
+powershell -ExecutionPolicy Bypass -File scripts\putty-setup.ps1 -Uninstall
 ```
 
-The card shows a command only for routers that answer SSH, so only for the lab that is really running.
+The script reads the router list from the dashboard and creates one saved PuTTY session per router, named `BGP <lab> <router>`. PuTTY reaches the router through the EVE-NG VM with the Windows OpenSSH client
+(`ssh.exe -W`, your existing key for the VM), because the router addresses only exist inside the VM. It also registers a `bgpputty:` link, which `scripts\putty-launch.ps1` turns into `putty.exe -load "BGP <lab> <router>"`.
+The first click makes the browser ask once to allow the link. Run the setup again when labs are added. The password is never stored. The first time you open a router, PuTTY shows its **Security Alert** for the router's host key: click **Accept** (a router that was wiped and rebuilt has a new key, so the alert returns). The sessions use only the algorithms that the routers' IOS 15.2 SSH server offers (DH group14, AES/3DES, RSA), and a 32-bit PuTTY starts the 64-bit `ssh.exe` through `C:\Windows\Sysnative`.
+
+Without PuTTY, any terminal works (IOS 15.2 needs the legacy algorithms):
+`ssh -J root@<eve-vm-ip> -o KexAlgorithms=+diffie-hellman-group14-sha1 -o HostKeyAlgorithms=+ssh-rsa -o Ciphers=+aes128-cbc lab@192.168.99.111`.
 
 ## 3D views in the Learn tab
 

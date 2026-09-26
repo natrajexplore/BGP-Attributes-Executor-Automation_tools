@@ -108,23 +108,23 @@
        <span><i class="d" style="background:#22d3ee"></i>SSH executor</span>`;
   }
 
-  /* SSH only: the routers accept SSH on their management address (line vty, transport input ssh). The management network exists inside
-     the EVE-NG VM, so a PC reaches a router through the VM as a jump host. Old IOS needs the legacy algorithms below. */
-  const sshCmd = ip => `ssh -J root@${location.hostname} -o KexAlgorithms=+diffie-hellman-group14-sha1 -o HostKeyAlgorithms=+ssh-rsa -o Ciphers=+aes128-cbc lab@${ip}`;
+  /* SSH only: the routers accept SSH on their management address (line vty, transport input ssh). The management network exists inside the
+     EVE-NG VM. "SSH session" opens bgpputty:<lab>/<router>, a link handler that scripts/putty-setup.ps1 registers on the Windows PC: it starts a
+     dedicated PuTTY window (saved session "BGP <lab> <router>") that reaches the router through the VM. */
+  const puttyUrl = (lab, name) => `bgpputty:${lab}/${name}`;
 
   function renderEve(g) {
     const lab = g.lab, rows = g.nodes, up = rows.some(n => n.reachable);
     $("live-eve-lab").textContent = `${lab.eve_path}  (root folder of EVE-NG)`;
     $("live-eve-note").innerHTML = up
-      ? `Lab <code>${esch(lab.eve_path)}</code> is running in EVE-NG under the account <code>bgpapi</code>. Routers are reached by <b>SSH only</b>: copy a command below and run it in a terminal on your PC (it goes through the VM <code>${esch(location.hostname)}</code> as a jump host; the user is <code>lab</code>).`
-      : `Lab <code>${esch(lab.eve_path)}</code> is not running. Press <b>Run</b> on one of its scenarios or <b>Start this lab</b>: the routers start, and their SSH commands appear here.`;
+      ? `Lab <code>${esch(lab.eve_path)}</code> is running in EVE-NG under the account <code>bgpapi</code>. Routers are reached by <b>SSH only</b>: <b>SSH session</b> opens the router in its own PuTTY window (user <code>lab</code>, password on the Credentials tab). Set it up once on your PC, see below.`
+      : `Lab <code>${esch(lab.eve_path)}</code> is not running. Press <b>Run</b> on one of its scenarios or <b>Start this lab</b>: the routers start, and their SSH sessions appear here.`;
     const html = `<table class="eve-t"><thead><tr><th>Router</th><th>Role</th><th>EVE-NG state</th><th>SSH address</th><th></th></tr></thead><tbody>` +
       rows.map(n => `<tr><td><b>${esch(n.name)}</b></td><td>${esch(n.role)} &middot; AS ${n.asn}</td><td class="${n.reachable ? "st-run" : "st-off"}">${n.reachable ? "running, SSH answers" : esch(n.status === "unknown" ? "not in EVE-NG" : n.status)}</td>
         <td><code>lab@${esch(n.mgmt_ip)}</code></td>
-        <td>${n.reachable ? `<button class="ghost" data-copy="${esch(sshCmd(n.mgmt_ip))}">Copy SSH command</button>` : ""}<button class="ghost" data-cli="${esch(n.name)}">CLI tab</button></td></tr>`).join("") + `</tbody></table>`;
+        <td>${n.reachable ? `<a class="btn" href="${esch(puttyUrl(lab.id, n.name))}" title="Open ${esch(n.name)} in its own PuTTY window">SSH session</a>` : ""}<button class="ghost" data-cli="${esch(n.name)}">CLI tab</button></td></tr>`).join("") + `</tbody></table>`;
     if (html === S.eveHtml && $("live-eve-table").firstChild) return;      // unchanged: keep the buttons, a click during a rebuild would be lost
     S.eveHtml = html; $("live-eve-table").innerHTML = html;
-    $("live-eve-table").querySelectorAll("button[data-copy]").forEach(b => { b.onclick = () => { (navigator.clipboard ? navigator.clipboard.writeText(b.dataset.copy) : Promise.reject()).catch(() => {}); b.textContent = "Copied"; setTimeout(() => { b.textContent = "Copy SSH command"; }, 1200); }; });
     $("live-eve-table").querySelectorAll("button[data-cli]").forEach(b => { b.onclick = () => openCli(b.dataset.cli); });
   }
 

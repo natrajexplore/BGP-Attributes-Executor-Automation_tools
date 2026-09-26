@@ -5,7 +5,6 @@
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const S = { labs: null, shown: new Set(), all: false, loading: false };
   const key = (lab, r, f) => `${lab}/${r}/${f}`;
-  const sshCmd = (ip, user) => `ssh -J root@${location.hostname} -o KexAlgorithms=+diffie-hellman-group14-sha1 -o HostKeyAlgorithms=+ssh-rsa -o Ciphers=+aes128-cbc ${user}@${ip}`;
 
   async function load() {
     if (S.labs || S.loading) return;
@@ -37,12 +36,12 @@
       return `<details class="lab${q ? " on" : ""}" data-lab="${esc(l.id)}"${q || openIds.has(l.id) ? " open" : ""}><summary><span class="num">${num}</span><span class="nm">${esc(l.short)}</span><span class="meta">${rows.length} routers &middot; ${esc(l.eve_path)}</span></summary>
         <table class="cred-t"><thead><tr><th>Router</th><th>Role</th><th>SSH address</th><th>Login user</th><th>Login password</th><th>Enable secret</th><th></th></tr></thead><tbody>${rows.map(r =>
           `<tr><td><b>${esc(r.name)}</b></td><td>${esc(r.role)} &middot; AS ${r.asn}</td><td><code>${esc(r.mgmt_ip)}</code></td><td><code>${esc(r.username)}</code></td>${secretCell(l.id, r, "password")}${secretCell(l.id, r, "secret")}
-           <td>${r.baseline_match === false ? `<span class="bad" title="The baseline configures a different login or enable secret than the inventory">baseline differs</span> ` : ""}<button class="ghost" data-copy="${esc(sshCmd(r.mgmt_ip, r.username))}">Copy SSH command</button></td></tr>`).join("")}</tbody></table></details>`;
+           <td>${r.baseline_match === false ? `<span class="bad" title="The baseline configures a different login or enable secret than the inventory">baseline differs</span> ` : ""}<a class="btn" href="bgpputty:${esc(l.id)}/${esc(r.name)}" title="Open ${esc(r.name)} in its own PuTTY window">SSH session</a></td></tr>`).join("")}</tbody></table></details>`;
     }).join("");
     $("cred-body").innerHTML = html || `<div class="live-empty">No router matches the filter.</div>`;
     $("cred-count").textContent = `${nr} routers in ${nl} labs` + (off ? ` · ${off} differ from their baseline` : "");
     $("cred-reveal").textContent = S.all ? "Hide all" : "Reveal all";
-    $("cred-note").innerHTML = `Login and enable passwords of every router in all ${S.labs.length} labs, from the lab files in the repository (<code>labs/&lt;lab&gt;/inventory.yaml</code> and the baselines). Routers accept <b>SSH only</b>; after login type <code>enable</code> and the enable secret. Values are hidden until you click <b>Reveal</b>. This is a lab VM: anyone who can open this dashboard can read them.`;
+    $("cred-note").innerHTML = `Login and enable passwords of every router in all ${S.labs.length} labs, from the lab files in the repository (<code>labs/&lt;lab&gt;/inventory.yaml</code> and the baselines). Routers accept <b>SSH only</b>: <b>SSH session</b> opens a router in its own PuTTY window (one-time setup, see the EVE-NG card of Live labs). After login type <code>enable</code> and the enable secret. Values are hidden until you click <b>Reveal</b>. This is a lab VM: anyone who can open this dashboard can read them.`;
   }
 
   function init() {

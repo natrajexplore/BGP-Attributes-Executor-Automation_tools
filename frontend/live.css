@@ -122,3 +122,4 @@ table.eve-t { width:calc(100% - 28px); margin:0 14px 14px; border-collapse:colla
 .l3d.light .l3d-cap { background:#f6f1e4; color:#7c2d12; border-top-color:#c5cfda; }
 .l3d.light .l3d-tools button { background:#fff; color:#1b2733; border-color:#c5cfda; }
 .l3d.light .l3d-tools button.on { border-color:#1d6fd6; color:#1d6fd6; }
+.cred-t a.btn { font-size:11.5px; padding:2px 8px; margin-right:4px; }

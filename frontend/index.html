@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BGP Attributes Executor</title>
-<link rel="stylesheet" href="/static/live.css?v=20260926e">
+<link rel="stylesheet" href="/static/live.css?v=20260926f">
 <style>
   :root {
     --bg:#0f141a; --panel:#171f29; --panel2:#1e2833; --line:#2b3947;
@@ -166,6 +166,12 @@
           <li>Create a second EVE account for the web page, once: <b>System &rarr; User management &rarr; Add new user</b>, role <b>Administrator</b>, <b>POD 1</b>, expiration -1, a password you choose.</li>
           <li>Log in to EVE-NG with that account and open the lab from the folder list (the path above). The routers show as running. Reach them by SSH with the commands below, not through the EVE-NG telnet console.</li>
           <li>Use a separate account for the web page: EVE-NG keeps one session per account, so using <code>bgpapi</code> itself would log you out whenever the dashboard talks to EVE-NG.</li>
+        </ol></details>
+      <details class="eve-how"><summary>Open routers in PuTTY (one-time setup on your PC)</summary>
+        <ol>
+          <li>The <b>SSH session</b> button starts a separate PuTTY window for that router. A web page cannot start programs, so your PC needs a small link handler, set up once: in the repository folder run <code>powershell -ExecutionPolicy Bypass -File scripts\putty-setup.ps1</code>. It adds one saved PuTTY session per router (named <code>BGP &lt;lab&gt; &lt;router&gt;</code>) and a <code>bgpputty:</code> link, for your Windows user only. <code>-DryRun</code> shows what it would do, <code>-Uninstall</code> removes it.</li>
+          <li>The first click makes the browser ask whether to open PuTTY links: allow it (and tick "always allow").</li>
+          <li>PuTTY connects through the EVE-NG VM with the Windows OpenSSH key you already use for the VM, then asks for the password of user <code>lab</code>: see the <b>Credentials</b> tab. Type <code>enable</code> for privileged mode.</li>
         </ol></details>
       <div id="live-eve-table"></div>
     </div>
@@ -386,24 +392,24 @@ loadScenarios();
 initMonitor();
 setInterval(loadDevices, 30000);
 </script>
-<script src="/static/vendor/three.min.js?v=20260926e"></script>
-<script src="/static/vendor/OrbitControls.js?v=20260926e"></script>
-<script src="/static/live3d.js?v=20260926e"></script>
-<script src="/static/learn-3d.js?v=20260926e"></script>
-<script src="/static/learn3d.js?v=20260926e"></script>
-<script src="/static/live.js?v=20260926e"></script>
-<script src="/static/learn-content.js?v=20260926e"></script>
-<script src="/static/learn-content-2.js?v=20260926e"></script>
-<script src="/static/learn-content-3.js?v=20260926e"></script>
-<script src="/static/learn-content-4.js?v=20260926e"></script>
-<script src="/static/learn-mp.js?v=20260926e"></script>
-<script src="/static/learn-mp-content.js?v=20260926e"></script>
-<script src="/static/learn-mp-2.js?v=20260926e"></script>
-<script src="/static/learn-mp-content-2.js?v=20260926e"></script>
-<script src="/static/learn-labs.js?v=20260926e"></script>
-<script src="/static/learn-md.js?v=20260926e"></script>
-<script src="/static/learn-sim.js?v=20260926e"></script>
-<script src="/static/credentials.js?v=20260926e"></script>
-<script src="/static/learn.js?v=20260926e"></script>
+<script src="/static/vendor/three.min.js?v=20260926f"></script>
+<script src="/static/vendor/OrbitControls.js?v=20260926f"></script>
+<script src="/static/live3d.js?v=20260926f"></script>
+<script src="/static/learn-3d.js?v=20260926f"></script>
+<script src="/static/learn3d.js?v=20260926f"></script>
+<script src="/static/live.js?v=20260926f"></script>
+<script src="/static/learn-content.js?v=20260926f"></script>
+<script src="/static/learn-content-2.js?v=20260926f"></script>
+<script src="/static/learn-content-3.js?v=20260926f"></script>
+<script src="/static/learn-content-4.js?v=20260926f"></script>
+<script src="/static/learn-mp.js?v=20260926f"></script>
+<script src="/static/learn-mp-content.js?v=20260926f"></script>
+<script src="/static/learn-mp-2.js?v=20260926f"></script>
+<script src="/static/learn-mp-content-2.js?v=20260926f"></script>
+<script src="/static/learn-labs.js?v=20260926f"></script>
+<script src="/static/learn-md.js?v=20260926f"></script>
+<script src="/static/learn-sim.js?v=20260926f"></script>
+<script src="/static/credentials.js?v=20260926f"></script>
+<script src="/static/learn.js?v=20260926f"></script>
 </body>
 </html>

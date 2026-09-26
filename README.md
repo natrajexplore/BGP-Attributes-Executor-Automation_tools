@@ -17,8 +17,8 @@ Everything below links to files in this repository. If you are reading this on G
 * **Live labs tab (now the default).** One click on **Run** takes a scenario from "which lab is that?" to a verified result: the dashboard stops the running lab, starts the scenario's own
   topology, waits for the routers, checks their baseline and BGP, pushes the change over SSH, verifies it, and rolls it back on request. [Details](#live-labs-any-scenario-on-its-own-topology).
 * **The Lab tab is gone.** Run always goes through Live labs and uses each scenario's own lab; `#lab` opens `#live/shared`. The shared lab is one of the 18 labs.
-* **EVE-NG state, SSH access and pod-1 view.** The page shows each router's EVE-NG state and a copy-ready SSH command (routers are reached by SSH only, through the VM as a jump host), and explains how to see the running lab in the EVE-NG web page ([below](#seeing-the-running-lab-in-the-eve-ng-web-page)).
-* **Credentials tab.** Login user, login password and enable secret of all 92 routers in the 18 labs, grouped by lab, hidden until you click Reveal, with Copy buttons and a copy-ready SSH command. Values come from each lab's `inventory.yaml` and are checked against its baseline (`GET /api/credentials`).
+* **EVE-NG state, SSH access and pod-1 view.** The page shows each router's EVE-NG state and an **SSH session** button that opens the router in its own PuTTY window (routers are reached by SSH only), and explains how to see the running lab in the EVE-NG web page ([below](#seeing-the-running-lab-in-the-eve-ng-web-page)).
+* **Credentials tab.** Login user, login password and enable secret of all 92 routers in the 18 labs, grouped by lab, hidden until you click Reveal, with Copy buttons and an SSH session button. Values come from each lab's `inventory.yaml` and are checked against its baseline (`GET /api/credentials`).
 * **Light or dark 3D scene.** A **Light / Dark** button on the 3D view (Live labs and the Learn pages) switches the scene only, not the rest of the dashboard. The choice is remembered in the browser.
 * **3D in the Learn tab.** Every attribute and MP-BGP page has a 3D view of its lab: the routers the scenario configures glow and a packet follows a path across the topology with a caption per hop. [Learn tab](#the-learn-tab).
 * **3D topology view.** Routers on tiers, physical links, and BGP sessions as arcs (iBGP, eBGP, MP-BGP VPNv4, PE-CE in a VRF) with live up/down state. Every router that receives configuration pulses
@@ -112,13 +112,25 @@ routers running: their state, canvas and consoles stay empty even though the com
 2. Log in with that account and open the lab from the folder list (the page shows the path, for example `/03_as_path.unl`). The routers show as running and their consoles open.
 3. Use that separate account for the web page. EVE-NG keeps one session per account, so `bgpapi` itself would be logged out whenever the dashboard talks to EVE-NG.
 
-The **EVE-NG** card on the Live labs page lists every router of the shown lab with its EVE-NG state and a **Copy SSH command** button. Routers accept **SSH only** (`transport input ssh`, user `lab`); the management network lives inside the VM, so use the VM as a jump host:
+The **EVE-NG** card on the Live labs page lists every router of the shown lab with its EVE-NG state and an **SSH session** button. Routers accept **SSH only** (`transport input ssh`, user `lab`); the management network lives inside the VM, so the sessions go through the VM.
+
+### One PuTTY window per router
+
+The **EVE-NG** card of Live labs and the **Credentials** tab have an **SSH session** button on every router. It opens that router in its own PuTTY window (user `lab`, PuTTY asks for the password: see the Credentials tab).
+A web page cannot start programs, so the PC needs a small handler, installed once (your Windows user only, no administrator rights):
 
 ```
-ssh -J root@<eve-vm-ip> -o KexAlgorithms=+diffie-hellman-group14-sha1 -o HostKeyAlgorithms=+ssh-rsa -o Ciphers=+aes128-cbc lab@192.168.99.111
+powershell -ExecutionPolicy Bypass -File scripts\putty-setup.ps1            # install
+powershell -ExecutionPolicy Bypass -File scripts\putty-setup.ps1 -DryRun    # show what it would do
+powershell -ExecutionPolicy Bypass -File scripts\putty-setup.ps1 -Uninstall
 ```
 
-Commands appear only for routers that answer SSH, that is for the lab that is really running.
+The script reads the router list from the dashboard and creates one saved PuTTY session per router, named `BGP <lab> <router>`. PuTTY reaches the router through the EVE-NG VM with the Windows OpenSSH client
+(`ssh.exe -W`, your existing key for the VM), because the router addresses only exist inside the VM. It also registers a `bgpputty:` link, which `scripts\putty-launch.ps1` turns into `putty.exe -load "BGP <lab> <router>"`.
+The first click makes the browser ask once to allow the link. Run the setup again when labs are added. The password is never stored. The first time you open a router, PuTTY shows its **Security Alert** for the router's host key: click **Accept** (a router that was wiped and rebuilt has a new key, so the alert returns). The sessions use only the algorithms that the routers' IOS 15.2 SSH server offers (DH group14, AES/3DES, RSA), and a 32-bit PuTTY starts the 64-bit `ssh.exe` through `C:\Windows\Sysnative`.
+
+Buttons appear only for routers that answer SSH, that is for the lab that is really running. Without PuTTY, the same works from any terminal:
+`ssh -J root@<eve-vm-ip> -o KexAlgorithms=+diffie-hellman-group14-sha1 -o HostKeyAlgorithms=+ssh-rsa -o Ciphers=+aes128-cbc lab@192.168.99.111`.
 
 ### Times (measured on the lab VM with four CPUs)
 

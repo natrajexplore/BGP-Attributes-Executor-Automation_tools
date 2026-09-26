@@ -89,7 +89,7 @@ EVE-NG runs each account's nodes in its own **tenant** (the account's pod). The 
 run in tenant 1. Your own `admin` login is tenant 0: it can open the lab files and their topology, but it does **not** see nodes started by `bgpapi` as
 running, and it cannot stop them (and the reverse). Consequences:
 
-* **To look at a configured, running router, use SSH, not the EVE web console.** The EVE-NG card of the Live labs tab gives a copy-ready command that goes through the VM as a jump host
+* **To look at a configured, running router, use SSH, not the EVE web console.** The **SSH session** button of the Live labs and Credentials tabs opens the router in its own PuTTY window (one-time `scripts\putty-setup.ps1`); from a terminal use the jump host command
   (`ssh -J root@<vm-ip> -o KexAlgorithms=+diffie-hellman-group14-sha1 -o HostKeyAlgorithms=+ssh-rsa -o Ciphers=+aes128-cbc lab@192.168.99.<n>`). Only an unconfigured router needs its console
   (`GET /api/devices` lists the ports, one client at a time); do not hold one open while `labtool.sh bootstrap` runs.
 * **Do not start a lab from the EVE web UI as `admin` while the same lab runs under `bgpapi`.** You would get a second copy in tenant 0 on the same management
