@@ -47,7 +47,7 @@ You need: a browser, and the EVE VM running with the dashboard up. Check with `h
 
 ### Step 1. Open the dashboard (2 minutes)
 
-Go to `http://192.168.186.128:8000`. You see three tabs at the top: **Live labs** (run any scenario on its own topology, with a 3D view), **Shared lab** (the original view of the 8-router lab) and **Learn** (the course).
+Go to `http://192.168.186.128:8000`. You see two tabs at the top: **Live labs** (run any scenario on its own topology, with a 3D view) and **Learn** (the course). The original 8-router lab is one of the labs in Live labs.
 
 ### Step 2. Read one attribute page (15 minutes)
 
@@ -72,8 +72,8 @@ Work through the steps in order. When every check is green the exercise is marke
 3. Watch the **SSH / CLI** panel: it shows the real commands (`configure terminal`, each line, `write memory`) and the router that receives them pulses in the 3D view.
 4. When the run ends you see the checks with the **before / after** difference. Click **Rollback** and confirm it goes back.
 
-Only one lab runs at a time, so running a scenario of another lab switches the VM to it. The **Shared lab** tab keeps the original view of the 8-router lab (it also has a
-**Reset lab to baseline** button). More detail: [`live-labs.md`](live-labs.md).
+Only one lab runs at a time, so running a scenario of another lab switches the VM to it. The **EVE-NG** card gives each router's SSH command (routers are reached by SSH through the VM, not by telnet). To see the running lab in the EVE-NG web page you need an EVE-NG account in **pod 1**
+(the dashboard's own account is in pod 1; your admin account is not): create one under System -> User management, then log in with it. More detail: [`live-labs.md`](live-labs.md).
 
 ### Step 5. Try the simulator (10 minutes)
 
@@ -104,6 +104,7 @@ Other things on the page:
 * **Cheat-sheet** button (top right of a topic): downloads a Markdown summary. Keep them.
 * **Troubleshooting drill** (Pro): a real symptom with router output. Answer in your head, then use **Hint** and **Show the answer**.
 * **Progress dots** next to each topic show which levels you finished, stored in your browser only.
+* **3D view** (Foundations and Practitioner): the topic's lab in 3D. The routers the scenario configures glow, the BGP sessions are drawn, and a packet follows a path with a caption at every hop. Drag to orbit, scroll to zoom.
 * **Lab topology** (Practitioner): links to the topic's standalone lab: README, downloads and files on GitHub.
 
 ### The two kinds of exercise
@@ -332,7 +333,7 @@ Which labs to do by hand, in order of value: 12, 13, 15, 05, 02, 03. The others 
 | The session is up but a route is missing | Timers (up to 30 s for eBGP), or a route-target or policy issue | Wait 30 s, repeat; then compare the route-targets with `show ip vrf detail` on both PEs |
 | You were logged out of the EVE web page while a script ran | EVE allows one session per account, the tooling shares an account | Use the dedicated automation account (see the [README](../README.md#things-worth-knowing)) |
 | A lab started blank though you configured it before | The lab was started under another EVE account or you did not `write memory` | Use `write memory` after configuring; use `bootstrap` and `baseline` for a fresh start |
-| You cannot see the nodes running in the EVE web page | Labs started by the tooling run under another EVE account | Use the telnet ports, as in Part 4 |
+| You cannot see the nodes running in the EVE web page | Labs started by the tooling run under another EVE account | Use SSH through the VM: copy the command from the EVE-NG card of Live labs (a fresh, unconfigured router has no SSH yet, so use its console as in Part 4) |
 | After a VM reboot the routers are stopped | EVE does not restart nodes by itself | `labs/labtool.sh main start` (or `<lab> start`) |
 
 If you get really stuck: **stop the lab and start again.** A fresh boot with the baseline from `CONFIGS.md` is always faster than repairing a half-changed lab.

@@ -2,7 +2,7 @@
 
 ## Shared lab
 
-`bgp-attributes.unl` is the 8-router lab that the dashboard's Lab tab and all 11 scenarios run on
+`bgp-attributes.unl` is the 8-router lab that the dashboard's shared-lab scenarios run on
 (see `docs/topology.md`). It is generated from `backend/inventory.yaml` by `backend/scripts/build_lab.py`.
 
 ## Management addresses
@@ -89,9 +89,9 @@ EVE-NG runs each account's nodes in its own **tenant** (the account's pod). The 
 run in tenant 1. Your own `admin` login is tenant 0: it can open the lab files and their topology, but it does **not** see nodes started by `bgpapi` as
 running, and it cannot stop them (and the reverse). Consequences:
 
-* **To look at a running router, use its console or SSH, not the EVE web console.** `GET /api/devices` (the Lab tab) lists every router's console as
-  `<vm-ip>:<port>`; connect with any telnet client (PuTTY, `telnet 192.168.186.128 32897`). All 8 shared-lab consoles were reachable from the Windows host.
-  A console accepts one client at a time, so do not hold it open while `labtool.sh bootstrap` runs. From the VM you can also `ssh lab@192.168.99.<n>`.
+* **To look at a configured, running router, use SSH, not the EVE web console.** The EVE-NG card of the Live labs tab gives a copy-ready command that goes through the VM as a jump host
+  (`ssh -J root@<vm-ip> -o KexAlgorithms=+diffie-hellman-group14-sha1 -o HostKeyAlgorithms=+ssh-rsa -o Ciphers=+aes128-cbc lab@192.168.99.<n>`). Only an unconfigured router needs its console
+  (`GET /api/devices` lists the ports, one client at a time); do not hold one open while `labtool.sh bootstrap` runs.
 * **Do not start a lab from the EVE web UI as `admin` while the same lab runs under `bgpapi`.** You would get a second copy in tenant 0 on the same management
   addresses, which is what happened once (two copies of the shared lab, answering the same addresses). A router's saved configuration lives with the tenant,
   so a lab started in a different tenant boots **blank** and needs `labtool.sh <lab> bootstrap` and `baseline` again.

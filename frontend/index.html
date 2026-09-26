@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BGP Attributes Executor</title>
-<link rel="stylesheet" href="/static/live.css">
+<link rel="stylesheet" href="/static/live.css?v=20260926b">
 <style>
   :root {
     --bg:#0f141a; --panel:#171f29; --panel2:#1e2833; --line:#2b3947;
@@ -134,12 +134,12 @@
 <body>
 <header>
   <h1>BGP Attributes Executor</h1>
-  <nav class="tabs"><a id="tab-live" href="#live">Live labs</a><a id="tab-lab" href="#lab" title="The original view: the 11 scenarios on the shared 8-router lab">Shared lab</a><a id="tab-learn" href="#learn">Learn</a></nav>
+  <nav class="tabs"><a id="tab-live" href="#live">Live labs</a><a id="tab-learn" href="#learn">Learn</a></nav>
   <span id="conn" class="dev"><span class="dot"></span>connecting</span>
   <span class="grow"></span>
   <a id="grafana" class="btn" target="_blank" rel="noopener" hidden>Grafana dashboard &#8599;</a>
   <button id="refresh" class="ghost">Refresh</button>
-  <button id="reset" class="ghost">Reset lab to baseline</button>
+  <button id="reset" class="ghost" title="Push the baseline again to every router of the running lab">Reset running lab</button>
 </header>
 
 <div class="live" id="view-live" hidden>
@@ -156,6 +156,18 @@
         <span class="live-tools"><button id="t-rot" class="ghost on" title="Rotate slowly">Rotate</button><button id="t-lab" class="ghost on" title="Show router names">Names</button><button id="t-reset" class="ghost">Reset view</button></span></div>
       <div id="live-3d"></div>
       <div id="live-legend" class="live-legend"></div>
+    </div>
+    <div class="card wide">
+      <h2>EVE-NG &middot; the running lab and SSH access <span id="live-eve-lab" class="live-run-title"></span></h2>
+      <div class="eve-note" id="live-eve-note"></div>
+      <details class="eve-how"><summary>See this lab in the EVE-NG web page</summary>
+        <ol>
+          <li>The dashboard controls the routers as the EVE account <code>bgpapi</code> (pod 1). A pod is a separate space in EVE-NG, so an account in another pod, such as <code>admin</code> (pod -1), never sees these routers running.</li>
+          <li>Create a second EVE account for the web page, once: <b>System &rarr; User management &rarr; Add new user</b>, role <b>Administrator</b>, <b>POD 1</b>, expiration -1, a password you choose.</li>
+          <li>Log in to EVE-NG with that account and open the lab from the folder list (the path above). The routers show as running. Reach them by SSH with the commands below, not through the EVE-NG telnet console.</li>
+          <li>Use a separate account for the web page: EVE-NG keeps one session per account, so using <code>bgpapi</code> itself would log you out whenever the dashboard talks to EVE-NG.</li>
+        </ol></details>
+      <div id="live-eve-table"></div>
     </div>
     <div class="card">
       <h2>Steps <span id="live-run-title" class="live-run-title"></span><span id="live-timer" class="live-timer"></span></h2>
@@ -216,7 +228,7 @@ async function loadDevices() {
     for (const d of devs) {
       const el = document.createElement("span");
       el.className = "dev " + (d.status || "");
-      el.title = `${d.role} · AS ${d.asn} · ${d.mgmt_ip}` + (d.console ? ` · console ${d.console}` : "");
+      el.title = `${d.role} · AS ${d.asn} · ${d.mgmt_ip}` + " · SSH only";
       el.innerHTML = `<span class="dot"></span>${d.name}`;
       box.appendChild(el);
     }
@@ -365,21 +377,23 @@ loadScenarios();
 initMonitor();
 setInterval(loadDevices, 30000);
 </script>
-<script src="/static/vendor/three.min.js"></script>
-<script src="/static/vendor/OrbitControls.js"></script>
-<script src="/static/live3d.js"></script>
-<script src="/static/live.js"></script>
-<script src="/static/learn-content.js"></script>
-<script src="/static/learn-content-2.js"></script>
-<script src="/static/learn-content-3.js"></script>
-<script src="/static/learn-content-4.js"></script>
-<script src="/static/learn-mp.js"></script>
-<script src="/static/learn-mp-content.js"></script>
-<script src="/static/learn-mp-2.js"></script>
-<script src="/static/learn-mp-content-2.js"></script>
-<script src="/static/learn-labs.js"></script>
-<script src="/static/learn-md.js"></script>
-<script src="/static/learn-sim.js"></script>
-<script src="/static/learn.js"></script>
+<script src="/static/vendor/three.min.js?v=20260926b"></script>
+<script src="/static/vendor/OrbitControls.js?v=20260926b"></script>
+<script src="/static/live3d.js?v=20260926b"></script>
+<script src="/static/learn-3d.js?v=20260926b"></script>
+<script src="/static/learn3d.js?v=20260926b"></script>
+<script src="/static/live.js?v=20260926b"></script>
+<script src="/static/learn-content.js?v=20260926b"></script>
+<script src="/static/learn-content-2.js?v=20260926b"></script>
+<script src="/static/learn-content-3.js?v=20260926b"></script>
+<script src="/static/learn-content-4.js?v=20260926b"></script>
+<script src="/static/learn-mp.js?v=20260926b"></script>
+<script src="/static/learn-mp-content.js?v=20260926b"></script>
+<script src="/static/learn-mp-2.js?v=20260926b"></script>
+<script src="/static/learn-mp-content-2.js?v=20260926b"></script>
+<script src="/static/learn-labs.js?v=20260926b"></script>
+<script src="/static/learn-md.js?v=20260926b"></script>
+<script src="/static/learn-sim.js?v=20260926b"></script>
+<script src="/static/learn.js?v=20260926b"></script>
 </body>
 </html>

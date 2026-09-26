@@ -339,6 +339,15 @@ async def stream(run_id: str) -> StreamingResponse:
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
+@app.middleware("http")
+async def revalidate_frontend(request, call_next):
+    """The page and its scripts change together; make browsers revalidate so an old cached script never meets a new page."""
+    resp = await call_next(request)
+    if request.url.path == "/" or request.url.path.startswith("/static/"):
+        resp.headers["Cache-Control"] = "no-cache"
+    return resp
+
+
 @app.get("/")
 def index() -> FileResponse:
     return FileResponse(FRONTEND_DIR / "index.html")

@@ -90,7 +90,9 @@ def build_graph(ctx: "labmgr.LabContext") -> dict:
     """Blocking (asks EVE-NG for node states): call through asyncio.to_thread."""
     inv = ctx.load_inventory()
     live = ctx.id == labmgr.ACTIVE.id and labmgr.monitorable()
-    eve_nodes = labmgr.node_status(ctx)
+    # EVE-NG reports the routers (and console ports) of every lab with the same node ids as running while one lab runs,
+    # so only the active lab's state is real; every other lab is stopped
+    eve_nodes = labmgr.node_status(ctx) if ctx.id == labmgr.ACTIVE.id else {}
     reach = monitor.reachability() if live else {}
     links = _links(ctx)
     adjacent: dict[str, set[str]] = {}
@@ -116,11 +118,14 @@ def build_graph(ctx: "labmgr.LabContext") -> dict:
     for name, d in inv["devices"].items():
         cv = d.get("canvas") or [0, 0]
         ev = eve_nodes.get(name.upper())
+        running = bool(ev) and ev["status"] != "stopped" and bool(ev.get("console_port"))
         nodes.append({
             "name": name, "role": d["role"], "asn": d["asn"], "mgmt_ip": str(d["mgmt_ip"]).split("/")[0],
             "router_id": d.get("router_id"), "x": cv[0], "y": cv[1],
-            "status": ev["status"] if ev else "unknown",
+            "status": ev["status"] if ev else ("stopped" if ctx.id != labmgr.ACTIVE.id else "unknown"),
             "reachable": reach.get(name) if live else None,
+            # the EVE-NG telnet console of the router: available while the lab is running (EVE-NG hands out the port at start)
+            "console": f"{ev['console_host']}:{ev['console_port']}" if running else None,
         })
 
     live_rows = {(s["router"], s["neighbor"]): s for s in monitor.snapshot()} if live else {}
@@ -147,8 +152,15 @@ def build_graph(ctx: "labmgr.LabContext") -> dict:
             if s["established"] is None:
                 s["state"] = "no data yet"
 
+    from . import scenarios                      # lazy: scenarios uses labmgr
+
+    targets: list[str] = []
+    for sc in scenarios.list_scenarios(ctx):
+        targets += [t for t in sc.get("targets", []) if t not in targets]
+
     return {
         "lab": {"id": ctx.id, "title": ctx.title, "short": ctx.short, "group": ctx.group, "routers": len(nodes),
+                "eve_path": ctx.eve_path, "targets": targets,
                 "active": ctx.id == labmgr.ACTIVE.id, "running": bool(labmgr.STATUS["running"]) if ctx.id == labmgr.ACTIVE.id else False,
                 "phase": labmgr.STATUS["phase"] if ctx.id == labmgr.ACTIVE.id else "idle", "live": live},
         "nodes": nodes, "links": links, "sessions": list(sessions.values()),

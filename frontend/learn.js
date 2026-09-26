@@ -620,7 +620,7 @@ router bgp 65000
     const total = ALL.length * 3, done = ALL.reduce((s, a) => s + LEVELS.filter(([lv]) => CONTENT(a.id)[lv] && levelDone(a.id, lv)).length, 0);
     el.innerHTML = `<h2>BGP path attributes · from scratch to pro</h2>
       <p class="lead">Eleven attributes, three levels each. <b>Foundations</b> explains what the attribute is and where it sits in path selection. <b>Practitioner</b> is the enterprise use case with config, verification and a hands-on exercise on the lab routers. <b>Pro</b> is tactics and tricks, interactions with other attributes, a troubleshooting drill and a harder quiz. Use the <a href="#learn/simulator">best-path simulator</a> to see why one route beats another.</p>
-      <p class="hint"><b>Two kinds of lab.</b> The hands-on exercises run on the <b>shared 8-router lab</b>, the same one the Lab tab uses, so you can try them from this page. Each attribute also has its own small <b>lab topology</b> (3 to 6 routers) built around its use case: see the "Lab topology" section on its Practitioner page. Those are separate EVE-NG labs that you start with <code>labs/labtool.sh</code>, and they must never run at the same time as the shared lab.</p>
+      <p class="hint"><b>Two kinds of lab.</b> The hands-on exercises run on the <b>shared 8-router lab</b>, the same one that Live labs lists as the shared lab, so you can try them from this page. Each attribute also has its own small <b>lab topology</b> (3 to 6 routers) built around its use case: see the "Lab topology" section on its Practitioner page. Those are separate EVE-NG labs that you start with <code>labs/labtool.sh</code>, and they must never run at the same time as the shared lab.</p>
       <div class="tryit"><span>Progress in this browser: ${done} of ${total} levels completed.</span><a class="btn" href="#learn/simulator">Open the simulator</a>
         <button class="ghost" id="dl-bp">Best-path cheat-sheet</button><button class="ghost" id="dl-all">All cheat-sheets</button></div>
       <h3 style="margin-top:18px">How BGP picks the best path (Cisco order)</h3>${orderStrip(null, "Attributes lower in the list only matter when everything above them ties. NEXT_HOP, ATOMIC_AGGREGATE, AGGREGATOR and COMMUNITY are not decision steps: they signal reachability, path detail, or policy.")}
@@ -639,6 +639,7 @@ router bgp 65000
       (a.mp ? "" : section("Where it sits in path selection", orderStrip(a.step, a.stepNote))) +
       section("What it is", list(a.what)) + (f.theory ? section("The theory in more depth", paras(f.theory)) : "") +
       section("How it works", `<div class="dgw">${diag(a.mech)}</div>`) +
+      (window.Learn3D ? section("3D view: " + (a.mp && !/^\d\d_/.test(a.id) ? "the idea on a real lab" : "where it happens"), Learn3D.box(a.id, "The lab in 3D")) : "") +
       (f.example ? section("Worked example · " + f.example.title, `<p>${esc(f.example.text)}</p>` + (f.example.output ? code(f.example.output) : "")) : "") +
       (f.basicConfig ? section("Basic configuration (IOS)", code(f.basicConfig)) : "") +
       (f.quiz ? section("Check your understanding", quizHtml(f.quiz, `${a.id}:foundations:quiz`)) : "");
@@ -648,9 +649,10 @@ router bgp 65000
     return section("Enterprise use case · " + a.useTitle, `<p>${esc(a.useText)}</p><div class="dgw">${diag(a.use)}</div>`) +
       section("Configuration (IOS)", code(a.config)) + section("Verify", code(a.verify.join("\n"))) + section("Production pitfalls", list(a.pitfalls)) +
       (p.tactics ? section("Practical tactics", p.tactics.map(t => `<h4>${esc(t.title)}</h4><p>${esc(t.text)}</p>` + (t.config ? code(t.config) : "")).join("")) : "") +
-      (p.exercise ? section("Hands-on exercise · " + p.exercise.title, (a.mp ? `<p class="hint">Guided: every step shows the output captured from the real lab. The dashboard drives only the shared 8-router lab, so these steps do not run from this page.</p>` : `<p class="hint">Runs on the shared 8-router lab (the same one as the Lab tab) through the buttons below.</p>`) + exerciseHtml(p.exercise, a.id)) : "") +
+      (p.exercise ? section("Hands-on exercise · " + p.exercise.title, (a.mp ? `<p class="hint">Guided: every step shows the output captured from the real lab. The dashboard drives only the shared 8-router lab, so these steps do not run from this page.</p>` : `<p class="hint">Runs on the shared 8-router lab (listed in Live labs) through the buttons below.</p>`) + exerciseHtml(p.exercise, a.id)) : "") +
+      (window.Learn3D ? section("Your lab in 3D", Learn3D.box(a.id, "The lab in 3D")) : "") +
       labSection(a) +
-      (a.mp ? "" : `<div class="tryit"><span>Or run the whole scenario from the Lab tab, with before/after diffs.</span><button class="primary" id="tryLab">Open scenario ${esc(a.id)} in Lab</button></div>`);
+      (/^\d\d_/.test(a.id) ? `<div class="tryit"><span>Run the scenario on its own lab from Live labs: the VM switches to this lab, and you see the 3D view, the steps and the SSH commands.</span><button class="primary" id="tryLab">Open ${esc(a.id)} in Live labs</button></div>` : "");
   }
   function pro(a, c) {
     const p = c.pro;
@@ -682,12 +684,13 @@ router bgp 65000
     }
     const tl = el.querySelector("#tryLab");
     if (tl) tl.onclick = () => {
-      location.hash = "lab";
+      location.hash = "live/" + a.id;
       setTimeout(() => {
-        const card = document.querySelector(`.scn[data-id="${a.id}"]`);
-        if (card) { card.scrollIntoView({ behavior: "smooth", block: "center" }); card.classList.add("flash"); setTimeout(() => card.classList.remove("flash"), 2500); }
-      }, 150);
+        const card = document.querySelector(`.lsc[data-key^="${a.id}/"]`);
+        if (card) { card.scrollIntoView({ behavior: "smooth", block: "center" }); card.style.outline = "2px solid var(--accent)"; setTimeout(() => { card.style.outline = ""; }, 2500); }
+      }, 900);
     };
+    if (window.Learn3D) Learn3D.mountAll(el);
   }
 
   function navHtml(id) {
@@ -704,6 +707,7 @@ router bgp 65000
   };
 
   function renderLearn() {
+    if (window.Learn3D) Learn3D.disposeAll();
     const nav = document.getElementById("learn-nav"), body = document.getElementById("learn-body"), parts = location.hash.split("/"), id = parts[1] || "";
     nav.innerHTML = navHtml(id);
     const a = ALL.find(x => x.id === id);
@@ -715,11 +719,15 @@ router bgp 65000
   }
 
   function route() {
-    const h = location.hash, view = h.startsWith("#learn") ? "learn" : h.startsWith("#lab") ? "lab" : "live";
-    for (const v of ["live", "lab", "learn"]) {
+    const h = location.hash;
+    if (h.startsWith("#lab")) { location.replace("#live/shared"); return; }      // the shared lab is one of the labs in Live labs now
+    const view = h.startsWith("#learn") ? "learn" : "live";
+    for (const v of ["live", "learn"]) {
       document.getElementById("view-" + v).hidden = v !== view;
       document.getElementById("tab-" + v).classList.toggle("on", v === view);
     }
+    document.getElementById("view-lab").hidden = true;                              // the original page is kept for its scripts, never shown
+    if (view !== "learn" && window.Learn3D) Learn3D.disposeAll();
     if (view === "learn") renderLearn();
     window.dispatchEvent(new CustomEvent("viewchange", { detail: view }));
   }

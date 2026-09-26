@@ -71,3 +71,29 @@
 .live-run-title { text-transform:none; letter-spacing:0; color:var(--fg); margin-left:6px; font-weight:500; }
 .live-timer { float:right; text-transform:none; letter-spacing:0; }
 #live-results { padding:0 14px 14px; }
+
+/* EVE-NG consoles card (Live labs) */
+.eve-note { padding:10px 14px; font-size:13px; color:var(--muted); }
+.eve-note code { background:#0b0f14; border:1px solid var(--line); border-radius:4px; padding:1px 6px; color:#cfe0f0; font:12px ui-monospace,Menlo,monospace; }
+.eve-how { margin:0 14px 10px; background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:6px 12px; font-size:13px; }
+.eve-how summary { cursor:pointer; color:var(--accent); font-weight:600; } .eve-how ol { margin:8px 0 4px; padding-left:20px; } .eve-how li { margin:4px 0; }
+.eve-how code { background:#0b0f14; border:1px solid var(--line); border-radius:4px; padding:1px 6px; color:#cfe0f0; font:12px ui-monospace,Menlo,monospace; }
+table.eve-t { width:calc(100% - 28px); margin:0 14px 14px; border-collapse:collapse; font-size:12.5px; }
+.eve-t th, .eve-t td { padding:6px 8px; border-bottom:1px solid var(--line); text-align:left; }
+.eve-t th { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; }
+.eve-t code { font:12px ui-monospace,Menlo,monospace; color:#cfe0f0; }
+.eve-t button, .eve-t a.btn { font-size:11.5px; padding:2px 8px; margin-right:4px; }
+.eve-t .st-run { color:var(--ok); } .eve-t .st-off { color:var(--muted); }
+
+/* 3D views on the Learn pages */
+.l3d { border:1px solid var(--line); border-radius:8px; overflow:hidden; background:#0b1017; }
+.l3d-bar { display:flex; align-items:center; gap:10px; padding:8px 12px; background:var(--panel2); border-bottom:1px solid var(--line); flex-wrap:wrap; font-size:13px; }
+.l3d-lab { color:var(--muted); font-size:12px; } .l3d-tools { margin-left:auto; display:flex; gap:6px; }
+.l3d-tools button { font-size:12px; padding:2px 9px; } .l3d-tools button.on { border-color:var(--accent); color:var(--accent); }
+.l3d-canvas { height:min(46vh,420px); min-height:300px; position:relative; background:#0b1017; }
+.l3d-none { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center; padding:20px; color:var(--muted); }
+.l3d-cap { padding:8px 14px; min-height:38px; font-size:13.5px; color:#fff3c4; background:#141c25; border-top:1px solid var(--line); }
+.l3d-note { padding:8px 14px 4px; font-size:13px; color:var(--muted); max-width:90ch; }
+.l3d-foot { display:flex; gap:14px; flex-wrap:wrap; align-items:center; padding:8px 14px 12px; font-size:12px; color:var(--muted); }
+.l3d-foot span { display:inline-flex; align-items:center; gap:6px; } .l3d-foot i { width:9px; height:9px; border-radius:50%; display:inline-block; }
+.l3d-foot a.btn { margin-left:auto; font-size:12px; padding:3px 10px; }

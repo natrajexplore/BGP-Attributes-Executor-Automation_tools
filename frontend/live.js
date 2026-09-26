@@ -91,7 +91,7 @@
     if (S.shown !== id) return;
     S.graph = g;
     const v = ensure3D(); if (v) { v.setGraph(g); }
-    fillTitle(g);
+    fillTitle(g); renderEve(g);
     for (const n of g.nodes) S.routers.add(n.name);
     renderCliTabs();
   }
@@ -105,12 +105,30 @@
        <span><i class="d" style="background:#22d3ee"></i>SSH executor</span>`;
   }
 
+  /* SSH only: the routers accept SSH on their management address (line vty, transport input ssh). The management network exists inside
+     the EVE-NG VM, so a PC reaches a router through the VM as a jump host. Old IOS needs the legacy algorithms below. */
+  const sshCmd = ip => `ssh -J root@${location.hostname} -o KexAlgorithms=+diffie-hellman-group14-sha1 -o HostKeyAlgorithms=+ssh-rsa -o Ciphers=+aes128-cbc lab@${ip}`;
+
+  function renderEve(g) {
+    const lab = g.lab, rows = g.nodes, up = rows.some(n => n.reachable);
+    $("live-eve-lab").textContent = `${lab.eve_path}  (root folder of EVE-NG)`;
+    $("live-eve-note").innerHTML = up
+      ? `Lab <code>${esch(lab.eve_path)}</code> is running in EVE-NG under the account <code>bgpapi</code>. Routers are reached by <b>SSH only</b>: copy a command below and run it in a terminal on your PC (it goes through the VM <code>${esch(location.hostname)}</code> as a jump host; the user is <code>lab</code>).`
+      : `Lab <code>${esch(lab.eve_path)}</code> is not running. Press <b>Run</b> on one of its scenarios or <b>Start this lab</b>: the routers start, and their SSH commands appear here.`;
+    $("live-eve-table").innerHTML = `<table class="eve-t"><thead><tr><th>Router</th><th>Role</th><th>EVE-NG state</th><th>SSH address</th><th></th></tr></thead><tbody>` +
+      rows.map(n => `<tr><td><b>${esch(n.name)}</b></td><td>${esch(n.role)} &middot; AS ${n.asn}</td><td class="${n.reachable ? "st-run" : "st-off"}">${n.reachable ? "running, SSH answers" : esch(n.status === "unknown" ? "not in EVE-NG" : n.status)}</td>
+        <td><code>lab@${esch(n.mgmt_ip)}</code></td>
+        <td>${n.reachable ? `<button class="ghost" data-copy="${esch(sshCmd(n.mgmt_ip))}">Copy SSH command</button>` : ""}<button class="ghost" data-cli="${esch(n.name)}">CLI tab</button></td></tr>`).join("") + `</tbody></table>`;
+    $("live-eve-table").querySelectorAll("button[data-copy]").forEach(b => { b.onclick = () => { (navigator.clipboard ? navigator.clipboard.writeText(b.dataset.copy) : Promise.reject()).catch(() => {}); b.textContent = "Copied"; setTimeout(() => { b.textContent = "Copy SSH command"; }, 1200); }; });
+    $("live-eve-table").querySelectorAll("button[data-cli]").forEach(b => { b.onclick = () => { S.tab = b.dataset.cli; if (S.v3) S.v3.select(S.tab); renderCliTabs(); renderCli(); $("cli-out").scrollIntoView({ block: "nearest" }); }; });
+  }
+
   async function pollGraph() {
     if (!S.shown || document.hidden || $("view-live").hidden) return;
     try {
       const g = await fetchJson(`/api/labs/${S.shown}/graph`);
       if (S.shown !== g.lab.id) return;
-      S.graph = g; if (S.v3) S.v3.update(g); fillTitle(g);
+      S.graph = g; if (S.v3) S.v3.update(g); fillTitle(g); renderEve(g);
     } catch (e) { /* the backend restarts sometimes */ }
   }
 

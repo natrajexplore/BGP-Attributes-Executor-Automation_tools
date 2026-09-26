@@ -6,8 +6,8 @@ lab files:
 | Part | What it is | Where |
 |---|---|---|
 | **Live labs** | Run any of **31 scenarios** (11 BGP attributes, 6 MPLS VPN use cases and their variants) on **its own topology**: the VM switches labs for you, with a **3D topology view**, live BGP session state and a **live SSH/CLI transcript** | `http://<eve-vm>:8000/` (default tab), [`docs/live-labs.md`](docs/live-labs.md) |
-| **Shared lab (Lab tab)** | The original view: the 11 scenarios on the shared 8-router lab, with live logs, before/after `show` diffs and a session monitor | [`backend/`](backend/), [`frontend/`](frontend/) |
-| **Learn tab** | A from-scratch-to-pro course: 11 attributes plus an MP-BGP / MPLS VPN track, with diagrams, exercises, drills, quizzes, cheat-sheets and a best-path simulator | `http://<eve-vm>:8000/#learn` |
+| **Shared lab** | The original 8-router lab and its 11 scenarios, with before/after `show` diffs and a session monitor. It is now one of the 18 labs in Live labs | [`backend/`](backend/), [`frontend/`](frontend/) |
+| **Learn tab** | A from-scratch-to-pro course: 11 attributes plus an MP-BGP / MPLS VPN track, with diagrams, **3D lab views with an animated packet path**, exercises, drills, quizzes, cheat-sheets and a best-path simulator | `http://<eve-vm>:8000/#learn` |
 | **17 standalone labs** | One small EVE lab per topic (3 to 7 routers), each with a README, every router's configuration, and a scenario you can apply and roll back | [`labs/`](labs/) |
 
 Everything below links to files in this repository. If you are reading this on GitHub, the links open the files directly.
@@ -16,6 +16,9 @@ Everything below links to files in this repository. If you are reading this on G
 
 * **Live labs tab (now the default).** One click on **Run** takes a scenario from "which lab is that?" to a verified result: the dashboard stops the running lab, starts the scenario's own
   topology, waits for the routers, checks their baseline and BGP, pushes the change over SSH, verifies it, and rolls it back on request. [Details](#live-labs-any-scenario-on-its-own-topology).
+* **The Lab tab is gone.** Run always goes through Live labs and uses each scenario's own lab; `#lab` opens `#live/shared`. The shared lab is one of the 18 labs.
+* **EVE-NG state, SSH access and pod-1 view.** The page shows each router's EVE-NG state and a copy-ready SSH command (routers are reached by SSH only, through the VM as a jump host), and explains how to see the running lab in the EVE-NG web page ([below](#seeing-the-running-lab-in-the-eve-ng-web-page)).
+* **3D in the Learn tab.** Every attribute and MP-BGP page has a 3D view of its lab: the routers the scenario configures glow and a packet follows a path across the topology with a caption per hop. [Learn tab](#the-learn-tab).
 * **3D topology view.** Routers on tiers, physical links, and BGP sessions as arcs (iBGP, eBGP, MP-BGP VPNv4, PE-CE in a VRF) with live up/down state. Every router that receives configuration pulses
   and an "SSH executor" sends a beam to it.
 * **Live SSH / CLI transcript.** The real commands, per router, exactly as they are typed: `ssh lab@<address>`, `configure terminal`, each line with the prompt of its config mode, `end`,
@@ -35,7 +38,7 @@ Everything below links to files in this repository. If you are reading this on G
 | **Run any of the 31 scenarios on its own topology**, with a 3D view and the live SSH commands | the dashboard's **Live labs** tab: [Live labs](#live-labs-any-scenario-on-its-own-topology) |
 | **New to networking?** Follow a guided path | [`docs/user-guide.md`](docs/user-guide.md): your first hour, a worked lab, reading output, an 8-week study plan |
 | **Learn** an attribute or MP-BGP from scratch | the dashboard's **Learn** tab: [how to open it](#the-learn-tab) |
-| **Run** the 11 scenarios one at a time with diffs | the dashboard's **Lab** tab: [the shared lab](#the-shared-8-router-lab-and-the-lab-tab) |
+| **Run** the shared 8-router lab's 11 scenarios | **Live labs**, group "Shared 8-router lab": [the shared lab](#the-shared-8-router-lab) |
 | **Build a lab by hand** on the router consoles | [`labs/<lab>/CONFIGS.md`](#how-to-work-with-a-lab) (every router's config, ready to paste) |
 | **Run a lab with the tooling** (import, start, bootstrap, apply, rollback) | [`labs/labtool.sh`](labs/labtool.sh) and [the labtool section](#2-with-the-tooling-labslabtoolsh) |
 | **Import a lab into the EVE web UI** | the `.zip` next to each lab: [import notes](#3-import-through-eve-web-ui) |
@@ -97,6 +100,23 @@ rolls it back first, so every lab is stopped at its baseline.
 | **Verification** | Each check with PASS or FAIL and a before/after diff |
 
 A page reload while a run is in progress follows that run from its start: the stream of a run is kept, so a late viewer receives everything.
+
+### Seeing the running lab in the EVE-NG web page
+
+The dashboard controls the routers as the EVE-NG account **`bgpapi`**, which is in **pod 1**. EVE-NG keeps every pod in a separate space, so an account in another pod (for example `admin`, pod -1) never sees these
+routers running: their state, canvas and consoles stay empty even though the commands really run on the routers. To see the labs the dashboard starts:
+
+1. In the EVE-NG web page, as `admin`: **System -> User management -> Add new user**. Role **Administrator**, **POD 1**, expiration -1, a password you choose.
+2. Log in with that account and open the lab from the folder list (the page shows the path, for example `/03_as_path.unl`). The routers show as running and their consoles open.
+3. Use that separate account for the web page. EVE-NG keeps one session per account, so `bgpapi` itself would be logged out whenever the dashboard talks to EVE-NG.
+
+The **EVE-NG** card on the Live labs page lists every router of the shown lab with its EVE-NG state and a **Copy SSH command** button. Routers accept **SSH only** (`transport input ssh`, user `lab`); the management network lives inside the VM, so use the VM as a jump host:
+
+```
+ssh -J root@<eve-vm-ip> -o KexAlgorithms=+diffie-hellman-group14-sha1 -o HostKeyAlgorithms=+ssh-rsa -o Ciphers=+aes128-cbc lab@192.168.99.111
+```
+
+Commands appear only for routers that answer SSH, that is for the lab that is really running.
 
 ### Times (measured on the lab VM with four CPUs)
 
@@ -164,6 +184,8 @@ Open `http://<eve-vm-ip>:8000/#learn` (or click **Learn** at the top of the dash
 | MP-BGP concept pages | `#learn/mp_families`, `#learn/mp_vpn` |
 | MP-BGP use-case pages | `#learn/12_mpls_l3vpn` ... `#learn/17_mpls_as_override` |
 
+Every attribute page and every MP-BGP page also has a **3D view** of its lab (Foundations: "where it happens", Practitioner: "your lab in 3D"): the routers the scenario configures glow amber, the BGP sessions are drawn, an animated packet follows a path with a caption per hop
+(for example CONTENT to ISP-B to ENT for AS_PATH, or CE1 to PE1 to P to PE2 to CE2 with the VPN and transport labels for lab 12), and a button opens the lab in Live labs. The view shows live state when the lab is running.
 Each page has **Foundations** (theory, worked example, quiz), **Practitioner** (production use case, configuration, verification, pitfalls,
 hands-on exercise, and the topic's lab with downloads), and **Pro** (tactics, interactions, edge cases, a troubleshooting drill and a harder quiz).
 Cheat-sheets download as Markdown. Progress is kept in your browser only.
@@ -173,7 +195,7 @@ Cheat-sheets download as Markdown. Progress is kept in your browser only.
 
 ---
 
-## The shared 8-router lab and the Lab tab
+## The shared 8-router lab
 
 Eight routers in AS 65000 (two route reflectors, two edges, a LAN router) with two ISPs and a content network: see
 [`docs/topology.md`](docs/topology.md), [`docs/addressing.md`](docs/addressing.md) and the inventory in
@@ -303,7 +325,7 @@ Before starting another lab: `docker stop bgp-attributes-executor` and `labs/lab
 
 * **EVE-NG allows one session per account.** The dashboard and `labtool.sh` log in as a dedicated `bgpapi` account so they do not log you out of your browser session. Set it with
   [`scripts/set-eve-user.sh`](scripts/set-eve-user.sh). Stop the dashboard before running `labtool.sh`, because both use the same account.
-* **Each account runs its nodes in its own tenant.** Labs started by `bgpapi` do not show as running in the admin account's EVE GUI. Use the telnet console ports
+* **Each account runs its nodes in its own tenant.** Labs started by `bgpapi` do not show as running in the admin account's EVE GUI. Use SSH through the VM (the EVE-NG card of the Live labs page has the command)
   or the dashboard. A lab started in a new tenant boots without configuration: run `bootstrap` and `baseline`.
 * **First boot takes minutes.** Allow about 10 to 15 minutes for `up` on a 7-router lab. `bootstrap` may print `FAILED` for a node on a console-prompt timeout while the node is fine;
   the baseline push is what counts.

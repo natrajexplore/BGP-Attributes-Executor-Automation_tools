@@ -1,6 +1,6 @@
 # Live labs: run any scenario on its own topology
 
-The **Live labs** tab (the default view of the dashboard) lists all 31 scenarios: the 11 BGP attributes, the 6 MPLS VPN use cases, their extra scenarios and the classic
+The **Live labs** tab (the default view of the dashboard, and the only place scenarios are run) lists all 31 scenarios: the 11 BGP attributes, the 6 MPLS VPN use cases, their extra scenarios and the classic
 shared-lab scenarios. Clicking **Run** on a scenario makes the VM switch to that scenario's own topology, configure it if needed, run the scenario over SSH and verify it,
 while a 3D view and a CLI transcript show what happens.
 
@@ -22,6 +22,28 @@ Run 05_med  ─►  stop the running lab ─► start lab 05 (4 routers) ─► 
 
 Anything a scenario needs is done for you. **Only one lab runs at a time** (the VM has 8 GB and EVE-NG cannot run two of these labs together), so a run first stops the lab that is
 running. Before leaving a lab, anything still applied there is rolled back, so every lab is stopped at its baseline.
+
+## Seeing the running lab in the EVE-NG web page
+
+The dashboard drives the routers as the EVE-NG account `bgpapi` (pod 1). EVE-NG keeps pods apart, so an account in another pod such as `admin` (pod -1) never sees these routers running, although the commands do run on them.
+Create a second account for the web page once (**System -> User management -> Add new user**, role Administrator, **POD 1**, a password you choose), log in with it, and open the lab from the folder list: the routers show as
+running and their consoles open. Keep it separate from `bgpapi`: EVE-NG allows one session per account, so `bgpapi` itself would be logged out whenever the dashboard uses it.
+
+### Reaching the routers: SSH only
+
+Routers accept **SSH only** (`line vty`, `transport input ssh`, user `lab`); the EVE-NG telnet consoles are not offered in the dashboard. The management network `192.168.99.0/24` exists inside the EVE-NG VM, so a PC reaches a router
+through the VM as a jump host. The **EVE-NG** card lists each router of the shown lab with its EVE-NG state and a **Copy SSH command** button. The command looks like this (IOS 15.2 needs the legacy algorithms):
+
+```
+ssh -J root@<eve-vm-ip> -o KexAlgorithms=+diffie-hellman-group14-sha1 -o HostKeyAlgorithms=+ssh-rsa -o Ciphers=+aes128-cbc lab@192.168.99.111
+```
+
+The card shows a command only for routers that answer SSH, so only for the lab that is really running.
+
+## 3D views in the Learn tab
+
+`frontend/learn3d.js` mounts the same 3D scene on the Learn pages. `frontend/learn-3d.js` holds one entry per page: the lab, the path of the animated packet (it follows real links of the lab, which a test checks), one caption per hop
+and a sentence under the view. The routers a scenario configures are highlighted automatically from the scenario's targets (`GET /api/labs/<lab>/graph`, field `lab.targets`). Without WebGL the box shows a short message.
 
 ## Times
 

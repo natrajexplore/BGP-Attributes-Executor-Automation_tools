@@ -4,7 +4,8 @@
    const v = Live3D.create(container, { onSelect(name) {} });
    v.setGraph(graph)        rebuild the scene           v.update(graph)   refresh state (rebuilds only if the topology changed)
    v.pulse(name, kind)      router is being configured  v.beam(name)      an SSH command travels from the executor to a router
-   v.select(name)  v.setAutoRotate(bool)  v.resetCamera()  v.setLabels(bool)  v.dispose()                                     */
+   v.select(name)  v.setAutoRotate(bool)  v.resetCamera()  v.setLabels(bool)  v.dispose()
+   v.highlight(names, tag)  routers a scenario configures (Learn tab)      v.tracePath(names, {captions, onHop})  a packet follows a path   */
 (() => {
   const TIER = { customer: 0, content: 0, provider: 0, subsidiary: 0, branch: 1, edge: 1, pe: 1, internal: 1, leaf: 1,
     "route-reflector-client": 1, core: 2, "route-reflector": 2 };
@@ -58,7 +59,7 @@
     tip.style.cssText = "position:absolute;pointer-events:none;display:none;background:rgba(15,20,26,.94);border:1px solid #2b3947;border-radius:6px;padding:6px 9px;font:12px/1.45 -apple-system,Segoe UI,sans-serif;color:#e6edf3;z-index:5;max-width:260px";
     container.style.position = container.style.position || "relative"; container.appendChild(tip);
 
-    const state = { graph: null, sig: "", rotate: true, labels: true, nodes: {}, sessions: [], pulses: [], beams: [], selected: null, extent: 10, center: new T.Vector3(), exec: null };
+    const state = { hl: {}, trace: null, graph: null, sig: "", rotate: true, labels: true, nodes: {}, sessions: [], pulses: [], beams: [], selected: null, extent: 10, center: new T.Vector3(), exec: null };
     const clock = new T.Clock();
     const ray = new T.Raycaster(), mouse = new T.Vector2();
     let raf = 0, disposed = false, hoverName = null;
@@ -69,7 +70,7 @@
     function clearWorld() {
       world.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) { (o.material.map) && o.material.map.dispose(); o.material.dispose && o.material.dispose(); } });
       while (world.children.length) world.remove(world.children[0]);
-      state.nodes = {}; state.sessions = []; state.pulses = []; state.beams = []; state.selected = null;
+      state.nodes = {}; state.sessions = []; state.pulses = []; state.beams = []; state.selected = null; state.hl = {}; state.trace = null;
     }
 
     function layout(graph) {
@@ -93,6 +94,7 @@
       clearWorld();
       const { pos, w, d } = layout(graph);
       state.extent = Math.max(w, d, 8);
+      if (handlers.compact) state.center.set(0, 1.4, 0);
       const usedTiers = [...new Set(graph.nodes.map(n => roleTier(n.role)))].sort();
       // floor and tier plates
       const grid = new T.GridHelper(Math.max(w, d) + 14, 24, 0x22303d, 0x16212b); grid.position.y = -0.3; world.add(grid);
@@ -144,7 +146,7 @@
         state.sessions.push({ s, curve, mat, tube, dots, col, boost: 0 });
       }
       // the SSH executor: where every configuration command comes from
-      const ex = new T.Group();
+      const ex = new T.Group(); ex.visible = !handlers.compact;
       const box = new T.Mesh(new T.OctahedronGeometry(0.5), new T.MeshStandardMaterial({ color: 0x22d3ee, emissive: 0x22d3ee, emissiveIntensity: 0.6 }));
       ex.add(box);
       const exl = textSprite(T, ["SSH executor", "ssh lab@192.168.99.x"], { size: 40, scale: 2.5 }); exl.position.y = 1.0; ex.add(exl);
@@ -187,7 +189,8 @@
 
     function resetCamera() {
       const e = state.extent;
-      camera.position.set(e * 0.3, e * 0.48 + 1.5, e * 0.72 + 2);
+      const k = handlers.compact ? 0.86 : 1;                 // embedded views (Learn tab) sit closer to the routers
+      camera.position.set(e * 0.3 * k, e * 0.48 * k + 1.2, e * 0.72 * k + 1.5);
       controls.target.copy(state.center); controls.update();
     }
 
@@ -226,6 +229,41 @@
     function select(name) {
       state.selected = name;
       for (const [n, g] of Object.entries(state.nodes)) g.userData.sel.material.opacity = n === name ? 0.95 : 0;
+    }
+
+    // ---- teaching aids (Learn tab): routers a scenario configures, and a packet that follows a path
+    function highlight(names, tag) {
+      for (const m of Object.values(state.hl)) { world.remove(m.ring, m.tag); m.ring.geometry.dispose(); m.ring.material.dispose(); m.tag.material.map.dispose(); m.tag.material.dispose(); }
+      state.hl = {};
+      for (const name of names || []) {
+        const g = state.nodes[name]; if (!g) continue;
+        const ring = new T.Mesh(new T.RingGeometry(1.12, 1.26, 48), new T.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.9, side: T.DoubleSide, depthWrite: false }));
+        ring.rotation.x = -Math.PI / 2; ring.position.copy(g.position); ring.position.y -= 0.12;
+        const label = textSprite(T, [tag || "configured here"], { w: 360, h: 64, size: 30, color: "#fbbf24", scale: 2.2 });
+        label.position.copy(g.position); label.position.y += 1.75;
+        world.add(ring, label); state.hl[name] = { ring, tag: label };
+      }
+    }
+    function tracePath(names, opts = {}) {
+      stopTrace();
+      const pts = (names || []).map(n => state.nodes[n]).filter(Boolean).map(g => g.position.clone().add(new T.Vector3(0, 0.55, 0)));
+      if (pts.length < 2) return false;
+      const curve = new T.CatmullRomCurve3(pts, false, "catmullrom", 0.15);
+      const path = new T.Mesh(new T.TubeGeometry(curve, 12 * pts.length, 0.045, 6, false), new T.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.32 }));
+      const pkt = new T.Mesh(new T.SphereGeometry(0.2, 14, 14), new T.MeshBasicMaterial({ color: 0xfff3c4 }));
+      const halo = new T.Mesh(new T.SphereGeometry(0.34, 14, 14), new T.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.35, depthWrite: false }));
+      pkt.add(halo);
+      const dists = [0]; for (let i = 1; i < pts.length; i++) dists.push(dists[i - 1] + pts[i].distanceTo(pts[i - 1]));
+      const u = dists.map(d => d / dists[dists.length - 1]);
+      const caps = (opts.captions || []).map(c => { const sp = textSprite(T, [c], { w: 520, h: 64, size: 30, color: "#fff3c4", scale: 3.4 }); sp.visible = false; world.add(sp); return sp; });
+      world.add(path, pkt);
+      state.trace = { curve, path, pkt, u, caps, speed: opts.speed || 0.07, onHop: opts.onHop, last: -1, names };
+      return true;
+    }
+    function stopTrace() {
+      const t = state.trace; if (!t) return;
+      world.remove(t.path, t.pkt, ...t.caps); t.path.geometry.dispose(); t.pkt.geometry.dispose();
+      t.caps.forEach(c => { c.material.map.dispose(); c.material.dispose(); }); state.trace = null;
     }
 
     // ---- interaction
@@ -295,6 +333,16 @@
         if (k >= 1) { world.remove(b.tube, b.pk); b.tube.geometry.dispose(); b.pk.geometry.dispose(); return false; }
         b.pk.position.copy(b.curve.getPoint(Math.min(1, k * 1.15))); b.tube.material.opacity = 0.6 * (1 - k * 0.6); return true;
       });
+      for (const [name, m] of Object.entries(state.hl)) {
+        const k = 1 + 0.08 * Math.sin(t * 3); m.ring.scale.setScalar(k); m.ring.material.opacity = 0.65 + 0.3 * Math.sin(t * 3); m.tag.visible = state.labels;
+      }
+      if (state.trace) {
+        const tr = state.trace, p = (t * tr.speed) % 1;
+        tr.pkt.position.copy(tr.curve.getPointAt(p)); tr.pkt.children[0].scale.setScalar(1 + 0.25 * Math.sin(t * 8));
+        let i = 0; while (i + 1 < tr.u.length && tr.u[i + 1] <= p) i++;
+        if (i !== tr.last) { tr.last = i; tr.caps.forEach((c, k) => { c.visible = k === i; }); tr.onHop && tr.onHop(i, tr.names[i]); }
+        const c = tr.caps[i]; if (c) c.position.copy(tr.pkt.position).add(new T.Vector3(0, 0.95, 0));
+      }
       for (const ss of state.sessions) {
         const fast = ss.boost > t ? 2.6 : 1;
         ss.dots.forEach(d => { if (!d.mesh.visible) return; const u = ((t * 0.16 * fast + d.off) % 1); d.mesh.position.copy(ss.curve.getPoint(u)); });
@@ -305,7 +353,7 @@
     frame();
 
     return {
-      setGraph, update, pulse, beam, select, resize, resetCamera,
+      setGraph, update, pulse, beam, select, resize, resetCamera, highlight, tracePath, stopTrace,
       setAutoRotate(v) { state.rotate = !!v; controls.autoRotate = !!v; },
       setLabels(v) { state.labels = !!v; },
       snapshot() { renderer.render(scene, camera); return renderer.domElement.toDataURL("image/png"); },
