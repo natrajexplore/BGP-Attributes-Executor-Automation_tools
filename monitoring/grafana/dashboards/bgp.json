@@ -377,7 +377,7 @@
       "uid": "prom"
      },
      "expr": "bgp_neighbor_up",
-     "legendFormat": "{{router}} → {{neighbor}} (AS{{remote_as}})",
+     "legendFormat": "{{router}} → {{neighbor}} {{af}} (AS{{remote_as}})",
      "refId": "A",
      "format": "time_series"
     }
@@ -448,7 +448,7 @@
       "uid": "prom"
      },
      "expr": "bgp_neighbor_prefixes_received",
-     "legendFormat": "{{router}} ← {{neighbor}}",
+     "legendFormat": "{{router}} ← {{neighbor}} {{af}}",
      "refId": "A",
      "format": "time_series"
     }
@@ -484,7 +484,7 @@
       "uid": "prom"
      },
      "expr": "increase(bgp_neighbor_transitions_total[5m])",
-     "legendFormat": "{{router}} → {{neighbor}} {{direction}}",
+     "legendFormat": "{{lab}} {{router}} → {{neighbor}} {{direction}}",
      "refId": "A",
      "format": "time_series"
     }
@@ -520,7 +520,7 @@
       "uid": "prom"
      },
      "expr": "increase(bgp_config_changes_total[5m])",
-     "legendFormat": "{{scenario}} {{mode}} {{result}}",
+     "legendFormat": "{{lab}} {{scenario}} {{mode}} {{result}}",
      "refId": "A",
      "format": "time_series"
     }

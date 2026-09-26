@@ -461,6 +461,8 @@ poller (20s)  ───┴─> Kafka :9094 ─> exporter :9108 ─┘
 ```
 
 Topics: `bgp.neighbor.events` (up/down transitions, router reachability), `bgp.neighbor.snapshots` (full state each poll), `bgp.config.changes` (every UI apply, rollback and reset).
+The dashboard runs one lab at a time and tags every message with its lab id. The exporter puts `lab` and `af` (ipv4, vpnv4 or vrf) on its series, drops the state of the previous lab when the lab changes
+(and after 10 minutes without snapshots), so the Grafana panels and the alerts describe the running lab only. Offline test: `monitoring/exporter/test_exporter.py`.
 
 1. **Windows (Docker Desktop):** set `KAFKA_ADVERTISED_HOST` in `.env` to the Windows IP the EVE VM can reach, allow inbound TCP 9094, 3000, 9090 and 8080 in Windows Firewall
    ([`scripts/setup-windows.ps1`](scripts/setup-windows.ps1)), then `docker compose -f docker-compose.monitoring.yml up -d --build`.
