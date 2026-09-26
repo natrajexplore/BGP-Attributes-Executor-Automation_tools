@@ -12,9 +12,12 @@
   const esch = s => String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
 
   // ------------------------------------------------------------------ catalogue
-  async function loadCatalog() {
+  async function loadCatalog(quiet) {
     S.cat = await fetchJson("/api/catalog");
     S.status = S.cat.status;
+    const sig = JSON.stringify(S.cat), same = sig === S.catSig;
+    S.catSig = sig;
+    if (quiet && same) return S.cat;                  // background refresh with nothing new: leave the buttons alone
     renderStatus(); renderCatalog();
     return S.cat;
   }
@@ -115,12 +118,23 @@
     $("live-eve-note").innerHTML = up
       ? `Lab <code>${esch(lab.eve_path)}</code> is running in EVE-NG under the account <code>bgpapi</code>. Routers are reached by <b>SSH only</b>: copy a command below and run it in a terminal on your PC (it goes through the VM <code>${esch(location.hostname)}</code> as a jump host; the user is <code>lab</code>).`
       : `Lab <code>${esch(lab.eve_path)}</code> is not running. Press <b>Run</b> on one of its scenarios or <b>Start this lab</b>: the routers start, and their SSH commands appear here.`;
-    $("live-eve-table").innerHTML = `<table class="eve-t"><thead><tr><th>Router</th><th>Role</th><th>EVE-NG state</th><th>SSH address</th><th></th></tr></thead><tbody>` +
+    const html = `<table class="eve-t"><thead><tr><th>Router</th><th>Role</th><th>EVE-NG state</th><th>SSH address</th><th></th></tr></thead><tbody>` +
       rows.map(n => `<tr><td><b>${esch(n.name)}</b></td><td>${esch(n.role)} &middot; AS ${n.asn}</td><td class="${n.reachable ? "st-run" : "st-off"}">${n.reachable ? "running, SSH answers" : esch(n.status === "unknown" ? "not in EVE-NG" : n.status)}</td>
         <td><code>lab@${esch(n.mgmt_ip)}</code></td>
         <td>${n.reachable ? `<button class="ghost" data-copy="${esch(sshCmd(n.mgmt_ip))}">Copy SSH command</button>` : ""}<button class="ghost" data-cli="${esch(n.name)}">CLI tab</button></td></tr>`).join("") + `</tbody></table>`;
+    if (html === S.eveHtml && $("live-eve-table").firstChild) return;      // unchanged: keep the buttons, a click during a rebuild would be lost
+    S.eveHtml = html; $("live-eve-table").innerHTML = html;
     $("live-eve-table").querySelectorAll("button[data-copy]").forEach(b => { b.onclick = () => { (navigator.clipboard ? navigator.clipboard.writeText(b.dataset.copy) : Promise.reject()).catch(() => {}); b.textContent = "Copied"; setTimeout(() => { b.textContent = "Copy SSH command"; }, 1200); }; });
-    $("live-eve-table").querySelectorAll("button[data-cli]").forEach(b => { b.onclick = () => { S.tab = b.dataset.cli; if (S.v3) S.v3.select(S.tab); renderCliTabs(); renderCli(); $("cli-out").scrollIntoView({ block: "nearest" }); }; });
+    $("live-eve-table").querySelectorAll("button[data-cli]").forEach(b => { b.onclick = () => openCli(b.dataset.cli); });
+  }
+
+  /* Select a router in the SSH / CLI card. With nothing in its transcript yet, run one read-only show so the tab visibly answers. */
+  function openCli(router) {
+    S.tab = router; if (S.v3) S.v3.select(router);
+    renderCliTabs(); renderCli();
+    const card = $("cli-out").closest(".card"); if (card && card.scrollIntoView) card.scrollIntoView({ block: "center", behavior: "smooth" });
+    if (!S.cli.some(e => e.router === router)) { $("cli-cmd").value = "show ip bgp summary"; quickShow(); }
+    $("cli-cmd").focus({ preventScroll: true });
   }
 
   async function pollGraph() {
@@ -253,12 +267,13 @@
   }
   function appendCli(ev) {
     const out = $("cli-out"), stick = out.scrollTop + out.clientHeight >= out.scrollHeight - 30;
+    const hint = out.firstElementChild; if (hint && hint.tagName === "SPAN") hint.remove();
     out.insertAdjacentHTML("beforeend", cliLine(ev));
     if (stick && $("cli-follow").checked) out.scrollTop = out.scrollHeight;
   }
   function renderCli() {
     const out = $("cli-out"), rows = S.cli.filter(e => S.tab === "All" || e.router === S.tab || (!e.router && S.tab === "All"));
-    out.innerHTML = rows.length ? rows.map(cliLine).join("") : `<span class="out">The commands sent to the routers appear here, exactly as the executor types them over SSH: login, configure terminal, each configuration line, end, write memory, and the show commands used for the checks.</span>`;
+    out.innerHTML = rows.length ? rows.map(cliLine).join("") : S.tab !== "All" ? `<span class="out">Nothing was sent to ${esch(S.tab)} yet. Type a read-only show command below and press Run show, for example: show ip bgp summary</span>` : `<span class="out">The commands sent to the routers appear here, exactly as the executor types them over SSH: login, configure terminal, each configuration line, end, write memory, and the show commands used for the checks.</span>`;
     out.scrollTop = out.scrollHeight;
   }
   function renderCliTabs(soft) {
@@ -311,7 +326,7 @@
       try { const r = await fetchJson(`/api/runs/${S.status.busy}`); resetRun(r.scenario + " on " + (r.lab || "")); setBusy(true); attach(S.status.busy, { lab: r.lab, sid: r.scenario }); } catch (e) { /* finished meanwhile */ }
     }
     setInterval(pollGraph, 6000);
-    setInterval(() => { if (!$("view-live").hidden && !document.hidden) loadCatalog().catch(() => {}); }, 15000);
+    setInterval(() => { if (!$("view-live").hidden && !document.hidden) loadCatalog(true).catch(() => {}); }, 15000);
   }
 
   window.addEventListener("viewchange", e => { if (e.detail === "live") { init(); S.v3 && S.v3.resize(); } });
