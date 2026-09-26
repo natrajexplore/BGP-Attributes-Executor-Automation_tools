@@ -1,15 +1,30 @@
 # BGP Attributes Executor
 
-A hands-on BGP platform on **EVE-NG** with real Cisco IOS routers (7206VXR / c7200, Dynamips). It has three parts that share the same
+A hands-on BGP platform on **EVE-NG** with real Cisco IOS routers (7206VXR / c7200, Dynamips). It has four parts that share the same
 lab files:
 
 | Part | What it is | Where |
 |---|---|---|
-| **Dashboard (Lab tab)** | Runs 11 BGP-attribute scenarios on a shared 8-router lab, with live logs, before/after `show` diffs and a session monitor | [`backend/`](backend/), [`frontend/`](frontend/) |
+| **Live labs** | Run any of **31 scenarios** (11 BGP attributes, 6 MPLS VPN use cases and their variants) on **its own topology**: the VM switches labs for you, with a **3D topology view**, live BGP session state and a **live SSH/CLI transcript** | `http://<eve-vm>:8000/` (default tab), [`docs/live-labs.md`](docs/live-labs.md) |
+| **Shared lab (Lab tab)** | The original view: the 11 scenarios on the shared 8-router lab, with live logs, before/after `show` diffs and a session monitor | [`backend/`](backend/), [`frontend/`](frontend/) |
 | **Learn tab** | A from-scratch-to-pro course: 11 attributes plus an MP-BGP / MPLS VPN track, with diagrams, exercises, drills, quizzes, cheat-sheets and a best-path simulator | `http://<eve-vm>:8000/#learn` |
 | **17 standalone labs** | One small EVE lab per topic (3 to 7 routers), each with a README, every router's configuration, and a scenario you can apply and roll back | [`labs/`](labs/) |
 
 Everything below links to files in this repository. If you are reading this on GitHub, the links open the files directly.
+
+## What's new
+
+* **Live labs tab (now the default).** One click on **Run** takes a scenario from "which lab is that?" to a verified result: the dashboard stops the running lab, starts the scenario's own
+  topology, waits for the routers, checks their baseline and BGP, pushes the change over SSH, verifies it, and rolls it back on request. [Details](#live-labs-any-scenario-on-its-own-topology).
+* **3D topology view.** Routers on tiers, physical links, and BGP sessions as arcs (iBGP, eBGP, MP-BGP VPNv4, PE-CE in a VRF) with live up/down state. Every router that receives configuration pulses
+  and an "SSH executor" sends a beam to it.
+* **Live SSH / CLI transcript.** The real commands, per router, exactly as they are typed: `ssh lab@<address>`, `configure terminal`, each line with the prompt of its config mode, `end`,
+  `write memory`, and the `show` commands of the checks with their output.
+* **One lab at a time, managed for you.** A lab manager switches between 18 labs (the 17 standalone labs and the shared lab), rolls back leftovers before leaving a lab, and remembers which labs are
+  configured. **Prepare all labs** sets every lab up once, so a later switch is only a boot.
+* **Safer automation.** Every SSH session verifies the router's hostname before sending anything, and a lab refuses to start if another router already answers on one of its management addresses.
+* **New management addresses: 192.168.99.101 to .199.** The block below .100 belongs to other projects on the same EVE bridge. [Addressing rule](#management-addresses).
+* **Tests.** Offline tests of the switch workflow, the hostname guard and the retry helper (`backend/tests/`).
 
 ---
 
@@ -33,9 +48,10 @@ Everything below links to files in this repository. If you are reading this on G
 
 ```
 Browser ──> FastAPI :8000 (Docker container on the EVE-NG VM, network_mode: host)
+              ├─ Lab manager: 18 labs, switch workflow, run lock, progress events (SSE)
               ├─ EVE-NG REST API   (topology, node start/stop, console ports)
-              └─ Netmiko SSH ──> 192.168.99.0/24 ──> each router's FastEthernet0/0 in VRF MGMT
-                                        (bridged out of EVE through Cloud1 / pnet1)
+              └─ Netmiko SSH ──> 192.168.99.101-199 ──> each router's FastEthernet0/0 in VRF MGMT
+                                        (bridged out of EVE through Cloud1 / pnet1; hostname checked on every login)
 
 Monitoring (optional):  poller (20 s) ─> Kafka :9094 ─> exporter :9108 ─> Prometheus :9090 ─> Grafana :3000
 ```
@@ -50,14 +66,88 @@ Monitoring (optional):  poller (20 s) ─> Kafka :9094 ─> exporter :9108 ─> 
 
 ## Live labs: any scenario on its own topology
 
-The dashboard opens on **Live labs** (`http://<eve-vm-ip>:8000/`). Every scenario, from the 11 BGP attributes to the MPLS VPN use cases, lists its lab. **Run** switches the VM to that
-scenario's topology (stopping the lab that is running, starting the routers, setting them up if needed), runs the scenario over SSH and verifies it. A **3D topology** shows the routers,
-links and BGP sessions with live state, and the **SSH / CLI** panel shows the real commands as they are sent (`configure terminal`, each line, `write memory`, the checks).
+The dashboard opens on **Live labs** (`http://<eve-vm-ip>:8000/`). It lists **18 labs and 31 scenarios** in three groups: BGP attributes (labs 01 to 11), MP-BGP and MPLS VPN (labs 12 to 17)
+and the shared 8-router lab. Every scenario has **Run** and **Rollback** buttons, and every lab has **View in 3D** and **Start this lab**.
 
-* Full description, times, API and troubleshooting: [`docs/live-labs.md`](docs/live-labs.md).
-* Only one lab runs at a time. A first run on a lab that was never configured takes 10 to 15 minutes; **Prepare all labs** does this once for every lab in the background.
-* **Management addresses:** this project uses **192.168.99.101 to .199**. Other projects on the same EVE bridge (for example an OSPF lab on 192.168.99.11 to .14) must keep to their own
-  addresses. The dashboard checks every router's hostname before it sends anything, and refuses to start a lab whose addresses another router already answers on. See [`docs/addressing.md`](docs/addressing.md).
+### What happens when you click Run
+
+```
+Run 05_med
+  1  roll back what a previous run left applied in the lab that is being left
+  2  stop the running lab                       (EVE-NG can run only one of these labs at a time)
+  3  start lab 05's routers
+  4  wait for SSH, and check that each router answers with its own hostname
+  5  first-time setup if the lab was never configured (console: hostname, user, SSH key, address)
+  6  check that every router has its baseline (push it where it is missing)
+  7  wait for every BGP session to come up    (IPv4, MP-BGP VPNv4 and PE-CE sessions in VRFs)
+  8  capture the state, push the scenario over SSH, wait for BGP to settle, verify, show the diff
+```
+
+Steps 1 to 7 are skipped, and shown as skipped, when the lab is already the running one. **Rollback** runs the same way and puts the lab back at its baseline. Leaving a lab with something still applied
+rolls it back first, so every lab is stopped at its baseline.
+
+### The page
+
+| Area | What it shows |
+|---|---|
+| **Catalogue** (left) | Every lab and scenario. A dot marks the running lab (green), labs that are configured and saved (blue) and labs never configured (grey). **Prepare all labs** sets every lab up once |
+| **3D topology** | Routers on tiers (customers or outside, edge, core), physical links, and BGP sessions as arcs: iBGP blue, eBGP orange, MP-BGP VPNv4 magenta, PE-CE in a VRF cyan. Rings are green when a router answers, amber while starting, red when it does not, grey when stopped; a down session turns red. Orbit, zoom, click a router to open its CLI tab. Any lab can be previewed in 3D without starting it |
+| **Steps** | The stages above, each pending, running, done, skipped or failed, with a timer and the reason for a failure |
+| **SSH / CLI** | The real SSH sessions, per router, with the prompt highlighted: `$ ssh lab@192.168.99.121`, `PE2#configure terminal`, `PE2(config-vrf)#route-target import 65000:11`, `end`, `write memory`, and the `show` commands of the checks. A box runs whitelisted read-only `show` commands on the selected router; Copy and Clear are there too |
+| **Verification** | Each check with PASS or FAIL and a before/after diff |
+
+A page reload while a run is in progress follows that run from its start: the stream of a run is kept, so a late viewer receives everything.
+
+### Times (measured on the lab VM with four CPUs)
+
+| Situation | Time |
+|---|---|
+| Switch from the shared lab to lab 12 and run its scenario | under 4 minutes in total (about 135 s of it the scenario, with its BGP settle time) |
+| Rollback on the running lab | about 50 s |
+| Bring the shared lab up after a VM reboot | about 2 minutes |
+| **Prepare all labs** (once): boot blank, console setup, baseline, save, for each of the 18 labs | about 2.5 hours |
+
+The emulated routers are CPU-bound. Other labs running on the same VM (for example a separate OSPF project) slow every step down, and are the main reason a lab can take longer than the figures above.
+
+### Safety rules
+
+1. **The dashboard never talks to a router whose hostname is not the one it expects.** The login is closed without sending anything.
+2. **It never starts a lab whose management addresses another router already answers on.** The run stops and names the address and the router that answered.
+3. **One run at a time.** A second request is refused with a message.
+4. **It stops a lab only through the lab that is really running.** EVE-NG reports the routers of every lab with matching node ids as running, and a stop sent through the wrong lab does nothing.
+5. **Slow routers are retried, wrong ones are not.** Baseline pushes are retried up to three times with longer timeouts; a hostname mismatch is never retried.
+
+### Management addresses
+
+This project uses **192.168.99.101 to 192.168.99.199** for router management: the last octet is 100 plus a per-router number (for example EDGE1 is .111, CORE-RR1 is .121, CONTENT is .133). The gateway
+192.168.99.1 and the /24 are unchanged. Other projects on the same EVE bridge, such as an OSPF lab on 192.168.99.11 to .14, keep the lower addresses. Two routers with the same address on one bridge answer in turn,
+and an automation tool can then configure the wrong one. See [`docs/addressing.md`](docs/addressing.md).
+
+### HTTP API
+
+| Endpoint | What it does |
+|---|---|
+| `GET /api/catalog` | Every lab with its scenarios, whether it is running, configured, and what is still applied |
+| `GET /api/lab/status` | The active lab, `running`, `phase` (`idle` or `switching`) and the run in progress |
+| `GET /api/labs/{lab}/graph` | Routers, links and sessions for the 3D view; live state when the lab is running |
+| `POST /api/labs/{lab}/scenarios/{id}/run` and `/rollback` | Run or roll back a scenario, switching to the lab first; returns `run_id` |
+| `POST /api/labs/{lab}/activate` | Switch to a lab without running a scenario |
+| `POST /api/prewarm` | Configure and save every lab once |
+| `GET /api/stream/{run_id}` | Server-sent events: `plan`, `step`, `cli`, `log`, `result` |
+
+`{lab}` is `shared` or a lab folder name such as `05_med`. The original `/api/scenarios/...` endpoints still exist and drive the shared lab. Full description, troubleshooting and the code map:
+[`docs/live-labs.md`](docs/live-labs.md).
+
+### Code and tests
+
+| Path | Role |
+|---|---|
+| [`backend/app/labmgr.py`](backend/app/labmgr.py) | Lab registry, the switch workflow, the run lock, progress events |
+| [`backend/app/scenarios.py`](backend/app/scenarios.py) | Scenario runs for any lab, with the steps and the CLI stream |
+| [`backend/app/devices.py`](backend/app/devices.py) | SSH with the hostname check; streams every command to the CLI panel |
+| [`backend/app/graph.py`](backend/app/graph.py) | The 3D graph, read from `inventory.yaml` and `baseline/*.cfg` |
+| [`frontend/live.js`](frontend/live.js), [`live3d.js`](frontend/live3d.js), [`live.css`](frontend/live.css) | The tab; `frontend/vendor/` holds Three.js r128 (MIT) |
+| [`backend/tests/`](backend/tests/) | Offline tests: `cd backend && ../venv/Scripts/python.exe tests/test_flow.py` (also `test_guard.py`, `test_retry.py`) |
 
 ---
 

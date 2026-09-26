@@ -133,9 +133,9 @@
     if (S.busy) return;
     const l = S.cat.labs.find(x => x.id === lab);
     if (mode === "run" && !l.active && !confirm(`Running "${sid}" switches the VM to lab ${l.id} (${l.short}): the running lab is stopped and ${l.routers} routers are started. ${l.prepared ? "That takes a few minutes." : "This lab was never configured, so the first run also sets it up (about 10 minutes)."} Continue?`)) return;
+    setBusy(true);                                        // at once: the buttons must not be usable while the 3D view loads
     resetRun(`${mode === "run" ? "Run" : "Rollback"} ${sid} on ${l.short}`);
     await showLab(lab);
-    setBusy(true);
     S.states[`${lab}/${sid}`] = "running"; setRowState(lab, sid, "running");
     try {
       const { run_id } = await fetchJson(`/api/labs/${lab}/scenarios/${sid}/${mode}`, { method: "POST" });
@@ -147,9 +147,9 @@
     if (S.busy) return;
     const l = S.cat.labs.find(x => x.id === lab);
     if (!l.active && !confirm(`Switch the VM to lab ${l.id} (${l.short})? The running lab is stopped.`)) return;
+    setBusy(true);
     resetRun(`Start ${l.short}`);
     await showLab(lab);
-    setBusy(true);
     try { const { run_id } = await fetchJson(`/api/labs/${lab}/activate`, { method: "POST" }); attach(run_id, { lab, activate: true }); }
     catch (e) { setBusy(false); addCli({ router: "", kind: "err", text: e.message }); }
   }
