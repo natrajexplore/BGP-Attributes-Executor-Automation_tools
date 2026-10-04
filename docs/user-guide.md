@@ -49,6 +49,9 @@ You need: a browser, and the EVE VM running with the dashboard up. Check with `h
 
 Go to `http://192.168.186.128:8000`. You see three tabs at the top: **Live labs** (run any scenario on its own topology, with a 3D view), **Learn** (the course) and **Credentials** (the login and enable password of every router). The original 8-router lab is one of the labs in Live labs.
 
+On the right of the header are **Refresh**, **Reset running lab** (pushes the baseline again to every router of the running lab) and, when the monitoring stack is set up,
+**Grafana dashboard**, **Prometheus** and **Kafka UI**. Each of those three opens its tool in a new browser tab.
+
 ### Step 2. Read one attribute page (15 minutes)
 
 1. Click **Learn**, then **01 WEIGHT**. You are on the **Foundations** level.
@@ -76,6 +79,11 @@ Work through the steps in order. When every check is green the exercise is marke
 
 Only one lab runs at a time, so running a scenario of another lab switches the VM to it. The **EVE-NG** card gives each router's SSH command (routers are reached by SSH through the VM, not by telnet). To see the running lab in the EVE-NG web page you need an EVE-NG account in **pod 1**
 (the dashboard's own account is in pod 1; your admin account is not): create one under System -> User management, then log in with it. More detail: [`live-labs.md`](live-labs.md).
+
+If the monitoring stack is running, watch the same run from the outside. Open **Grafana dashboard** (dashboard *BGP Network Monitor*), then on a router of the running lab
+shut one BGP neighbor (`neighbor <address> shutdown` under `router bgp`). Within one poll (20 seconds) the session turns down in the dashboard's *BGP session monitor* card and in
+Grafana's state timeline, and the event appears in **Kafka UI** under the topic `bgp.neighbor.events`. After 30 seconds the alert `BGPSessionDown` fires on the
+**Prometheus** page, under *Alerts*. Undo it with `no neighbor <address> shutdown`. Setup: [Monitoring in the README](../README.md#monitoring-kafka---prometheus---grafana).
 
 ### Step 5. Try the simulator (10 minutes)
 
@@ -326,7 +334,7 @@ Which labs to do by hand, in order of value: 12, 13, 15, 05, 02, 03. The others 
 | Symptom | Likely cause | What to do |
 |---|---|---|
 | Dashboard does not load | Container stopped (for example after running a lab) | `docker start bgp-attributes-executor` on the VM |
-| The dashboard shows fewer than 22 sessions after you restored the shared lab | Routers still converging | Wait two minutes; if it persists, click **Reset lab to baseline** |
+| The dashboard shows fewer than 22 sessions after you restored the shared lab | Routers still converging | Wait two minutes; if it persists, click **Reset running lab** |
 | `telnet` says connection refused | Nodes are not running, or wrong port | `labs/labtool.sh <lab> start`; check with `ss -ltn \| grep 328` |
 | The console prints nothing or you cannot type | Someone else has the console open (one connection per router) | Close the other terminal or press Enter a few times |
 | A pasted config gives `% Invalid input` | A line was pasted in the wrong mode, or a typo | Type `configure terminal` first; paste again in smaller pieces |
@@ -337,8 +345,12 @@ Which labs to do by hand, in order of value: 12, 13, 15, 05, 02, 03. The others 
 | A lab started blank though you configured it before | The lab was started under another EVE account or you did not `write memory` | Use `write memory` after configuring; use `bootstrap` and `baseline` for a fresh start |
 | You cannot see the nodes running in the EVE web page | Labs started by the tooling run under another EVE account | Use SSH through the VM: copy the command from the EVE-NG card of Live labs (a fresh, unconfigured router has no SSH yet, so use its console as in Part 4) |
 | After a VM reboot the routers are stopped | EVE does not restart nodes by itself | `labs/labtool.sh main start` (or `<lab> start`) |
+| No **Grafana dashboard**, **Prometheus** or **Kafka UI** buttons in the header | `BGP_GRAFANA_URL` is not set in `.env` | Set it, then `docker compose up -d --build` on the VM |
+| The monitor card says *Kafka: disabled* | `BGP_KAFKA_BOOTSTRAP` is not set in `.env` | Set it to `<windows-ip>:9094`, then `docker compose up -d --build` |
+| Grafana stops updating | The exporter lost Kafka (for example after the Kafka container was recreated) | `docker restart bgp-exporter` on the Windows host |
 
 If you get really stuck: **stop the lab and start again.** A fresh boot with the baseline from `CONFIGS.md` is always faster than repairing a half-changed lab.
+More symptoms, for the dashboard, PuTTY and the monitoring stack: [Troubleshooting in the README](../README.md#troubleshooting).
 
 ---
 
@@ -419,7 +431,7 @@ The first step that separates the routes decides. The rest are never checked.
 
 ## Where to go next
 
-* [`README.md`](../README.md): the map of the whole repository, with a link to every lab
+* [`README.md`](../README.md): the map of the whole repository, with a link to every lab, the [prerequisites](../README.md#prerequisites) and the [configuration reference](../README.md#configuration-reference)
 * [`labs/README.md`](../labs/README.md): the lab index and run routine
 * Each lab's `README.md` and `CONFIGS.md`, for example [lab 12](../labs/12_mpls_l3vpn/README.md)
 * [`docs/runbook.md`](runbook.md) and [`docs/eve-setup.md`](eve-setup.md): rebuilding and setting up the platform
