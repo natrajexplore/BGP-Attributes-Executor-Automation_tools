@@ -15,10 +15,13 @@ Run 05_med  ─►  stop the running lab ─► start lab 05 (4 routers) ─► 
 
 | Area | What it shows |
 |---|---|
+| **Header** (top right) | **Refresh**, **Reset running lab** (pushes the baseline again to every router of the running lab) and, when the monitoring stack is set up, **Grafana dashboard**, **Prometheus** and **Kafka UI**, each opening in a new browser tab. Prometheus and Kafka UI default to the Grafana host on `:9090` and `:8080` ([configuration reference](../README.md#configuration-reference)) |
 | **Catalogue** (left) | 18 labs in three groups. Each lab lists its scenarios with **Run** and **Rollback**, and **View in 3D** / **Start this lab**. A dot shows whether a lab is running now (green), configured and saved (blue) or never configured (grey) |
 | **3D topology** | The lab's routers on tiers (customers or outside, edge, core), the physical links, and the BGP sessions as arcs: iBGP blue, eBGP orange, MP-BGP VPNv4 magenta, PE-CE sessions in a VRF cyan. Router rings are green when the router answers, amber while starting, red when not answering, grey when stopped. Sessions turn red when down. Every router that receives configuration pulses, and a cyan **SSH executor** sends a beam to it. Drag to orbit, scroll to zoom, click a router to select its CLI tab |
 | **Steps** | The stages of the run with their state: roll back what is still applied, stop the running lab, start the routers, wait for the routers, first-time setup, check the baseline, wait for BGP, capture the state before, push, let BGP converge, verify |
 | **SSH / CLI** | The real SSH sessions, per router: `$ ssh lab@<address>`, `<router>#configure terminal`, each configuration line with the prompt of the mode it was typed in, `end`, `write memory`, and the show commands of the checks with their output. A box under it runs whitelisted read-only show commands on the selected router |
+| **EVE-NG** | The EVE path of the shown lab, each router's EVE-NG state and SSH address, an **SSH session** button (PuTTY) and a **CLI tab** button that selects the router in the SSH / CLI panel and shows its BGP summary |
+| **Verification** | Each check with PASS or FAIL and a before/after diff |
 
 Anything a scenario needs is done for you. **Only one lab runs at a time** (the VM has 8 GB and EVE-NG cannot run two of these labs together), so a run first stops the lab that is
 running. Before leaving a lab, anything still applied there is rolled back, so every lab is stopped at its baseline.
@@ -90,6 +93,11 @@ and this project must not use the ones below .100. See [`addressing.md`](address
 | `POST /api/prewarm` | Configure and save every lab once (long) |
 | `GET /api/stream/{run_id}` | Server-sent events of a run: `plan`, `step`, `cli`, `log`, `result`. A client that connects late still receives everything from the start |
 | `GET /api/runs/{run_id}` | The record of a run, including the results and diffs |
+| `POST /api/lab/reset` | Push the baseline again to the routers of the running lab (the header's **Reset running lab**); returns `run_id` |
+| `GET /api/devices/{name}/show?cmd=...` | A whitelisted read-only `show` on a router of the active lab (the CLI panel's command box) |
+| `GET /api/credentials` | Login user, password and enable secret of every router of every lab, with whether each matches its baseline |
+| `GET /api/config` | The header links (`grafana_url`, `prometheus_url`, `kafka_ui_url`), whether Kafka publishing is on, and the poll interval |
+| `GET /api/monitor/state`, `GET /api/events/recent`, `GET /api/events/stream` | The session monitor: current sessions, the latest events, and new events as server-sent events |
 
 `{lab}` is `shared` or a lab folder name such as `05_med`. The original endpoints (`/api/scenarios/...`) still exist and drive the shared lab.
 
@@ -102,10 +110,11 @@ and this project must not use the ones below .100. See [`addressing.md`](address
 | `backend/app/devices.py` | SSH with the hostname check; streams every command to the CLI panel |
 | `backend/app/graph.py` | The 3D graph, read from `inventory.yaml` and `baseline/*.cfg` |
 | `backend/app/monitor.py` | Session monitor for the active lab (IPv4 and VPNv4 sessions) |
+| `backend/app/credentials.py`, `frontend/credentials.js` | The Credentials tab: inventory logins checked against the baselines |
 | `frontend/live.js`, `live3d.js`, `live.css` | The tab; `vendor/` holds Three.js (r128, MIT) |
-| `backend/tests/` | Offline tests of the switch workflow and the hostname guard |
+| `backend/tests/` | Offline tests of the switch workflow, the hostname guard, the retry helper and the credentials list |
 
-Run the tests with `cd backend && ../venv/Scripts/python.exe tests/test_flow.py` (and `test_guard.py`).
+Run the tests with `cd backend && ../venv/Scripts/python.exe tests/test_flow.py` (and `test_guard.py`, `test_retry.py`, `test_credentials.py`).
 
 ## Troubleshooting
 
@@ -117,3 +126,6 @@ Run the tests with `cd backend && ../venv/Scripts/python.exe tests/test_flow.py`
 | `could not stop the running lab` | EVE-NG still reports a lab running after the stop. Stop it in EVE-NG or with `labs/labtool.sh <lab> stop` |
 | `no SSH on <routers> after the console setup` | The console setup did not finish. Check the console of that router, then run **Start this lab** again |
 | `baseline still missing on ...` | The push to the router failed; the CLI panel shows the router's own error |
+| No **Grafana dashboard**, **Prometheus** or **Kafka UI** button in the header | `BGP_GRAFANA_URL` is empty in `.env`, or the dashboard was not rebuilt after setting it (`docker compose up -d --build`) |
+
+More symptoms, for PuTTY, EVE-NG accounts and the monitoring stack: [Troubleshooting in the README](../README.md#troubleshooting).
