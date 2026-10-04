@@ -1,5 +1,12 @@
 # BGP Attributes Executor
 
+![License: MIT](https://img.shields.io/badge/license-MIT-green)
+![Python 3.12](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)
+![Docker](https://img.shields.io/badge/docker-compose-2496ED?logo=docker&logoColor=white)
+![EVE-NG](https://img.shields.io/badge/EVE--NG-Community-orange)
+![Cisco IOS](https://img.shields.io/badge/Cisco%20IOS-c7200%2015.2-1BA0D7?logo=cisco&logoColor=white)
+
 A hands-on BGP platform on **EVE-NG** with real Cisco IOS routers (7206VXR / c7200, Dynamips): click **Run** on a scenario and the platform starts that scenario's own lab,
 configures the routers over SSH, verifies the result and shows it in 3D. It has five parts that share the same lab files:
 
@@ -12,6 +19,14 @@ configures the routers over SSH, verifies the result and shows it in 3D. It has 
 | **17 standalone labs** | One small EVE lab per topic (3 to 7 routers), each with a README, every router's configuration, and a scenario you can apply and roll back | [`labs/`](labs/) |
 
 Everything below links to files in this repository. If you are reading this on GitHub, the links open the files directly.
+
+## Contents
+
+* [What's new](#whats-new) · [Start here](#start-here) · [The dashboard at a glance](#the-dashboard-at-a-glance)
+* [Architecture](#architecture) · [Tech stack](#tech-stack)
+* [Live labs](#live-labs-any-scenario-on-its-own-topology) · [The Learn tab](#the-learn-tab) · [The shared 8-router lab](#the-shared-8-router-lab) · [The 17 standalone labs](#the-17-standalone-labs) · [How to work with a lab](#how-to-work-with-a-lab)
+* [Prerequisites](#prerequisites) · [Quick start](#quick-start-deploy-the-platform) · [Configuration reference](#configuration-reference)
+* [Repo layout](#repo-layout) · [Monitoring](#monitoring-kafka---prometheus---grafana) · [Troubleshooting](#troubleshooting) · [More documentation](#more-documentation) · [License](#license)
 
 ## What's new
 
@@ -68,7 +83,7 @@ Everything below links to files in this repository. If you are reading this on G
 | **Run a lab with the tooling** (import, start, bootstrap, apply, rollback) | [`labs/labtool.sh`](labs/labtool.sh) and [the labtool section](#2-with-the-tooling-labslabtoolsh) |
 | **Import a lab into the EVE web UI** | the `.zip` next to each lab: [import notes](#3-import-through-eve-web-ui) |
 | **Deploy the whole platform** | [Quick start](#quick-start-deploy-the-platform) |
-| **Watch sessions in Grafana** | [Monitoring](#monitoring-kafka---prometheus---grafana) |
+| **Watch sessions in Grafana, Prometheus and Kafka UI** | [Monitoring](#monitoring-kafka---prometheus---grafana) |
 
 ---
 
@@ -105,6 +120,32 @@ Monitoring (optional):  poller (20 s) ─> Kafka :9094 ─> exporter :9108 ─> 
 * **Frontend:** a single-page app in vanilla JavaScript (SSE for live logs), no build step.
 * **Labs:** generated `.unl` topology files and per-router baseline configs, driven by the same code through environment variables, so any
   lab folder can be run without changing the backend.
+
+The same picture as a diagram (GitHub renders it):
+
+```mermaid
+flowchart LR
+  B["Browser"] -->|"HTTP + SSE :8000"| API["FastAPI dashboard<br/>(Docker on the EVE-NG VM)"]
+  API -->|"REST"| EVE["EVE-NG API"]
+  EVE -->|"start / stop nodes"| R["Cisco c7200 routers<br/>VRF MGMT 192.168.99.101-199"]
+  API -->|"Netmiko SSH"| R
+  subgraph WIN["Windows host, Docker Desktop (optional)"]
+    K[("Kafka :9094")] --> X["exporter :9108"] --> P["Prometheus :9090"] --> G["Grafana :3000"]
+    K --> KU["Kafka UI :8080"]
+  end
+  API -->|"events, snapshots, config changes"| K
+```
+
+### Tech stack
+
+| Layer | Technology |
+|---|---|
+| Network | EVE-NG Community, Cisco 7206VXR (c7200, Dynamips) running IOS 15.2, MPLS / MP-BGP VPNv4 |
+| Backend | Python 3.12, FastAPI, Uvicorn, Netmiko and Paramiko (SSH), Jinja2 (scenario templates), PyYAML, httpx (EVE-NG REST) |
+| Frontend | Vanilla JavaScript single-page app, Server-Sent Events, Three.js r128 for the 3D views, no build step |
+| Monitoring | Apache Kafka 3.8 (KRaft), a Python exporter (confluent-kafka), Prometheus 2.55 with alert rules, Grafana 11.3, Kafka UI |
+| Packaging | Docker Compose: one stack on the EVE-NG VM (dashboard), one on Docker Desktop (monitoring) |
+| Desktop | PuTTY and the Windows OpenSSH client for the per-router SSH sessions |
 
 ---
 
@@ -284,8 +325,8 @@ Eight routers in AS 65000 (two route reflectors, two edges, a LAN router) with t
 | 10 | ORIGINATOR_ID | ORIGINATOR_ID | RR clients learn who originated the prefix | [yaml](backend/scenarios/10_originator_id.yaml) · [template](backend/templates/10_originator_id.j2) |
 | 11 | CLUSTER_LIST | CLUSTER_LIST | A cluster-id clash triggers RR loop prevention | [yaml](backend/scenarios/11_cluster_list.yaml) · [template](backend/templates/11_cluster_list.j2) |
 
-Every scenario has an **apply** and a **rollback** path and verify commands with regex assertions. Use the **Lab** tab to run one, or the
-**Reset lab to baseline** button to push [`backend/baseline/`](backend/baseline/) again.
+Every scenario has an **apply** and a **rollback** path and verify commands with regex assertions. Run one from **Live labs** (group "Shared 8-router lab"),
+or use the header's **Reset running lab** button to push the baseline again to every router of the running lab.
 
 ---
 
@@ -329,8 +370,8 @@ Small MPLS cores (PE, P and customer routers). Learn-tab pages: `#learn/mp_famil
 ## How to work with a lab
 
 Only **one lab can run at a time** in EVE-NG here (nodes are keyed by tenant and node id, and the dashboard's session monitor polls the same management
-addresses). The dashboard container and the shared 8-router lab must be stopped before you start another lab, and started again afterwards
-(see [stopping and restoring](#stopping-a-lab-and-restoring-the-shared-lab)).
+addresses). **Live labs** switches labs for you. The two manual ways below (by hand and `labtool.sh`) bypass the dashboard: stop the dashboard container and the
+running lab before you start another lab, and start them again afterwards (see [stopping and restoring](#stopping-a-lab-and-restoring-the-shared-lab)).
 
 ### 1. By hand, from the router consoles
 
@@ -404,6 +445,18 @@ Before starting another lab: `docker stop bgp-attributes-executor` and `labs/lab
 
 ---
 
+## Prerequisites
+
+| What | Details |
+|---|---|
+| **Host PC** | Windows 11 with Intel VT-x / AMD-V enabled, VMware Workstation 17 ([`docs/eve-setup.md`](docs/eve-setup.md)) |
+| **EVE-NG VM** | EVE-NG Community, **4 vCPU, 8 GB RAM, 60 GB disk**, nested virtualization on. NIC 1 = `pnet0` (EVE management), NIC 2 = `pnet1` on a host-only network for the router management subnet `192.168.99.0/24`, with `192.168.99.1` on the VM |
+| **Router image** | `c7200-adventerprisek9-mz.152-4.S6.image` in `/opt/unetlab/addons/dynamips/`. **Not included**: you need your own licensed Cisco IOS image. Each router uses 256 MB (512 MB makes the emulated CPU halt) |
+| **Docker on the EVE VM** | Docker Engine with the Compose plugin, for the dashboard container |
+| **Optional: monitoring** | Docker Desktop on the Windows host, with TCP 9094, 3000, 9090 and 8080 open to the EVE VM |
+| **Optional: SSH sessions** | PuTTY and the Windows OpenSSH client, plus an SSH key for `root` on the EVE VM |
+| **Optional: local scripts and tests** | Python 3.12 with `backend/requirements.txt` |
+
 ## Quick start: deploy the platform
 
 1. Generate the shared lab and import it into EVE-NG: `python backend/scripts/build_lab.py` gives `labs/bgp-attributes.unl`. See
@@ -421,10 +474,34 @@ Before starting another lab: `docker stop bgp-attributes-executor` and `labs/lab
 4. Open `http://<eve-vm-ip>:8000/`.
 
 `.env` holds the EVE URL and account (`BGP_EVENG_*`), the router login (`BGP_DEVICE_*`), the shared lab path and the optional Kafka and Grafana settings; it is never committed.
-Use a dedicated EVE account for the automation (`scripts/set-eve-user.sh`, default name `bgpapi`).
+Use a dedicated EVE account for the automation (`scripts/set-eve-user.sh`, default name `bgpapi`). Every setting is listed in the [configuration reference](#configuration-reference).
 
 Regenerate a standalone lab's `.unl`: `python backend/scripts/build_lab.py --inventory labs/<lab>/inventory.yaml --out labs/<lab>/<lab>.unl`.
 Regenerate every lab's `CONFIGS.md`: `python scripts/make-lab-configs.py [lab]`.
+
+### Configuration reference
+
+All settings are environment variables read from `.env` ([`.env.example`](.env.example) is the template). The default is what applies when the variable is not set.
+
+| Variable | Default | What it does |
+|---|---|---|
+| `BGP_EVENG_URL` | `http://127.0.0.1` | EVE-NG REST API address, as seen from the dashboard container (`network_mode: host`) |
+| `BGP_EVENG_USER` / `BGP_EVENG_PASS` | `admin` / `eve` | EVE-NG account the dashboard uses. Use a dedicated account such as `bgpapi` (EVE-NG allows one session per account) |
+| `BGP_LAB_PATH` | `/bgp-attributes.unl` | EVE path of the shared 8-router lab |
+| `BGP_DEVICE_USER` / `BGP_DEVICE_PASS` | `lab` / `lab123` | Router SSH login, created by the baseline configs |
+| `BGP_DEVICE_SECRET` | same as `BGP_DEVICE_PASS` | Router enable secret |
+| `BGP_CONSOLE_FALLBACK` | `true` | Use the EVE-NG telnet console when SSH to the management address fails |
+| `BGP_CONN_TIMEOUT` / `BGP_READ_TIMEOUT` | `15` / `30` | SSH connect and read timeouts, in seconds |
+| `BGP_MONITOR` | `true` | Run the background BGP session poller |
+| `BGP_POLL_INTERVAL` | `20` | Seconds between two polls |
+| `BGP_KAFKA_BOOTSTRAP` | empty | Kafka bootstrap server, for example `<windows-ip>:9094`. Empty turns publishing off |
+| `BGP_TOPIC_EVENTS` / `BGP_TOPIC_SNAPSHOTS` / `BGP_TOPIC_CONFIG` | `bgp.neighbor.events` / `bgp.neighbor.snapshots` / `bgp.config.changes` | Kafka topic names |
+| `BGP_GRAFANA_URL` | empty | Target of the header's **Grafana dashboard** button; empty hides it |
+| `BGP_PROMETHEUS_URL` | Grafana host on `:9090` | Target of the header's **Prometheus** button |
+| `BGP_KAFKA_UI_URL` | Grafana host on `:8080` | Target of the header's **Kafka UI** button |
+| `KAFKA_ADVERTISED_HOST` | none | Used by the monitoring stack on Windows: the Windows IP the EVE VM can reach, advertised by Kafka's external listener |
+
+`BGP_FRONTEND`, `BGP_INVENTORY`, `BGP_TEMPLATES`, `BGP_SCENARIOS`, `BGP_BASELINE`, `BGP_LABS` and `BGP_RUNS` point at paths inside the container and normally stay unset.
 
 ---
 
@@ -433,7 +510,7 @@ Regenerate every lab's `CONFIGS.md`: `python scripts/make-lab-configs.py [lab]`.
 ```
 backend/
   app/              FastAPI application (labmgr = lab switching, scenarios, devices, graph, EVE client, monitor)
-  tests/            offline tests of the switch workflow and the hostname guard
+  tests/            offline tests: switch workflow, hostname guard, retry helper, credentials list
   templates/        Jinja2, one per scenario (apply + {% if rollback %})
   scenarios/        YAML: targets, vars, verify assertions
   baseline/         full per-device IOS configs of the shared lab
@@ -468,9 +545,35 @@ The dashboard runs one lab at a time and tags every message with its lab id. The
    ([`scripts/setup-windows.ps1`](scripts/setup-windows.ps1)), then `docker compose -f docker-compose.monitoring.yml up -d --build`.
 2. **EVE VM:** set `BGP_KAFKA_BOOTSTRAP=<windows-ip>:9094` and `BGP_GRAFANA_URL=http://<windows-ip>:3000` in `.env`, then `docker compose up -d --build`.
 3. Open the dashboard (`:8000`): the *BGP session monitor* card shows live sessions and events. Grafana: `http://localhost:3000` (dashboard *BGP Network Monitor*, anonymous viewer). Kafka UI: `http://localhost:8080`.
+   The header has **Grafana dashboard**, **Prometheus** and **Kafka UI** buttons that open each tool in a new tab. Prometheus and Kafka UI use the `BGP_GRAFANA_URL` host on `:9090` and `:8080`;
+   set `BGP_PROMETHEUS_URL` or `BGP_KAFKA_UI_URL` in `.env` to override. The buttons stay hidden when no URL is known.
 
 Test: `shutdown` a neighbor on a router (or run a scenario). The event appears in the UI feed, Kafka UI and the Grafana state timeline, and `BGPSessionDown` fires in Prometheus after 30 seconds.
 After recreating the Kafka container, restart the exporter (`docker restart bgp-exporter`).
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause and fix |
+|---|---|
+| The page looks out of date after an update | Press **Ctrl+Shift+R** once |
+| The EVE-NG web page shows the lab as stopped while the dashboard runs it | The dashboard runs labs as `bgpapi` in pod 1. Log in with a separate pod-1 account: [steps](#seeing-the-running-lab-in-the-eve-ng-web-page) |
+| You are logged out of the EVE-NG web page, or the dashboard gets EVE-NG login errors | EVE-NG keeps one session per account. Give the dashboard its own account (`scripts/set-eve-user.sh`) and stop the dashboard before running `labtool.sh` |
+| A run stops because another router answers on a management address | Another lab or project uses that address on the same EVE bridge. Stop it, and keep other projects below `.100`: [management addresses](#management-addresses) |
+| A run stops on a hostname mismatch | The address belongs to a router of another lab. Check which lab is really running; the dashboard never configures the wrong router |
+| No **SSH session** buttons | They show only for routers that answer SSH (the running lab). Run `scripts/putty-setup.ps1` once, and again after labs are added |
+| PuTTY shows a **Security Alert** | First connection to that router, or the router was rebuilt: click **Accept** |
+| A plain `ssh` to a router fails on algorithms | IOS 15.2 needs older algorithms: use the `ssh -J ... -o KexAlgorithms=+diffie-hellman-group14-sha1 ...` command from [One PuTTY window per router](#one-putty-window-per-router) |
+| `labtool.sh bootstrap` prints `FAILED` for a node | Usually a console-prompt timeout while the node is fine; the baseline push is what counts |
+| Steps take much longer than the [measured times](#times-measured-on-the-lab-vm-with-four-cpus) | The routers are CPU-bound. Stop other labs running on the same VM |
+| A router halts right after boot | Its RAM is above 256 MB; keep the generated 256 MB profile ([`docs/eve-setup.md`](docs/eve-setup.md)) |
+| The monitor card says *Kafka: disabled* | `BGP_KAFKA_BOOTSTRAP` is empty in `.env`. Set it and run `docker compose up -d --build` |
+| No **Grafana**, **Prometheus** or **Kafka UI** buttons | `BGP_GRAFANA_URL` is empty (or the backend was not rebuilt after setting it) |
+| The EVE VM cannot reach Kafka | Check `KAFKA_ADVERTISED_HOST` and the Windows Firewall ports ([`scripts/setup-windows.ps1`](scripts/setup-windows.ps1)) |
+| Grafana stops updating after Kafka was recreated | `docker restart bgp-exporter` |
+
+More checks and the rebuild procedure: [`docs/runbook.md`](docs/runbook.md) and [`docs/live-labs.md`](docs/live-labs.md).
 
 ---
 
