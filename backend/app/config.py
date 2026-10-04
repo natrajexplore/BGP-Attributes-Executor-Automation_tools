@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import yaml
 
@@ -35,12 +36,22 @@ class Settings:
     poll_interval = float(os.getenv("BGP_POLL_INTERVAL", "20"))
     monitor_enabled = os.getenv("BGP_MONITOR", "true").lower() == "true"
     grafana_url = os.getenv("BGP_GRAFANA_URL", "")
+    # Header links; default to the Grafana host on the monitoring stack's ports.
+    prometheus_url = os.getenv("BGP_PROMETHEUS_URL", "")
+    kafka_ui_url = os.getenv("BGP_KAFKA_UI_URL", "")
 
     conn_timeout = int(os.getenv("BGP_CONN_TIMEOUT", "15"))
     read_timeout = int(os.getenv("BGP_READ_TIMEOUT", "30"))
 
 
+def _sibling_url(url: str, port: int) -> str:
+    u = urlsplit(url)
+    return f"{u.scheme}://{u.hostname}:{port}" if u.hostname else ""
+
+
 settings = Settings()
+settings.prometheus_url = settings.prometheus_url or _sibling_url(settings.grafana_url, 9090)
+settings.kafka_ui_url = settings.kafka_ui_url or _sibling_url(settings.grafana_url, 8080)
 
 
 def load_inventory(path: Path | None = None) -> dict:

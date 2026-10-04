@@ -39,7 +39,8 @@ def health() -> dict:
 
 @app.get("/api/config")
 def public_config() -> dict:
-    return {"grafana_url": settings.grafana_url, "kafka_enabled": bool(settings.kafka_bootstrap),
+    return {"grafana_url": settings.grafana_url, "prometheus_url": settings.prometheus_url,
+            "kafka_ui_url": settings.kafka_ui_url, "kafka_enabled": bool(settings.kafka_bootstrap),
             "poll_interval": settings.poll_interval}
 
 

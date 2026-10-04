@@ -138,6 +138,8 @@
   <span id="conn" class="dev"><span class="dot"></span>connecting</span>
   <span class="grow"></span>
   <a id="grafana" class="btn" target="_blank" rel="noopener" hidden>Grafana dashboard &#8599;</a>
+  <a id="prometheus" class="btn" target="_blank" rel="noopener" hidden>Prometheus &#8599;</a>
+  <a id="kafka-ui" class="btn" target="_blank" rel="noopener" hidden>Kafka UI &#8599;</a>
   <button id="refresh" class="ghost">Refresh</button>
   <button id="reset" class="ghost" title="Push the baseline again to every router of the running lab">Reset running lab</button>
 </header>
@@ -380,6 +382,8 @@ function addEvent(e) {
 async function initMonitor() {
   const cfg = await api("/api/config").catch(() => ({}));
   if (cfg.grafana_url) { $("#grafana").href = cfg.grafana_url; $("#grafana").hidden = false; }
+  if (cfg.prometheus_url) { $("#prometheus").href = cfg.prometheus_url; $("#prometheus").hidden = false; }
+  if (cfg.kafka_ui_url) { $("#kafka-ui").href = cfg.kafka_ui_url; $("#kafka-ui").hidden = false; }
   $("#kafka").textContent = cfg.kafka_enabled ? "Kafka: publishing" : "Kafka: disabled (BGP_KAFKA_BOOTSTRAP empty)";
   (await api("/api/events/recent").catch(() => [])).reverse().forEach(addEvent);
   new EventSource("/api/events/stream").addEventListener("bgp", e => addEvent(JSON.parse(e.data)));
