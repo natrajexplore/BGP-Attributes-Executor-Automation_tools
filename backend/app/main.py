@@ -278,7 +278,7 @@ async def prewarm(labs: list[str] | None = None) -> dict:
         raise _busy(exc)
 
 
-# The original endpoints (Lab tab, Learn-tab exercises) drive the shared 8-router lab; running one switches back to it.
+# The original endpoints (Learn-tab exercises) drive the shared 8-router lab; running one switches back to it.
 @app.get("/api/scenarios")
 def scenario_list() -> list[dict]:
     return scenarios.list_scenarios(labmgr.shared_context())

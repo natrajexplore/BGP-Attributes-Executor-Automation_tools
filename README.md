@@ -60,6 +60,13 @@ Everything below links to files in this repository. If you are reading this on G
 * **Light or dark 3D scene.** A **Light / Dark** button on the 3D view (Live labs and the Learn pages) switches the scene only, not the rest of the dashboard. The choice is remembered in the browser.
 * **3D in the Learn tab.** All 11 attribute pages and all 8 MP-BGP pages have a 3D view of their lab: the routers the scenario configures glow and a packet follows a path across the topology with a caption per hop. [Learn tab](#the-learn-tab).
 
+### Monitoring and documentation
+
+* **Prometheus and Kafka UI in the header.** Next to **Grafana dashboard**, the header has **Prometheus** and **Kafka UI** buttons that open each tool in a new tab, so the whole
+  Kafka -> Prometheus -> Grafana chain is one click away during a demo. They default to the Grafana host on `:9090` and `:8080` (`BGP_PROMETHEUS_URL` and `BGP_KAFKA_UI_URL` override them). [Monitoring](#monitoring-kafka---prometheus---grafana).
+* **A fuller README.** [Prerequisites](#prerequisites), a [configuration reference](#configuration-reference) with every setting and its default, a [troubleshooting](#troubleshooting) table, a [tech stack](#tech-stack) summary and an architecture diagram.
+* **Updated guides.** The [user guide](docs/user-guide.md) has a short monitoring demo (shut a neighbor, watch it in Grafana, Kafka UI and Prometheus), and [`docs/live-labs.md`](docs/live-labs.md) lists the header, the EVE-NG and Verification panels and every endpoint.
+
 ### Housekeeping
 
 * **No stale pages.** The dashboard sends `Cache-Control: no-cache` and versions its script URLs, so a browser never runs an old script against a new page. The EVE-NG card and the lab list are only redrawn when their content changes, so clicks are not lost.

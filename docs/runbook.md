@@ -21,7 +21,7 @@ docker exec -it bgp-attributes-executor python scripts/push_baseline.py         
 docker exec -it bgp-attributes-executor python scripts/push_baseline.py EDGE1 EDGE2  # subset
 ```
 
-Or from the dashboard: **Reset lab to baseline** button (calls `POST /api/lab/reset`).
+Or from the dashboard: the header's **Reset running lab** button (calls `POST /api/lab/reset`, pushes the baseline to every router of the running lab).
 
 ## Health check
 
